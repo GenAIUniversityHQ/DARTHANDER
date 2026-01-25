@@ -100,189 +100,167 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
   if (!state) return null;
 
   return (
-    <div className="space-y-4 mt-2">
-      {/* SLIDERS - Big and chunky */}
-      {sliders.map((slider) => {
-        const value = (state as any)[slider.key] ?? 0;
-        const percentage = Math.round(value * 100);
+    <div className="space-y-2">
+      {/* SLIDERS - Compact */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+        {sliders.map((slider) => {
+          const value = (state as any)[slider.key] ?? 0;
+          const percentage = Math.round(value * 100);
 
-        return (
-          <div key={slider.key} className="space-y-1">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-black text-white/80 tracking-wider flex items-center gap-2">
-                <slider.icon className="w-4 h-4" />
-                {slider.label}
-              </span>
-              <span className="text-sm font-black text-white tabular-nums">{percentage}%</span>
+          return (
+            <div key={slider.key}>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-bold text-white/70 flex items-center gap-1">
+                  <slider.icon className="w-3 h-3" />
+                  {slider.label}
+                </span>
+                <span className="text-[10px] font-bold text-white/50 tabular-nums">{percentage}%</span>
+              </div>
+              <div className="relative h-2 bg-white/10 rounded-full overflow-hidden group cursor-pointer">
+                <div
+                  className={`absolute inset-y-0 left-0 bg-gradient-to-r ${slider.color} rounded-full`}
+                  style={{ width: `${percentage}%` }}
+                />
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow
+                            transform -translate-x-1/2"
+                  style={{ left: `${percentage}%` }}
+                />
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={percentage}
+                  onChange={(e) => onChange(slider.key, parseInt(e.target.value) / 100)}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              </div>
             </div>
-            <div className="relative h-4 bg-white/10 rounded-full overflow-hidden group cursor-pointer">
-              {/* Gradient fill */}
-              <div
-                className={`absolute inset-y-0 left-0 bg-gradient-to-r ${slider.color} rounded-full transition-all duration-150`}
-                style={{ width: `${percentage}%` }}
-              />
-              {/* Glow effect */}
-              <div
-                className={`absolute inset-y-0 left-0 bg-gradient-to-r ${slider.color} rounded-full blur-md opacity-50`}
-                style={{ width: `${percentage}%` }}
-              />
-              {/* Knob */}
-              <div
-                className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-lg
-                          transform -translate-x-1/2 group-hover:scale-110 transition-transform"
-                style={{ left: `${percentage}%` }}
-              />
-              {/* Slider Input */}
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={percentage}
-                onChange={(e) => onChange(slider.key, parseInt(e.target.value) / 100)}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-            </div>
+          );
+        })}
+      </div>
+
+      {/* GEOMETRY + MOTION in one row */}
+      <div className="pt-2 border-t border-white/10 flex gap-4">
+        <div className="flex-1">
+          <h3 className="text-[10px] font-bold text-white/50 mb-1">GEOMETRY</h3>
+          <div className="flex flex-wrap gap-1">
+            {geometryModes.map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => onChange('geometryMode', mode.id as any)}
+                className={`px-2 py-1 rounded text-[10px] font-bold uppercase
+                           ${state.geometryMode === mode.id
+                             ? `${mode.color} text-white`
+                             : 'bg-white/10 text-white/50 hover:bg-white/20'
+                           }`}
+              >
+                {mode.label}
+              </button>
+            ))}
           </div>
-        );
-      })}
-
-      {/* PRIMARY GEOMETRY */}
-      <div className="pt-3 border-t border-white/10">
-        <h3 className="text-xs font-black text-white/60 tracking-widest mb-2">GEOMETRY</h3>
-        <div className="flex flex-wrap gap-1.5">
-          {geometryModes.map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => onChange('geometryMode', mode.id as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
-                         transition-all duration-200 transform hover:scale-105 active:scale-95
-                         ${state.geometryMode === mode.id
-                           ? `${mode.color} text-white shadow-lg shadow-${mode.color}/50`
-                           : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
-                         }`}
-            >
-              {mode.label}
-            </button>
-          ))}
+        </div>
+        <div className="w-px bg-white/10" />
+        <div>
+          <h3 className="text-[10px] font-bold text-white/50 mb-1">MOTION</h3>
+          <div className="flex flex-wrap gap-1">
+            {motionDirs.map((dir) => (
+              <button
+                key={dir.id}
+                onClick={() => onChange('motionDirection', dir.id as any)}
+                className={`px-2 py-1 rounded text-[10px] font-bold uppercase
+                           ${dir.id === 'flow' ? 'relative' : ''}
+                           ${state.motionDirection === dir.id
+                             ? `${dir.color} text-white ${dir.id === 'flow' ? 'animate-pulse' : ''}`
+                             : 'bg-white/10 text-white/50 hover:bg-white/20'
+                           }`}
+              >
+                {dir.id === 'flow' && <span className="absolute -top-0.5 -right-0.5 text-[6px]">✦</span>}
+                {dir.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* SACRED / ANCIENT GEOMETRY LAYER */}
-      <div className="pt-3 border-t border-white/10">
-        <h3 className="text-xs font-black text-white/60 tracking-widest mb-2">SACRED LAYER</h3>
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            onClick={() => onChange('geometryLayer2', 'none' as any)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
-                       transition-all duration-200 transform hover:scale-105 active:scale-95
-                       ${!state.geometryLayer2 || state.geometryLayer2 === 'none'
-                         ? 'bg-slate-600 text-white shadow-lg'
-                         : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
-                       }`}
-          >
-            NONE
-          </button>
-          {sacredGeometry.map((geo) => (
+      {/* LAYERS - All in compact rows */}
+      <div className="pt-2 border-t border-white/10 space-y-1.5">
+        {/* SACRED */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">SACRED</h3>
+          <div className="flex flex-wrap gap-1">
             <button
-              key={geo.id}
-              onClick={() => onChange('geometryLayer2', geo.id as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
-                         transition-all duration-200 transform hover:scale-105 active:scale-95
-                         ${state.geometryLayer2 === geo.id
-                           ? `${geo.color} text-white shadow-lg`
-                           : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
-                         }`}
+              onClick={() => onChange('geometryLayer2', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!state.geometryLayer2 || state.geometryLayer2 === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
             >
-              {geo.label}
+              OFF
             </button>
-          ))}
+            {sacredGeometry.map((geo) => (
+              <button
+                key={geo.id}
+                onClick={() => onChange('geometryLayer2', geo.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${state.geometryLayer2 === geo.id
+                             ? `${geo.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {geo.label.split(' ')[0]}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* QUANTUM / EXPERIENTIAL LAYER */}
-      <div className="pt-3 border-t border-white/10">
-        <h3 className="text-xs font-black text-white/60 tracking-widest mb-2">QUANTUM LAYER</h3>
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            onClick={() => onChange('geometryLayer3', 'none' as any)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
-                       transition-all duration-200 transform hover:scale-105 active:scale-95
-                       ${!(state as any).geometryLayer3 || (state as any).geometryLayer3 === 'none'
-                         ? 'bg-slate-600 text-white shadow-lg'
-                         : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
-                       }`}
-          >
-            NONE
-          </button>
-          {quantumGeometry.map((geo) => (
+        {/* QUANTUM */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">QUANTUM</h3>
+          <div className="flex flex-wrap gap-1">
             <button
-              key={geo.id}
-              onClick={() => onChange('geometryLayer3', geo.id as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
-                         transition-all duration-200 transform hover:scale-105 active:scale-95
-                         ${(state as any).geometryLayer3 === geo.id
-                           ? `${geo.color} text-white shadow-lg`
-                           : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
-                         }`}
+              onClick={() => onChange('geometryLayer3', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).geometryLayer3 || (state as any).geometryLayer3 === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
             >
-              {geo.label}
+              OFF
             </button>
-          ))}
+            {quantumGeometry.map((geo) => (
+              <button
+                key={geo.id}
+                onClick={() => onChange('geometryLayer3', geo.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).geometryLayer3 === geo.id
+                             ? `${geo.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {geo.label.split(' ')[0]}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* COSMIC / NEBULA LAYER */}
-      <div className="pt-3 border-t border-white/10">
-        <h3 className="text-xs font-black text-white/60 tracking-widest mb-2">COSMIC LAYER</h3>
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            onClick={() => onChange('geometryLayer4', 'none' as any)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
-                       transition-all duration-200 transform hover:scale-105 active:scale-95
-                       ${!(state as any).geometryLayer4 || (state as any).geometryLayer4 === 'none'
-                         ? 'bg-slate-600 text-white shadow-lg'
-                         : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
-                       }`}
-          >
-            NONE
-          </button>
-          {cosmicLayers.map((layer) => (
+        {/* COSMIC */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">COSMIC</h3>
+          <div className="flex flex-wrap gap-1">
             <button
-              key={layer.id}
-              onClick={() => onChange('geometryLayer4', layer.id as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
-                         transition-all duration-200 transform hover:scale-105 active:scale-95
-                         ${(state as any).geometryLayer4 === layer.id
-                           ? `${layer.color} text-white shadow-lg`
-                           : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
-                         }`}
+              onClick={() => onChange('geometryLayer4', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).geometryLayer4 || (state as any).geometryLayer4 === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
             >
-              {layer.label}
+              OFF
             </button>
-          ))}
-        </div>
-      </div>
-
-      {/* MOTION DIRECTION */}
-      <div className="pt-3 border-t border-white/10">
-        <h3 className="text-xs font-black text-white/60 tracking-widest mb-2">MOTION</h3>
-        <div className="flex flex-wrap gap-1.5">
-          {motionDirs.map((dir) => (
-            <button
-              key={dir.id}
-              onClick={() => onChange('motionDirection', dir.id as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
-                         transition-all duration-200 transform hover:scale-105 active:scale-95
-                         ${dir.id === 'flow' ? 'relative' : ''}
-                         ${state.motionDirection === dir.id
-                           ? `${dir.color} text-white shadow-lg ${dir.id === 'flow' ? 'shadow-purple-500/50 animate-pulse' : ''}`
-                           : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
-                         }`}
-            >
-              {dir.id === 'flow' && <span className="absolute -top-1 -right-1 text-[8px]">✦</span>}
-              {dir.label}
-            </button>
-          ))}
+            {cosmicLayers.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('geometryLayer4', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).geometryLayer4 === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
