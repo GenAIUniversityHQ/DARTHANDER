@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Parameter Sliders Component - STAGE READY
 
-import { Flame, Diamond, Zap, Rocket, Music } from 'lucide-react';
+import { Flame, Diamond, Zap, Rocket, Music, Waves } from 'lucide-react';
 
 interface VisualState {
   overallIntensity: number;
@@ -9,6 +9,7 @@ interface VisualState {
   chaosFactor: number;
   motionSpeed: number;
   audioReactGeometry: number;
+  bassImpact: number;
   eclipsePhase: number;
   colorBrightness: number;
   depthFocalPoint: number;
@@ -17,6 +18,7 @@ interface VisualState {
   geometryMode?: string;
   motionDirection?: string;
   colorPalette?: string;
+  geometryLayer2?: string;
 }
 
 interface ParameterSlidersProps {
@@ -37,10 +39,11 @@ const sliders: SliderConfig[] = [
   { key: 'geometryComplexity', label: 'COMPLEXITY', color: 'from-cyan-400 via-blue-500 to-purple-500', icon: Diamond },
   { key: 'chaosFactor', label: 'CHAOS', color: 'from-red-500 via-orange-500 to-yellow-500', icon: Zap },
   { key: 'motionSpeed', label: 'SPEED', color: 'from-green-400 via-cyan-500 to-blue-500', icon: Rocket },
-  { key: 'audioReactGeometry', label: 'AUDIO', color: 'from-pink-500 via-purple-500 to-indigo-500', icon: Music },
+  { key: 'audioReactGeometry', label: 'AUDIO REACT', color: 'from-pink-500 via-purple-500 to-indigo-500', icon: Music },
+  { key: 'bassImpact', label: 'BASS IMPACT', color: 'from-red-600 via-red-500 to-orange-500', icon: Waves },
 ];
 
-// Geometry modes with colors
+// Primary geometry modes
 const geometryModes = [
   { id: 'stars', label: 'STARS', color: 'bg-purple-500' },
   { id: 'mandala', label: 'MANDALA', color: 'bg-amber-500' },
@@ -51,6 +54,37 @@ const geometryModes = [
   { id: 'void', label: 'VOID', color: 'bg-slate-600' },
 ];
 
+// Sacred / Ancient geometry layers
+const sacredGeometry = [
+  { id: 'flower-of-life', label: 'FLOWER OF LIFE', color: 'bg-amber-400' },
+  { id: 'metatron', label: 'METATRON', color: 'bg-violet-500' },
+  { id: 'sri-yantra', label: 'SRI YANTRA', color: 'bg-red-500' },
+  { id: 'torus', label: 'TORUS', color: 'bg-cyan-400' },
+  { id: 'vesica', label: 'VESICA', color: 'bg-blue-400' },
+  { id: 'seed-of-life', label: 'SEED', color: 'bg-green-400' },
+];
+
+// Quantum / Experiential layers
+const quantumGeometry = [
+  { id: 'quantum-field', label: 'QUANTUM', color: 'bg-indigo-500' },
+  { id: 'wave-function', label: 'WAVE', color: 'bg-blue-500' },
+  { id: 'particle-grid', label: 'PARTICLES', color: 'bg-cyan-500' },
+  { id: 'neural-net', label: 'NEURAL', color: 'bg-pink-500' },
+  { id: 'dna-helix', label: 'DNA', color: 'bg-green-500' },
+  { id: 'singularity', label: 'SINGULARITY', color: 'bg-purple-600' },
+];
+
+// Cosmic / Nebula layers
+const cosmicLayers = [
+  { id: 'nebula', label: 'NEBULA', color: 'bg-purple-500' },
+  { id: 'galaxy', label: 'GALAXY', color: 'bg-indigo-500' },
+  { id: 'supernova', label: 'SUPERNOVA', color: 'bg-orange-500' },
+  { id: 'black-hole', label: 'BLACK HOLE', color: 'bg-slate-700' },
+  { id: 'aurora', label: 'AURORA', color: 'bg-emerald-500' },
+  { id: 'cosmic-dust', label: 'COSMIC DUST', color: 'bg-pink-400' },
+  { id: 'wormhole', label: 'WORMHOLE', color: 'bg-violet-600' },
+];
+
 // Motion directions
 const motionDirs = [
   { id: 'outward', label: 'OUT', color: 'bg-cyan-500' },
@@ -59,17 +93,6 @@ const motionDirs = [
   { id: 'counter', label: 'CCW', color: 'bg-yellow-500' },
   { id: 'breathing', label: 'BREATH', color: 'bg-pink-500' },
   { id: 'still', label: 'STILL', color: 'bg-slate-500' },
-];
-
-// Color palettes with actual colors
-const colorPalettes = [
-  { id: 'cosmos', label: 'COSMOS', colors: ['#8B5CF6', '#EC4899'] },
-  { id: 'void', label: 'VOID', colors: ['#1e293b', '#334155'] },
-  { id: 'fire', label: 'FIRE', colors: ['#f97316', '#ef4444'] },
-  { id: 'ice', label: 'ICE', colors: ['#06b6d4', '#3b82f6'] },
-  { id: 'earth', label: 'EARTH', colors: ['#22c55e', '#eab308'] },
-  { id: 'neon', label: 'NEON', colors: ['#ff00ff', '#00ffff'] },
-  { id: 'sacred', label: 'SACRED', colors: ['#ffd700', '#8B5CF6'] },
 ];
 
 export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
@@ -122,7 +145,7 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
         );
       })}
 
-      {/* GEOMETRY MODE - Big colorful buttons */}
+      {/* PRIMARY GEOMETRY */}
       <div className="pt-3 border-t border-white/10">
         <h3 className="text-xs font-black text-white/60 tracking-widest mb-2">GEOMETRY</h3>
         <div className="flex flex-wrap gap-1.5">
@@ -138,6 +161,102 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
                          }`}
             >
               {mode.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* SACRED / ANCIENT GEOMETRY LAYER */}
+      <div className="pt-3 border-t border-white/10">
+        <h3 className="text-xs font-black text-white/60 tracking-widest mb-2">SACRED LAYER</h3>
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => onChange('geometryLayer2', 'none' as any)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
+                       transition-all duration-200 transform hover:scale-105 active:scale-95
+                       ${!state.geometryLayer2 || state.geometryLayer2 === 'none'
+                         ? 'bg-slate-600 text-white shadow-lg'
+                         : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                       }`}
+          >
+            NONE
+          </button>
+          {sacredGeometry.map((geo) => (
+            <button
+              key={geo.id}
+              onClick={() => onChange('geometryLayer2', geo.id as any)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
+                         transition-all duration-200 transform hover:scale-105 active:scale-95
+                         ${state.geometryLayer2 === geo.id
+                           ? `${geo.color} text-white shadow-lg`
+                           : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                         }`}
+            >
+              {geo.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* QUANTUM / EXPERIENTIAL LAYER */}
+      <div className="pt-3 border-t border-white/10">
+        <h3 className="text-xs font-black text-white/60 tracking-widest mb-2">QUANTUM LAYER</h3>
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => onChange('geometryLayer3', 'none' as any)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
+                       transition-all duration-200 transform hover:scale-105 active:scale-95
+                       ${!(state as any).geometryLayer3 || (state as any).geometryLayer3 === 'none'
+                         ? 'bg-slate-600 text-white shadow-lg'
+                         : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                       }`}
+          >
+            NONE
+          </button>
+          {quantumGeometry.map((geo) => (
+            <button
+              key={geo.id}
+              onClick={() => onChange('geometryLayer3', geo.id as any)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
+                         transition-all duration-200 transform hover:scale-105 active:scale-95
+                         ${(state as any).geometryLayer3 === geo.id
+                           ? `${geo.color} text-white shadow-lg`
+                           : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                         }`}
+            >
+              {geo.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* COSMIC / NEBULA LAYER */}
+      <div className="pt-3 border-t border-white/10">
+        <h3 className="text-xs font-black text-white/60 tracking-widest mb-2">COSMIC LAYER</h3>
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => onChange('geometryLayer4', 'none' as any)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
+                       transition-all duration-200 transform hover:scale-105 active:scale-95
+                       ${!(state as any).geometryLayer4 || (state as any).geometryLayer4 === 'none'
+                         ? 'bg-slate-600 text-white shadow-lg'
+                         : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                       }`}
+          >
+            NONE
+          </button>
+          {cosmicLayers.map((layer) => (
+            <button
+              key={layer.id}
+              onClick={() => onChange('geometryLayer4', layer.id as any)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
+                         transition-all duration-200 transform hover:scale-105 active:scale-95
+                         ${(state as any).geometryLayer4 === layer.id
+                           ? `${layer.color} text-white shadow-lg`
+                           : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                         }`}
+            >
+              {layer.label}
             </button>
           ))}
         </div>
@@ -159,30 +278,6 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
                          }`}
             >
               {dir.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* COLOR PALETTE - Show actual colors */}
-      <div className="pt-3 border-t border-white/10">
-        <h3 className="text-xs font-black text-white/60 tracking-widest mb-2">COLORS</h3>
-        <div className="flex flex-wrap gap-1.5">
-          {colorPalettes.map((palette) => (
-            <button
-              key={palette.id}
-              onClick={() => onChange('colorPalette', palette.id as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
-                         transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center gap-1.5
-                         ${state.colorPalette === palette.id
-                           ? 'ring-2 ring-white ring-offset-2 ring-offset-black'
-                           : 'hover:ring-1 hover:ring-white/50'
-                         }`}
-              style={{
-                background: `linear-gradient(135deg, ${palette.colors[0]}, ${palette.colors[1]})`
-              }}
-            >
-              <span className="text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{palette.label}</span>
             </button>
           ))}
         </div>

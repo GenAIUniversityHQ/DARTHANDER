@@ -46,6 +46,8 @@ export interface VisualState {
   geometryScale: number;
   geometryRotation: number;
   geometrySymmetry: number;
+  geometryLayer2: string;
+  geometryLayer3: string;
   colorPalette: string;
   colorSaturation: number;
   colorBrightness: number;
@@ -61,8 +63,10 @@ export interface VisualState {
   eclipsePhase: number;
   coronaIntensity: number;
   nebulaPresence: number;
+  cosmicDepth: number;
   overallIntensity: number;
   chaosFactor: number;
+  bassImpact: number;
   audioReactGeometry: number;
   audioReactColor: number;
   audioReactMotion: number;
@@ -102,6 +106,8 @@ export const DEFAULT_VISUAL_STATE: VisualState = {
   geometryScale: 1.0,
   geometryRotation: 0.0,
   geometrySymmetry: 6,
+  geometryLayer2: 'none',
+  geometryLayer3: 'none',
   colorPalette: 'cosmos',
   colorSaturation: 0.7,
   colorBrightness: 0.6,
@@ -117,8 +123,10 @@ export const DEFAULT_VISUAL_STATE: VisualState = {
   eclipsePhase: 0.0,
   coronaIntensity: 0.0,
   nebulaPresence: 0.2,
+  cosmicDepth: 0.5,
   overallIntensity: 0.4,
   chaosFactor: 0.0,
+  bassImpact: 0.5,
   audioReactGeometry: 0.3,
   audioReactColor: 0.2,
   audioReactMotion: 0.3,
