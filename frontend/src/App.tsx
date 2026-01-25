@@ -1,5 +1,5 @@
 // DARTHANDER Visual Consciousness Engine
-// Main Control Surface Application (Client-side Only - Netlify MVP)
+// STAGE READY - Built for Performance
 
 import { useEffect, useState, useRef } from 'react';
 import { useStore } from './store';
@@ -18,11 +18,13 @@ function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
+  const [activePreset, setActivePreset] = useState<string | null>(null);
 
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [hasAudioInRecording, setHasAudioInRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingIntervalRef = useRef<number | null>(null);
 
@@ -38,7 +40,6 @@ function App() {
     loadPreset,
     apiKey,
     setApiKey,
-    audioStream,
   } = useStore();
 
   // Initialize API key input from stored value
@@ -109,22 +110,24 @@ function App() {
 
   const handleLoadPreset = (preset: typeof presets[0]) => {
     loadPreset(preset);
-    setLastInterpretation(`Loaded: ${preset.name}`);
+    setActivePreset(preset.id);
+    setLastInterpretation(`🎨 ${preset.name}`);
   };
 
   const handleHold = () => {
     updateVisualParameter('motionSpeed', 0);
-    setLastInterpretation('HOLD');
+    setLastInterpretation('⏸️ HOLD');
   };
 
   const handleKill = () => {
     setVisualState({ ...visualState, overallIntensity: 0, starBrightness: 0, colorBrightness: 0 });
-    setLastInterpretation('KILL');
+    setLastInterpretation('🔴 KILL');
   };
 
   const handleReset = () => {
     setVisualState(DEFAULT_VISUAL_STATE);
-    setLastInterpretation('RESET');
+    setActivePreset(null);
+    setLastInterpretation('🔄 RESET');
   };
 
   const handleSaveApiKey = () => {
@@ -132,7 +135,7 @@ function App() {
     setShowSettings(false);
   };
 
-  // Recording functions
+  // Recording functions - FIXED: Get fresh audio stream from store
   const startRecording = () => {
     const canvas = document.querySelector('#preview-canvas') as HTMLCanvasElement;
     if (!canvas) return;
@@ -140,19 +143,37 @@ function App() {
     // Get video stream from canvas
     const videoStream = canvas.captureStream(30);
 
+    // Get FRESH audio stream from store state (not stale closure)
+    const currentAudioStream = useStore.getState().audioStream;
+
     // Combine video and audio streams if audio is available
     let combinedStream: MediaStream;
-    if (audioStream && audioStream.getAudioTracks().length > 0) {
-      // Create combined stream with video and audio tracks
+    if (currentAudioStream && currentAudioStream.getAudioTracks().length > 0) {
+      // Clone audio tracks to avoid issues
+      const audioTracks = currentAudioStream.getAudioTracks();
       combinedStream = new MediaStream([
         ...videoStream.getVideoTracks(),
-        ...audioStream.getAudioTracks(),
+        ...audioTracks,
       ]);
+      setHasAudioInRecording(true);
+      console.log('Recording with audio:', audioTracks.length, 'tracks');
     } else {
       combinedStream = videoStream;
+      setHasAudioInRecording(false);
+      console.log('Recording without audio - no audio stream available');
     }
 
-    const recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm; codecs=vp9' });
+    // Try to use the best codec available
+    let mimeType = 'video/webm; codecs=vp9,opus';
+    if (!MediaRecorder.isTypeSupported(mimeType)) {
+      mimeType = 'video/webm; codecs=vp8,opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'video/webm';
+      }
+    }
+    const options: MediaRecorderOptions = { mimeType };
+
+    const recorder = new MediaRecorder(combinedStream, options);
 
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) setRecordedChunks((prev) => [...prev, e.data]);
@@ -239,17 +260,17 @@ function App() {
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   return (
-    <div className="h-screen overflow-hidden cosmic-bg text-white font-mono flex flex-col">
+    <div className="h-screen overflow-hidden bg-black text-white font-sans flex flex-col">
       {/* Settings Modal */}
       {showSettings && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="glass-panel rounded-xl p-5 max-w-sm w-full">
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="text-sm font-bold text-neon-purple flex items-center gap-2">
-                <Key className="w-4 h-4" /> API Key
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+          <div className="bg-zinc-900 border border-white/20 rounded-2xl p-6 max-w-sm w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-black text-white flex items-center gap-2">
+                <Key className="w-5 h-5 text-purple-400" /> API Key
               </h2>
-              <button onClick={() => setShowSettings(false)} className="text-white/50 hover:text-white">
-                <X className="w-4 h-4" />
+              <button onClick={() => setShowSettings(false)} className="text-white/50 hover:text-white p-2">
+                <X className="w-5 h-5" />
               </button>
             </div>
             <input
@@ -257,100 +278,137 @@ function App() {
               value={apiKeyInput}
               onChange={(e) => setApiKeyInput(e.target.value)}
               placeholder="AIzaSy..."
-              className="w-full glass-input rounded-lg px-3 py-2 text-sm mb-3"
+              className="w-full bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-white mb-4 focus:border-purple-500 outline-none"
             />
-            <button onClick={handleSaveApiKey} className="w-full py-2 bg-neon-purple/30 border border-neon-purple/50 rounded-lg text-sm">
-              Save
+            <button
+              onClick={handleSaveApiKey}
+              className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-black hover:opacity-90 transition-opacity"
+            >
+              SAVE
             </button>
           </div>
         </div>
       )}
 
-      {/* Compact Header */}
-      <header className="glass-panel border-b border-neon-purple/20 px-4 py-2 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <h1 className="text-lg font-bold bg-gradient-to-r from-neon-purple to-neon-magenta bg-clip-text text-transparent">
+      {/* Header - BOLD and readable */}
+      <header className="bg-zinc-900/80 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-black bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent">
             DARTHANDER
           </h1>
-          <div className={`w-2 h-2 rounded-full ${apiKey ? 'bg-neon-cyan' : 'bg-yellow-500 animate-pulse'}`} />
+          <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold ${apiKey ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+            <div className={`w-2 h-2 rounded-full ${apiKey ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'}`} />
+            {apiKey ? 'AI READY' : 'NO KEY'}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Recording Controls */}
+        <div className="flex items-center gap-3">
+          {/* Recording Controls - BIG and clear */}
           {!isRecording ? (
-            <button onClick={startRecording} className="px-2 py-1 glass-button rounded text-[10px] flex items-center gap-1 text-neon-red hover:shadow-glow-red">
-              <Video className="w-3 h-3" /> REC
+            <button
+              onClick={startRecording}
+              className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-xl text-sm font-black flex items-center gap-2 transition-all hover:scale-105"
+            >
+              <Video className="w-4 h-4" /> REC
             </button>
           ) : (
-            <button onClick={stopRecording} className="px-2 py-1 bg-neon-red/30 border border-neon-red rounded text-[10px] flex items-center gap-1 text-neon-red animate-pulse">
-              <Square className="w-3 h-3" /> {formatTime(recordingTime)}
+            <button
+              onClick={stopRecording}
+              className="px-4 py-2 bg-red-600 rounded-xl text-sm font-black flex items-center gap-2 animate-pulse"
+            >
+              <Square className="w-4 h-4" /> {formatTime(recordingTime)}
+              {hasAudioInRecording && <span className="text-[10px] opacity-75">🔊</span>}
             </button>
           )}
 
           {recordedChunks.length > 0 && !isRecording && (
-            <button onClick={downloadRecording} className="px-2 py-1 glass-button rounded text-[10px] flex items-center gap-1 text-neon-cyan hover:shadow-glow-cyan">
-              <Download className="w-3 h-3" /> SAVE
+            <button
+              onClick={downloadRecording}
+              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-xl text-sm font-black flex items-center gap-2 transition-all hover:scale-105"
+            >
+              <Download className="w-4 h-4" /> SAVE
             </button>
           )}
 
           {/* Popout Display */}
-          <button onClick={handlePopout} className="px-2 py-1 glass-button rounded text-[10px] flex items-center gap-1 text-neon-magenta hover:shadow-glow-magenta" title="Open display window (F)">
-            <ExternalLink className="w-3 h-3" /> DISPLAY
+          <button
+            onClick={handlePopout}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-xl text-sm font-black flex items-center gap-2 transition-all hover:scale-105"
+            title="Open display window (F)"
+          >
+            <ExternalLink className="w-4 h-4" /> DISPLAY
           </button>
 
-          <button onClick={() => setShowSettings(true)} className="p-1.5 glass-button rounded" title="Settings">
-            <Settings className="w-3.5 h-3.5" />
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
+            title="Settings"
+          >
+            <Settings className="w-5 h-5" />
           </button>
         </div>
       </header>
 
-      {/* Main Content - Horizontal Layout */}
+      {/* Main Content - Split Layout */}
       <div className="flex-1 flex min-h-0">
-        {/* Left: Preview */}
-        <div className="w-[45%] p-2 flex flex-col min-h-0">
-          <div className="flex-1 min-h-0">
+        {/* Left: VISUALIZER - The Star of the Show */}
+        <div className="w-1/2 p-3 flex flex-col min-h-0">
+          <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-purple-500/20">
             <PreviewMonitor state={visualState} canvasId="preview-canvas" />
           </div>
 
-          {/* Prompt Bar */}
-          <div className="mt-2 glass-panel rounded-lg p-2 flex items-center gap-2">
+          {/* Prompt Bar - Clean and simple */}
+          <div className="mt-3 bg-zinc-900/80 backdrop-blur rounded-2xl p-3 flex items-center gap-3 border border-white/10">
             <VoiceInput isActive={isVoiceActive} onToggle={() => setIsVoiceActive(!isVoiceActive)} onTranscription={handlePromptSubmit} />
             <div className="flex-1">
-              <PromptInput onSubmit={handlePromptSubmit} compact />
+              <PromptInput onSubmit={handlePromptSubmit} placeholder="Type a command..." compact />
             </div>
-            <span className={`text-[9px] truncate max-w-[150px] ${isProcessing ? 'text-neon-cyan animate-pulse' : 'text-neon-magenta'}`}>
+            <div className={`text-sm font-bold px-3 py-1 rounded-lg ${isProcessing ? 'bg-cyan-500/20 text-cyan-400 animate-pulse' : 'bg-white/5 text-white/60'}`}>
               {lastInterpretation || 'Ready'}
-            </span>
+            </div>
           </div>
         </div>
 
-        {/* Right: Controls */}
-        <div className="w-[55%] p-2 flex flex-col gap-2 min-h-0 overflow-y-auto">
-          {/* Presets + Actions Row */}
-          <div className="glass-panel rounded-lg p-2">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[9px] text-neon-purple/60 tracking-widest">PRESETS</span>
-              <div className="flex gap-1">
-                <button onClick={handleHold} className="px-2 py-1 glass-button rounded text-[9px] text-neon-cyan">HOLD</button>
-                <button onClick={handleKill} className="px-2 py-1 bg-neon-red/10 border border-neon-red/30 rounded text-[9px] text-neon-red">KILL</button>
-                <button onClick={handleReset} className="px-2 py-1 glass-button rounded text-[9px] text-neon-purple">RESET</button>
-              </div>
-            </div>
-            <PresetGrid presets={presets} onSelect={handleLoadPreset} currentPreset={null} />
+        {/* Right: CONTROLS - Big and Bold */}
+        <div className="w-1/2 p-3 flex flex-col gap-3 min-h-0 overflow-y-auto">
+          {/* ACTION BUTTONS - HUGE */}
+          <div className="flex gap-2">
+            <button
+              onClick={handleHold}
+              className="flex-1 py-4 bg-cyan-600 hover:bg-cyan-500 rounded-xl text-lg font-black transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              ⏸️ HOLD
+            </button>
+            <button
+              onClick={handleKill}
+              className="flex-1 py-4 bg-red-600 hover:bg-red-500 rounded-xl text-lg font-black transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              🔴 KILL
+            </button>
+            <button
+              onClick={handleReset}
+              className="flex-1 py-4 bg-purple-600 hover:bg-purple-500 rounded-xl text-lg font-black transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              🔄 RESET
+            </button>
           </div>
 
-          {/* Parameters */}
-          <div className="glass-panel rounded-lg p-2 flex-1 min-h-0 overflow-y-auto">
-            <span className="text-[9px] text-neon-purple/60 tracking-widest">CONTROLS</span>
-            <ParameterSliders state={visualState} onChange={(p, v) => updateVisualParameter(p, v)} compact />
+          {/* PRESETS - Colorful Grid */}
+          <div className="bg-zinc-900/80 backdrop-blur rounded-2xl p-4 border border-white/10">
+            <h2 className="text-sm font-black text-white/60 tracking-widest mb-3">PRESETS</h2>
+            <PresetGrid presets={presets} onSelect={handleLoadPreset} currentPreset={presets.find(p => p.id === activePreset) || null} />
           </div>
 
-          {/* Audio */}
-          <div className="glass-panel rounded-lg p-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[9px] text-neon-purple/60 tracking-widest">AUDIO</span>
-              <AudioSourceSelector />
-            </div>
+          {/* SLIDERS & CONTROLS */}
+          <div className="bg-zinc-900/80 backdrop-blur rounded-2xl p-4 border border-white/10 flex-1 min-h-0 overflow-y-auto">
+            <h2 className="text-sm font-black text-white/60 tracking-widest mb-2">CONTROLS</h2>
+            <ParameterSliders state={visualState} onChange={(p, v) => updateVisualParameter(p, v)} />
+          </div>
+
+          {/* AUDIO - Clear and prominent */}
+          <div className="bg-zinc-900/80 backdrop-blur rounded-2xl p-4 border border-white/10">
+            <h2 className="text-sm font-black text-white/60 tracking-widest mb-3">AUDIO SOURCE</h2>
+            <AudioSourceSelector />
           </div>
         </div>
       </div>
