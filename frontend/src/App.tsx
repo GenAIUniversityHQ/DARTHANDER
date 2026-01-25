@@ -92,11 +92,295 @@ function App() {
     };
   }, [popoutWindow]);
 
-  // Handle prompt submission
+  // ============================================
+  // REAL-TIME VOICE COMMAND PROCESSOR
+  // Direct keyword mapping for instant response
+  // ============================================
+  const processVoiceCommand = (text: string): boolean => {
+    const cmd = text.toLowerCase().trim();
+    const words = cmd.split(/\s+/);
+
+    // --- CONTROL COMMANDS ---
+    if (cmd.includes('hold') || cmd.includes('freeze') || cmd.includes('pause')) {
+      handleHold();
+      return true;
+    }
+    if (cmd.includes('kill') || cmd.includes('black') || cmd.includes('off')) {
+      handleKill();
+      return true;
+    }
+    if (cmd.includes('go') || cmd.includes('resume') || cmd.includes('play') || cmd.includes('start')) {
+      handleGo();
+      return true;
+    }
+    if (cmd.includes('reset') || cmd.includes('default')) {
+      handleReset();
+      return true;
+    }
+
+    // --- PRESETS ---
+    const presetMap: Record<string, string> = {
+      'awe': 'awe', 'wonder': 'awe', 'stargazing': 'awe',
+      'cosmos': 'cosmos', 'cosmic': 'cosmos', 'space': 'cosmos',
+      'portal': 'portal', 'vortex': 'portal',
+      'void': 'void', 'dark': 'void', 'darkness': 'void',
+      'mandala': 'mandala', 'sacred': 'mandala',
+      'eclipse': 'eclipse', 'sun': 'eclipse',
+      'fire': 'fire', 'flame': 'fire', 'inferno': 'fire',
+      'ice': 'ice', 'frozen': 'ice', 'cold': 'ice',
+      'fractal': 'fractal', 'fractals': 'fractal',
+      'chaos': 'chaos', 'chaotic': 'chaos',
+      'zen': 'zen', 'calm': 'zen', 'peaceful': 'zen',
+    };
+    for (const [keyword, presetId] of Object.entries(presetMap)) {
+      if (cmd.includes(keyword)) {
+        const preset = presets.find(p => p.id === presetId);
+        if (preset) {
+          handleLoadPreset(preset);
+          return true;
+        }
+      }
+    }
+
+    // --- GEOMETRY MODES ---
+    const geometryMap: Record<string, string> = {
+      'stars': 'stars', 'star': 'stars', 'starfield': 'stars',
+      'mandala': 'mandala', 'mandalas': 'mandala',
+      'hexagon': 'hexagon', 'hex': 'hexagon', 'hexagons': 'hexagon',
+      'fractal': 'fractal', 'fractals': 'fractal',
+      'spiral': 'spiral', 'spirals': 'spiral',
+      'tunnel': 'tunnel', 'tunnels': 'tunnel',
+      'void': 'void',
+      'fibonacci': 'fibonacci', 'fib': 'fibonacci', 'golden': 'fibonacci',
+      'chaos field': 'chaos-field', 'chaos': 'chaos-field',
+    };
+    for (const [keyword, mode] of Object.entries(geometryMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryMode', mode);
+        setLastInterpretation(`🔷 ${mode.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- SACRED GEOMETRY LAYER ---
+    const sacredMap: Record<string, string> = {
+      'flower': 'flower-of-life', 'flower of life': 'flower-of-life',
+      'metatron': 'metatron', 'metatrons': 'metatron',
+      'sri yantra': 'sri-yantra', 'sri': 'sri-yantra', 'yantra': 'sri-yantra',
+      'torus': 'torus',
+      'vesica': 'vesica', 'vesica piscis': 'vesica',
+      'seed': 'seed-of-life', 'seed of life': 'seed-of-life',
+      'merkaba': 'merkaba', 'merkabah': 'merkaba',
+      'phi': 'golden-ratio', 'golden ratio': 'golden-ratio',
+    };
+    for (const [keyword, layer] of Object.entries(sacredMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryLayer2', layer);
+        setLastInterpretation(`✨ SACRED: ${layer.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- QUANTUM LAYER ---
+    const quantumMap: Record<string, string> = {
+      'quantum': 'quantum-field', 'quantum field': 'quantum-field',
+      'wave': 'wave-function', 'wave function': 'wave-function', 'waves': 'wave-function',
+      'particles': 'particle-grid', 'particle': 'particle-grid',
+      'neural': 'neural-net', 'neural net': 'neural-net', 'neurons': 'neural-net',
+      'dna': 'dna-helix', 'helix': 'dna-helix',
+      'singularity': 'singularity',
+      'entangle': 'entanglement', 'entanglement': 'entanglement',
+      'superposition': 'superposition', 'super': 'superposition',
+    };
+    for (const [keyword, layer] of Object.entries(quantumMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryLayer3', layer);
+        setLastInterpretation(`⚛️ QUANTUM: ${layer.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- COSMIC LAYER ---
+    const cosmicMap: Record<string, string> = {
+      'surf': 'cosmic-surf', 'surfing': 'cosmic-surf', 'cosmic surf': 'cosmic-surf',
+      'streaks': 'star-streaks', 'star streaks': 'star-streaks',
+      'fluid': 'fluid-flow', 'flow': 'fluid-flow',
+      'nebula': 'nebula', 'nebulae': 'nebula',
+      'galaxy': 'galaxy', 'galaxies': 'galaxy',
+      'aurora': 'aurora', 'northern lights': 'aurora',
+      'wormhole': 'wormhole',
+      'pulsar': 'pulsar',
+      'web': 'cosmic-web', 'cosmic web': 'cosmic-web',
+    };
+    for (const [keyword, layer] of Object.entries(cosmicMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryLayer4', layer);
+        setLastInterpretation(`🌌 COSMIC: ${layer.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- LIFEFORCE LAYER ---
+    const lifeMap: Record<string, string> = {
+      'heartbeat': 'heartbeat', 'heart': 'heartbeat',
+      'breath': 'breath', 'breathing': 'breath',
+      'neurons': 'neurons', 'neuron': 'neurons', 'brain': 'neurons',
+      'cells': 'cells', 'cell': 'cells',
+      'mycelium': 'mycelium', 'mushroom': 'mycelium', 'fungal': 'mycelium',
+      'biolum': 'biolum', 'bioluminescence': 'biolum', 'glow': 'biolum',
+      'roots': 'roots', 'root': 'roots', 'tree': 'roots',
+      'jellyfish': 'jellyfish', 'jelly': 'jellyfish',
+    };
+    for (const [keyword, layer] of Object.entries(lifeMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryLayer5', layer);
+        setLastInterpretation(`🧬 LIFE: ${layer.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- MOTION DIRECTIONS ---
+    const motionMap: Record<string, string> = {
+      'flow': 'flow', 'dance': 'flow', 'dancer': 'flow',
+      'outward': 'outward', 'out': 'outward', 'expand': 'outward',
+      'inward': 'inward', 'in': 'inward', 'collapse': 'inward',
+      'clockwise': 'clockwise', 'cw': 'clockwise',
+      'counter': 'counter', 'ccw': 'counter', 'counterclockwise': 'counter',
+      'breathing': 'breathing',
+      'still': 'still', 'stop': 'still', 'stationary': 'still',
+    };
+    for (const [keyword, direction] of Object.entries(motionMap)) {
+      if (words.includes(keyword)) {
+        updateVisualParameter('motionDirection', direction);
+        setLastInterpretation(`🌀 MOTION: ${direction.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- COLOR PALETTES ---
+    const colorMap: Record<string, string> = {
+      'cosmos': 'cosmos', 'purple': 'cosmos',
+      'void': 'void', 'black': 'void',
+      'fire': 'fire', 'red': 'fire', 'orange': 'fire',
+      'ice': 'ice', 'blue': 'ice', 'cyan': 'ice',
+      'earth': 'earth', 'green': 'earth',
+      'neon': 'neon', 'pink': 'neon', 'magenta': 'neon',
+      'sacred': 'sacred', 'gold': 'sacred', 'golden': 'sacred',
+      'ocean': 'ocean', 'sea': 'ocean',
+      'sunset': 'sunset', 'warm': 'sunset',
+    };
+    for (const [keyword, palette] of Object.entries(colorMap)) {
+      if (cmd.includes(keyword) && (cmd.includes('color') || cmd.includes('palette') || words.length <= 2)) {
+        updateVisualParameter('colorPalette', palette);
+        setLastInterpretation(`🎨 COLOR: ${palette.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- INTENSITY CONTROLS ---
+    if (cmd.includes('more') || cmd.includes('increase') || cmd.includes('up') || cmd.includes('higher') || cmd.includes('intense')) {
+      const currentIntensity = visualState.overallIntensity || 0.5;
+      updateVisualParameter('overallIntensity', Math.min(1, currentIntensity + 0.15));
+      setLastInterpretation('⬆️ INTENSITY UP');
+      return true;
+    }
+    if (cmd.includes('less') || cmd.includes('decrease') || cmd.includes('down') || cmd.includes('lower') || cmd.includes('subtle')) {
+      const currentIntensity = visualState.overallIntensity || 0.5;
+      updateVisualParameter('overallIntensity', Math.max(0, currentIntensity - 0.15));
+      setLastInterpretation('⬇️ INTENSITY DOWN');
+      return true;
+    }
+
+    // --- SPEED CONTROLS ---
+    if (cmd.includes('faster') || cmd.includes('speed up') || cmd.includes('quick')) {
+      const currentSpeed = visualState.motionSpeed || 0.3;
+      updateVisualParameter('motionSpeed', Math.min(1, currentSpeed + 0.15));
+      setLastInterpretation('⚡ FASTER');
+      return true;
+    }
+    if (cmd.includes('slower') || cmd.includes('slow down') || cmd.includes('slow')) {
+      const currentSpeed = visualState.motionSpeed || 0.3;
+      updateVisualParameter('motionSpeed', Math.max(0, currentSpeed - 0.15));
+      setLastInterpretation('🐢 SLOWER');
+      return true;
+    }
+
+    // --- LAYER OFF COMMANDS ---
+    if (cmd.includes('sacred off') || cmd.includes('no sacred') || cmd.includes('remove sacred')) {
+      updateVisualParameter('geometryLayer2', 'none');
+      setLastInterpretation('❌ SACRED OFF');
+      return true;
+    }
+    if (cmd.includes('quantum off') || cmd.includes('no quantum') || cmd.includes('remove quantum')) {
+      updateVisualParameter('geometryLayer3', 'none');
+      setLastInterpretation('❌ QUANTUM OFF');
+      return true;
+    }
+    if (cmd.includes('cosmic off') || cmd.includes('no cosmic') || cmd.includes('remove cosmic')) {
+      updateVisualParameter('geometryLayer4', 'none');
+      setLastInterpretation('❌ COSMIC OFF');
+      return true;
+    }
+    if (cmd.includes('life off') || cmd.includes('no life') || cmd.includes('remove life')) {
+      updateVisualParameter('geometryLayer5', 'none');
+      setLastInterpretation('❌ LIFE OFF');
+      return true;
+    }
+    if (cmd.includes('clear') || cmd.includes('all off') || cmd.includes('clean')) {
+      updateVisualParameter('geometryLayer2', 'none');
+      updateVisualParameter('geometryLayer3', 'none');
+      updateVisualParameter('geometryLayer4', 'none');
+      updateVisualParameter('geometryLayer5', 'none');
+      setLastInterpretation('🧹 LAYERS CLEARED');
+      return true;
+    }
+
+    // --- ECLIPSE/CORONA ---
+    if (cmd.includes('eclipse')) {
+      updateVisualParameter('eclipsePhase', 0.7);
+      updateVisualParameter('coronaIntensity', 0.6);
+      setLastInterpretation('🌑 ECLIPSE');
+      return true;
+    }
+    if (cmd.includes('corona') || cmd.includes('glow')) {
+      const current = visualState.coronaIntensity || 0;
+      updateVisualParameter('coronaIntensity', Math.min(1, current + 0.2));
+      setLastInterpretation('☀️ CORONA UP');
+      return true;
+    }
+
+    // --- CHAOS ---
+    if (cmd.includes('chaos') || cmd.includes('chaotic') || cmd.includes('wild')) {
+      const current = visualState.chaosFactor || 0;
+      updateVisualParameter('chaosFactor', Math.min(1, current + 0.2));
+      setLastInterpretation('🌪️ CHAOS UP');
+      return true;
+    }
+
+    // --- BASS IMPACT ---
+    if (cmd.includes('bass') || cmd.includes('punch') || cmd.includes('impact')) {
+      const current = visualState.bassImpact || 0.5;
+      updateVisualParameter('bassImpact', Math.min(1, current + 0.2));
+      setLastInterpretation('🔊 BASS IMPACT UP');
+      return true;
+    }
+
+    return false; // Not a recognized command - will fall through to AI
+  };
+
+  // Handle prompt submission (voice or typed)
   const handlePromptSubmit = async (prompt: string) => {
-    if (!prompt.trim() || isProcessing) return;
+    if (!prompt.trim()) return;
+
+    // Try instant keyword processing first
+    if (processVoiceCommand(prompt)) {
+      return; // Command was handled instantly
+    }
+
+    // Fall back to AI interpretation for complex commands
+    if (isProcessing) return;
     setIsProcessing(true);
-    setLastInterpretation('Processing...');
+    setLastInterpretation('🤖 AI thinking...');
 
     try {
       const result = await interpretPrompt(prompt, visualState, apiKey || undefined);
