@@ -582,17 +582,36 @@ function App() {
       return true;
     }
 
-    // --- ECLIPSE/CORONA ---
+    // --- ECLIPSE/CORONA/BEAMS ---
+    // Turn OFF beams/corona/rays
+    if (cmd.includes('beams off') || cmd.includes('no beams') || cmd.includes('rays off') || cmd.includes('no rays')) {
+      updateVisualParameter('coronaIntensity', 0);
+      setLastInterpretation('BEAMS OFF');
+      return true;
+    }
+    if (cmd.includes('corona off') || cmd.includes('no corona')) {
+      updateVisualParameter('coronaIntensity', 0);
+      setLastInterpretation('CORONA OFF');
+      return true;
+    }
+    if (cmd.includes('eclipse off') || cmd.includes('no eclipse')) {
+      updateVisualParameter('eclipsePhase', 0);
+      updateVisualParameter('coronaIntensity', 0);
+      setLastInterpretation('ECLIPSE OFF');
+      return true;
+    }
+    // Turn ON eclipse
     if (cmd.includes('eclipse')) {
       updateVisualParameter('eclipsePhase', 0.7);
       updateVisualParameter('coronaIntensity', 0.6);
-      setLastInterpretation('🌑 ECLIPSE');
+      setLastInterpretation('ECLIPSE ON');
       return true;
     }
-    if (cmd.includes('corona') || cmd.includes('glow')) {
+    // Increase corona/beams
+    if (cmd.includes('corona') || cmd.includes('glow') || cmd.includes('beams') || cmd.includes('rays')) {
       const current = visualState.coronaIntensity || 0;
       updateVisualParameter('coronaIntensity', Math.min(1, current + 0.2));
-      setLastInterpretation('☀️ CORONA UP');
+      setLastInterpretation('CORONA UP');
       return true;
     }
 
