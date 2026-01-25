@@ -33,8 +33,9 @@ interface PreviewMonitorProps {
   canvasId?: string;
 }
 
-// Color palettes
+// Color palettes - expanded with full spectrum
 const palettes: Record<string, { bg: string; colors: string[] }> = {
+  // Original
   cosmos: { bg: '#050510', colors: ['#8B5CF6', '#EC4899', '#06B6D4', '#3B82F6'] },
   void: { bg: '#000000', colors: ['#1a1a2e', '#16213e', '#0f3460', '#1a1a2e'] },
   fire: { bg: '#0a0000', colors: ['#ff4500', '#ff6b35', '#f7931e', '#ffcc00'] },
@@ -44,6 +45,31 @@ const palettes: Record<string, { bg: string; colors: string[] }> = {
   sacred: { bg: '#0f0a14', colors: ['#ffd700', '#8B5CF6', '#ff69b4', '#00ced1'] },
   ocean: { bg: '#000814', colors: ['#00b4d8', '#0077b6', '#90e0ef', '#48cae4', '#023e8a'] },
   sunset: { bg: '#0a0505', colors: ['#ff6b6b', '#feca57', '#ff9f43', '#ee5a24', '#f368e0'] },
+  // NEW: Full spectrum rainbow
+  spectrum: { bg: '#050505', colors: ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3'] },
+  rainbow: { bg: '#000000', colors: ['#ff1744', '#ff9100', '#ffea00', '#00e676', '#00b0ff', '#d500f9', '#f50057'] },
+  // NEW: Light / Bright palettes
+  light: { bg: '#0a0a14', colors: ['#ffffff', '#f0f0ff', '#e0e0ff', '#d0d0ff', '#c0c0ff'] },
+  ethereal: { bg: '#050510', colors: ['#e8d5ff', '#d5e8ff', '#ffe8d5', '#d5ffe8', '#ffd5e8'] },
+  pastel: { bg: '#08080f', colors: ['#ffb3ba', '#bae1ff', '#baffc9', '#ffffba', '#ffdfba'] },
+  // NEW: Ice / Cold variations
+  glacier: { bg: '#000510', colors: ['#b3e5fc', '#4fc3f7', '#03a9f4', '#0288d1', '#01579b'] },
+  arctic: { bg: '#000814', colors: ['#e1f5fe', '#b3e5fc', '#81d4fa', '#4fc3f7', '#29b6f6'] },
+  frost: { bg: '#000a0f', colors: ['#e0f7fa', '#b2ebf2', '#80deea', '#4dd0e1', '#26c6da'] },
+  // NEW: Dark red / purple prism
+  bloodmoon: { bg: '#0a0000', colors: ['#4a0000', '#6b0000', '#8b0000', '#b20000', '#d40000'] },
+  darkprism: { bg: '#0a000a', colors: ['#4a004a', '#6b006b', '#8b008b', '#9400d3', '#ba55d3'] },
+  crimson: { bg: '#050005', colors: ['#8b0000', '#9b111e', '#722f37', '#dc143c', '#ff1493'] },
+  amethyst: { bg: '#050010', colors: ['#4b0082', '#6a0dad', '#8b008b', '#9932cc', '#ba55d3'] },
+  obsidian: { bg: '#000000', colors: ['#1a0a1a', '#2a0a2a', '#3a0a3a', '#4a0a4a', '#5a0a5a'] },
+  // NEW: Black and white / Monochrome
+  monochrome: { bg: '#000000', colors: ['#ffffff', '#cccccc', '#999999', '#666666', '#333333'] },
+  noir: { bg: '#000000', colors: ['#f5f5f5', '#e0e0e0', '#9e9e9e', '#616161', '#212121'] },
+  silver: { bg: '#050505', colors: ['#c0c0c0', '#a9a9a9', '#808080', '#696969', '#d3d3d3'] },
+  // NEW: Mystical / Ancient
+  ancient: { bg: '#0a0805', colors: ['#d4af37', '#c5a028', '#b8860b', '#daa520', '#ffd700'] },
+  mystic: { bg: '#0a050f', colors: ['#9370db', '#8a2be2', '#9400d3', '#8b008b', '#4b0082'] },
+  alchemical: { bg: '#050500', colors: ['#ffd700', '#c0c0c0', '#cd7f32', '#b87333', '#8b4513'] },
 };
 
 // Flow state for dancer-like movement
@@ -270,6 +296,30 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
       if (layer5 && layer5 !== 'none') {
         ctx.globalAlpha = 0.5;
         drawLifeforceLayer(ctx, layer5, width, height, bass, mid, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === ANCIENT WISDOM LAYER ===
+      const layer6 = (state as any)?.geometryLayer6;
+      if (layer6 && layer6 !== 'none') {
+        ctx.globalAlpha = 0.6;
+        drawAncientLayer(ctx, layer6, width, height, bass, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === DIMENSIONAL LAYER (4D+) ===
+      const layer7 = (state as any)?.geometryLayer7;
+      if (layer7 && layer7 !== 'none') {
+        ctx.globalAlpha = 0.6;
+        drawDimensionalLayer(ctx, layer7, width, height, bass, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === CONSCIOUSNESS LAYER ===
+      const layer8 = (state as any)?.geometryLayer8;
+      if (layer8 && layer8 !== 'none') {
+        ctx.globalAlpha = 0.6;
+        drawConsciousnessLayer(ctx, layer8, width, height, bass, beat, timeRef.current, palette);
         ctx.globalAlpha = 1;
       }
 
@@ -1171,6 +1221,1157 @@ function drawLifeforceLayer(ctx: CanvasRenderingContext2D, type: string, w: numb
       ctx.strokeStyle = `rgba(180, 100, 255, ${0.4 - i * 0.03})`;
       ctx.lineWidth = 3 - i * 0.2;
       ctx.stroke();
+    }
+  }
+
+  // DNA Helix - double helix structure
+  if (type === 'dna-helix') {
+    const helixLength = 200;
+    for (let i = 0; i < helixLength; i += 5) {
+      const y = i - helixLength / 2;
+      const twist = (i + time * 0.05) * 0.1;
+      const x1 = Math.sin(twist) * 40;
+      const x2 = Math.sin(twist + Math.PI) * 40;
+      const z1 = Math.cos(twist);
+      const z2 = Math.cos(twist + Math.PI);
+
+      // Backbone strands
+      ctx.beginPath();
+      ctx.arc(x1, y, 4 + z1 * 2 + bass * 3, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(100, 200, 255, ${0.5 + z1 * 0.3})`;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(x2, y, 4 + z2 * 2 + bass * 3, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 100, 150, ${0.5 + z2 * 0.3})`;
+      ctx.fill();
+
+      // Base pairs (rungs)
+      if (i % 15 === 0) {
+        ctx.beginPath();
+        ctx.moveTo(x1, y);
+        ctx.lineTo(x2, y);
+        ctx.strokeStyle = `rgba(200, 255, 100, ${0.4 + beat * 0.3})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Kundalini - rising serpent energy through chakras
+  if (type === 'kundalini') {
+    const chakraColors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#00bfff', '#4b0082', '#8b00ff'];
+    const rise = (time * 0.001) % 1;
+
+    // Serpent spine
+    ctx.beginPath();
+    for (let i = 0; i <= 100; i++) {
+      const t = i / 100;
+      const y = h * 0.4 - t * h * 0.8;
+      const wave = Math.sin(t * Math.PI * 3 + time * 0.005) * 30 * (1 - t * 0.5);
+      if (i === 0) ctx.moveTo(wave, y);
+      else ctx.lineTo(wave, y);
+    }
+    ctx.strokeStyle = `rgba(255, 100, 50, ${0.6 + bass * 0.3})`;
+    ctx.lineWidth = 4 + beat * 3;
+    ctx.stroke();
+
+    // Chakra points
+    chakraColors.forEach((color, i) => {
+      const y = h * 0.35 - (i / 6) * h * 0.7;
+      const active = rise > i / 7;
+      const size = active ? 15 + bass * 10 : 8;
+
+      const glow = ctx.createRadialGradient(0, y, 0, 0, y, size * 2);
+      glow.addColorStop(0, color + (active ? 'ff' : '60'));
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.fillRect(-size * 2, y - size * 2, size * 4, size * 4);
+    });
+  }
+
+  // Aura - layered energy field
+  if (type === 'aura') {
+    const auraColors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd'];
+    for (let layer = auraColors.length - 1; layer >= 0; layer--) {
+      const baseR = 60 + layer * 35;
+      const breathe = Math.sin(time * 0.002 + layer * 0.5) * 10;
+      const r = baseR + breathe + bass * 20;
+
+      ctx.beginPath();
+      for (let a = 0; a < Math.PI * 2; a += 0.05) {
+        const wobble = Math.sin(a * 5 + time * 0.003 + layer) * 5;
+        const px = Math.cos(a) * (r + wobble);
+        const py = Math.sin(a) * (r + wobble) * 1.3; // Oval shape
+        if (a === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = auraColors[layer] + '20';
+      ctx.fill();
+      ctx.strokeStyle = auraColors[layer] + '40';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  // Cymatics - sound made visible (standing wave patterns)
+  if (type === 'cymatics') {
+    const freq = 3 + Math.floor(bass * 5); // Frequency based on bass
+    for (let r = 20; r < Math.min(w, h) * 0.4; r += 15) {
+      ctx.beginPath();
+      for (let a = 0; a < Math.PI * 2; a += 0.02) {
+        const wave = Math.sin(a * freq + time * 0.003) * (10 + bass * 15);
+        const px = Math.cos(a) * (r + wave);
+        const py = Math.sin(a) * (r + wave);
+        if (a === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = palette.colors[Math.floor(r / 20) % palette.colors.length] + '60';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // Nodal points
+    for (let i = 0; i < freq * 2; i++) {
+      const angle = (i / (freq * 2)) * Math.PI * 2;
+      const dist = 80 + bass * 40;
+      const x = Math.cos(angle) * dist;
+      const y = Math.sin(angle) * dist;
+      ctx.beginPath();
+      ctx.arc(x, y, 5 + beat * 5, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[0] + 'aa';
+      ctx.fill();
+    }
+  }
+}
+
+// ============================================
+// ANCIENT WISDOM LAYER - Cultural sacred symbols
+// ============================================
+function drawAncientLayer(ctx: CanvasRenderingContext2D, type: string, _w: number, _h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
+
+  // Ankh - Egyptian key of life
+  if (type === 'ankh') {
+    const scale = 1 + bass * 0.3;
+    ctx.save();
+    ctx.scale(scale, scale);
+
+    // Loop (top circle)
+    ctx.beginPath();
+    ctx.ellipse(0, -60, 25, 35, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    // Vertical staff
+    ctx.beginPath();
+    ctx.moveTo(0, -25);
+    ctx.lineTo(0, 80);
+    ctx.stroke();
+
+    // Horizontal arms
+    ctx.beginPath();
+    ctx.moveTo(-35, 0);
+    ctx.lineTo(35, 0);
+    ctx.stroke();
+
+    // Inner glow
+    const glow = ctx.createRadialGradient(0, -60, 0, 0, -60, 50);
+    glow.addColorStop(0, palette.colors[0] + '40');
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.fillRect(-60, -110, 120, 100);
+
+    ctx.restore();
+  }
+
+  // Eye of Horus - Egyptian protection symbol
+  if (type === 'eye-of-horus') {
+    const scale = 1 + bass * 0.2;
+    ctx.save();
+    ctx.scale(scale, scale);
+
+    // Eye outline
+    ctx.beginPath();
+    ctx.moveTo(-60, 0);
+    ctx.quadraticCurveTo(0, -30, 60, 0);
+    ctx.quadraticCurveTo(0, 30, -60, 0);
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Iris
+    ctx.beginPath();
+    ctx.arc(0, 0, 20, 0, Math.PI * 2);
+    ctx.fillStyle = palette.colors[1] + 'aa';
+    ctx.fill();
+
+    // Pupil
+    ctx.beginPath();
+    ctx.arc(0, 0, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#000000';
+    ctx.fill();
+
+    // Falcon markings below
+    ctx.beginPath();
+    ctx.moveTo(-10, 30);
+    ctx.quadraticCurveTo(-20, 60, -10, 90);
+    ctx.strokeStyle = palette.colors[0] + 'aa';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(10, 30);
+    ctx.lineTo(30, 50);
+    ctx.lineTo(50, 50);
+    ctx.stroke();
+
+    // Glow on pulse
+    if (beat > 0.5) {
+      const eyeGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 40);
+      eyeGlow.addColorStop(0, palette.colors[0] + '60');
+      eyeGlow.addColorStop(1, 'transparent');
+      ctx.fillStyle = eyeGlow;
+      ctx.fillRect(-50, -50, 100, 100);
+    }
+
+    ctx.restore();
+  }
+
+  // Ouroboros - serpent eating its tail
+  if (type === 'ouroboros') {
+    const rotation = time * 0.001;
+    const radius = 80 + bass * 20;
+
+    ctx.save();
+    ctx.rotate(rotation);
+
+    // Serpent body
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0.3, Math.PI * 2 - 0.3);
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.lineWidth = 12;
+    ctx.stroke();
+
+    // Scales pattern
+    for (let a = 0.5; a < Math.PI * 2 - 0.5; a += 0.3) {
+      const x = Math.cos(a) * radius;
+      const y = Math.sin(a) * radius;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[1] + '60';
+      ctx.fill();
+    }
+
+    // Head eating tail
+    const headAngle = 0.15;
+    const hx = Math.cos(headAngle) * radius;
+    const hy = Math.sin(headAngle) * radius;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 15, 0, Math.PI * 2);
+    ctx.fillStyle = palette.colors[0] + 'ee';
+    ctx.fill();
+
+    // Eye
+    ctx.beginPath();
+    ctx.arc(hx + 5, hy - 3, 3, 0, Math.PI * 2);
+    ctx.fillStyle = palette.colors[1];
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Enso - Zen circle
+  if (type === 'enso') {
+    const radius = 100 + bass * 30;
+    const strokeWidth = 8 + beat * 4;
+
+    ctx.beginPath();
+    // Imperfect circle - the beauty of enso
+    for (let a = 0.2; a < Math.PI * 2 - 0.1; a += 0.05) {
+      const wobble = Math.sin(a * 3 + time * 0.001) * 3;
+      const r = radius + wobble;
+      const x = Math.cos(a) * r;
+      const y = Math.sin(a) * r;
+      if (a < 0.25) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+
+    // Brushstroke effect - fading at ends
+    const gradient = ctx.createLinearGradient(-radius, 0, radius, 0);
+    gradient.addColorStop(0, palette.colors[0] + '20');
+    gradient.addColorStop(0.1, palette.colors[0] + 'cc');
+    gradient.addColorStop(0.9, palette.colors[0] + 'cc');
+    gradient.addColorStop(1, palette.colors[0] + '40');
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = strokeWidth;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  // Om - Sacred Hindu symbol
+  if (type === 'om') {
+    const scale = 1 + bass * 0.2;
+    ctx.save();
+    ctx.scale(scale, scale);
+
+    // Simplified Om shape using curves
+    ctx.beginPath();
+    // Main body curves (simplified representation)
+    ctx.arc(-30, 20, 30, 0.5, Math.PI * 1.5);
+    ctx.quadraticCurveTo(0, -20, 30, 0);
+    ctx.arc(50, 20, 25, -Math.PI * 0.5, Math.PI * 0.8);
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    // Top crescent and dot
+    ctx.beginPath();
+    ctx.arc(40, -50, 15, Math.PI * 0.2, Math.PI * 0.8);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(40, -75, 6, 0, Math.PI * 2);
+    ctx.fillStyle = palette.colors[0] + 'ee';
+    ctx.fill();
+
+    // Vibration rings
+    for (let i = 1; i <= 3; i++) {
+      const r = 80 + i * 30 + Math.sin(time * 0.003 + i) * 10;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.strokeStyle = palette.colors[0] + (20 - i * 5).toString(16);
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  // Yin Yang - balance of opposites
+  if (type === 'yin-yang') {
+    const radius = 80 + bass * 20;
+    const rotation = time * 0.0005;
+
+    ctx.save();
+    ctx.rotate(rotation);
+
+    // White half
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, -Math.PI / 2, Math.PI / 2);
+    ctx.arc(0, radius / 2, radius / 2, Math.PI / 2, -Math.PI / 2, true);
+    ctx.arc(0, -radius / 2, radius / 2, Math.PI / 2, -Math.PI / 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    // Black half
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, Math.PI / 2, -Math.PI / 2);
+    ctx.arc(0, -radius / 2, radius / 2, -Math.PI / 2, Math.PI / 2, true);
+    ctx.arc(0, radius / 2, radius / 2, -Math.PI / 2, Math.PI / 2);
+    ctx.fillStyle = '#000000';
+    ctx.fill();
+
+    // Small circles (dots)
+    ctx.beginPath();
+    ctx.arc(0, radius / 2, radius / 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(0, -radius / 2, radius / 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#000000';
+    ctx.fill();
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = palette.colors[0] + '60';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // Dharma Wheel - Buddhist eight-spoked wheel
+  if (type === 'dharma-wheel') {
+    const radius = 80 + bass * 20;
+    const rotation = time * 0.0008;
+
+    ctx.save();
+    ctx.rotate(rotation);
+
+    // Outer rim
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    // Hub
+    ctx.beginPath();
+    ctx.arc(0, 0, 15, 0, Math.PI * 2);
+    ctx.fillStyle = palette.colors[0] + 'aa';
+    ctx.fill();
+
+    // Eight spokes
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * 15, Math.sin(angle) * 15);
+      ctx.lineTo(Math.cos(angle) * (radius - 3), Math.sin(angle) * (radius - 3));
+      ctx.strokeStyle = palette.colors[0] + 'cc';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Spoke decoration
+      const midR = radius * 0.6;
+      ctx.beginPath();
+      ctx.arc(Math.cos(angle) * midR, Math.sin(angle) * midR, 5, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[1] + '80';
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  // Triskele - Celtic triple spiral
+  if (type === 'triskele') {
+    const rotation = time * 0.001;
+
+    ctx.save();
+    ctx.rotate(rotation);
+
+    for (let arm = 0; arm < 3; arm++) {
+      ctx.save();
+      ctx.rotate((arm / 3) * Math.PI * 2);
+
+      ctx.beginPath();
+      for (let t = 0; t < Math.PI * 2; t += 0.1) {
+        const r = 10 + t * 15 + bass * 10;
+        const x = Math.cos(t) * r;
+        const y = Math.sin(t) * r;
+        if (t === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = palette.colors[arm % palette.colors.length] + 'cc';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  // Hunab Ku - Mayan galactic symbol
+  if (type === 'hunab-ku') {
+    const scale = 1 + bass * 0.2;
+    const rotation = time * 0.0005;
+
+    ctx.save();
+    ctx.scale(scale, scale);
+    ctx.rotate(rotation);
+
+    // Yin-yang style swirl
+    const radius = 70;
+
+    // First half
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI);
+    ctx.arc(radius / 2, 0, radius / 2, Math.PI, 0, true);
+    ctx.arc(-radius / 2, 0, radius / 2, 0, Math.PI, true);
+    ctx.fillStyle = palette.colors[0] + 'cc';
+    ctx.fill();
+
+    // Second half
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, Math.PI, Math.PI * 2);
+    ctx.arc(-radius / 2, 0, radius / 2, 0, Math.PI);
+    ctx.arc(radius / 2, 0, radius / 2, Math.PI, 0);
+    ctx.fillStyle = '#000000cc';
+    ctx.fill();
+
+    // Decorative border
+    ctx.beginPath();
+    ctx.arc(0, 0, radius + 10, 0, Math.PI * 2);
+    ctx.strokeStyle = palette.colors[0] + '80';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Corner glyphs
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+      const d = radius + 30;
+      ctx.beginPath();
+      ctx.rect(
+        Math.cos(angle) * d - 8,
+        Math.sin(angle) * d - 8,
+        16, 16
+      );
+      ctx.fillStyle = palette.colors[1] + '80';
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  // Chakras - seven energy centers aligned vertically
+  if (type === 'chakras') {
+    const chakras = [
+      { y: 120, color: '#ff0000', name: 'Root' },
+      { y: 80, color: '#ff7f00', name: 'Sacral' },
+      { y: 40, color: '#ffff00', name: 'Solar' },
+      { y: 0, color: '#00ff00', name: 'Heart' },
+      { y: -40, color: '#00bfff', name: 'Throat' },
+      { y: -80, color: '#4b0082', name: 'Third Eye' },
+      { y: -120, color: '#8b00ff', name: 'Crown' },
+    ];
+
+    // Central channel (Sushumna)
+    ctx.beginPath();
+    ctx.moveTo(0, 140);
+    ctx.lineTo(0, -140);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Draw each chakra
+    chakras.forEach((chakra, i) => {
+      const active = Math.sin(time * 0.003 + i * 0.5) > 0.3;
+      const baseSize = 20 + bass * 10;
+      const size = active ? baseSize * 1.3 : baseSize;
+
+      // Glow
+      const glow = ctx.createRadialGradient(0, chakra.y, 0, 0, chakra.y, size * 2);
+      glow.addColorStop(0, chakra.color + (active ? 'cc' : '60'));
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.fillRect(-size * 2, chakra.y - size * 2, size * 4, size * 4);
+
+      // Lotus petals
+      const petals = 4 + i * 2; // More petals for higher chakras
+      for (let p = 0; p < petals; p++) {
+        const angle = (p / petals) * Math.PI * 2 + time * 0.001;
+        ctx.beginPath();
+        ctx.ellipse(
+          Math.cos(angle) * (size * 0.6),
+          chakra.y + Math.sin(angle) * (size * 0.3),
+          size * 0.4, size * 0.2,
+          angle, 0, Math.PI * 2
+        );
+        ctx.fillStyle = chakra.color + '40';
+        ctx.fill();
+      }
+
+      // Center
+      ctx.beginPath();
+      ctx.arc(0, chakra.y, size * 0.3, 0, Math.PI * 2);
+      ctx.fillStyle = chakra.color + 'ee';
+      ctx.fill();
+    });
+  }
+}
+
+// ============================================
+// DIMENSIONAL LAYER - Higher dimensions & impossible geometry
+// ============================================
+function drawDimensionalLayer(ctx: CanvasRenderingContext2D, type: string, _w: number, _h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
+
+  // Tesseract - 4D hypercube projection
+  if (type === 'tesseract') {
+    const size = 60 + bass * 20;
+    const rotation = time * 0.001;
+    const innerSize = size * 0.5;
+
+    ctx.save();
+
+    // Outer cube vertices
+    const outer = [
+      [-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
+      [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]
+    ].map(([x, y, z]) => {
+      const rx = x * Math.cos(rotation) - z * Math.sin(rotation);
+      const rz = x * Math.sin(rotation) + z * Math.cos(rotation);
+      const ry = y * Math.cos(rotation * 0.7) - rz * Math.sin(rotation * 0.7);
+      return [rx * size, ry * size];
+    });
+
+    // Inner cube (4D inner)
+    const inner = [
+      [-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
+      [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]
+    ].map(([x, y, z]) => {
+      const rx = x * Math.cos(rotation + 0.5) - z * Math.sin(rotation + 0.5);
+      const rz = x * Math.sin(rotation + 0.5) + z * Math.cos(rotation + 0.5);
+      const ry = y * Math.cos(rotation * 0.7 + 0.3) - rz * Math.sin(rotation * 0.7 + 0.3);
+      return [rx * innerSize, ry * innerSize];
+    });
+
+    // Draw connecting lines (4D edges)
+    ctx.strokeStyle = palette.colors[0] + '60';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 8; i++) {
+      ctx.beginPath();
+      ctx.moveTo(outer[i][0], outer[i][1]);
+      ctx.lineTo(inner[i][0], inner[i][1]);
+      ctx.stroke();
+    }
+
+    // Draw outer cube
+    const edges = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.lineWidth = 2;
+    edges.forEach(([a, b]) => {
+      ctx.beginPath();
+      ctx.moveTo(outer[a][0], outer[a][1]);
+      ctx.lineTo(outer[b][0], outer[b][1]);
+      ctx.stroke();
+    });
+
+    // Draw inner cube
+    ctx.strokeStyle = palette.colors[1] + 'aa';
+    edges.forEach(([a, b]) => {
+      ctx.beginPath();
+      ctx.moveTo(inner[a][0], inner[a][1]);
+      ctx.lineTo(inner[b][0], inner[b][1]);
+      ctx.stroke();
+    });
+
+    ctx.restore();
+  }
+
+  // Hypersphere - 4D sphere projection (glome)
+  if (type === 'hypersphere') {
+    const baseRadius = 80 + bass * 30;
+    const layers = 5;
+
+    for (let l = 0; l < layers; l++) {
+      const phase = time * 0.001 + l * 0.5;
+      const w4 = Math.sin(phase); // 4th dimension coordinate
+      const radius = baseRadius * Math.sqrt(1 - w4 * w4); // 3D projection radius
+
+      if (radius > 5) {
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = palette.colors[l % palette.colors.length] + (80 + l * 20).toString(16);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Cross-section indicators
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+          const x = Math.cos(a + phase) * radius;
+          const y = Math.sin(a + phase) * radius;
+          ctx.beginPath();
+          ctx.arc(x, y, 3 + beat * 3, 0, Math.PI * 2);
+          ctx.fillStyle = palette.colors[l % palette.colors.length] + 'aa';
+          ctx.fill();
+        }
+      }
+    }
+  }
+
+  // Klein Bottle - non-orientable surface
+  if (type === 'klein-bottle') {
+    const scale = 40 + bass * 15;
+
+    ctx.beginPath();
+    for (let u = 0; u < Math.PI * 2; u += 0.1) {
+      for (let v = 0; v < Math.PI * 2; v += 0.3) {
+        const rotation = time * 0.0005;
+        // Klein bottle parametric equations (simplified projection)
+        const x = (2 + Math.cos(u / 2) * Math.sin(v) - Math.sin(u / 2) * Math.sin(2 * v)) * Math.cos(u);
+        const y = (2 + Math.cos(u / 2) * Math.sin(v) - Math.sin(u / 2) * Math.sin(2 * v)) * Math.sin(u);
+
+        const rx = x * Math.cos(rotation) - y * Math.sin(rotation);
+        const ry = x * Math.sin(rotation) + y * Math.cos(rotation);
+
+        ctx.beginPath();
+        ctx.arc(rx * scale, ry * scale, 2, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[Math.floor(u) % palette.colors.length] + '80';
+        ctx.fill();
+      }
+    }
+  }
+
+  // Möbius Strip
+  if (type === 'mobius') {
+    const R = 80 + bass * 20; // Major radius
+    const w = 30; // Width
+    const rotation = time * 0.001;
+
+    ctx.save();
+    ctx.rotate(rotation * 0.3);
+
+    for (let u = 0; u < Math.PI * 2; u += 0.05) {
+      for (let v = -1; v <= 1; v += 0.5) {
+        // Möbius strip parametric equations
+        const x = (R + v * w * Math.cos(u / 2)) * Math.cos(u);
+        const y = (R + v * w * Math.cos(u / 2)) * Math.sin(u);
+        const z = v * w * Math.sin(u / 2);
+
+        // Simple 3D to 2D projection
+        const scale = 200 / (200 + z);
+        const px = x * scale;
+        const py = y * scale * 0.4; // Flatten for better view
+
+        const colorIndex = Math.floor((u / (Math.PI * 2)) * palette.colors.length);
+        ctx.beginPath();
+        ctx.arc(px, py, 2 + beat, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[colorIndex % palette.colors.length] + 'aa';
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
+  }
+
+  // Penrose Triangle / Impossible geometry
+  if (type === 'penrose') {
+    const size = 80 + bass * 20;
+    const rotation = time * 0.0005;
+
+    ctx.save();
+    ctx.rotate(rotation);
+
+    // Penrose triangle coordinates
+    const thickness = 20;
+    const h = size * Math.sqrt(3) / 2;
+
+    // Draw the three beams
+    for (let beam = 0; beam < 3; beam++) {
+      ctx.save();
+      ctx.rotate((beam * 2 * Math.PI) / 3);
+
+      // Outer edge
+      ctx.beginPath();
+      ctx.moveTo(-size / 2, h / 2);
+      ctx.lineTo(0, -h / 2);
+      ctx.lineTo(size / 2, h / 2);
+      ctx.strokeStyle = palette.colors[beam % palette.colors.length] + 'cc';
+      ctx.lineWidth = thickness;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // Impossible overlap illusion (simplified)
+    ctx.fillStyle = palette.colors[0] + '40';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(size * 0.3, -h * 0.3);
+    ctx.lineTo(0, -h * 0.5);
+    ctx.lineTo(-size * 0.3, -h * 0.3);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Calabi-Yau manifold (string theory extra dimensions)
+  if (type === 'calabi-yau') {
+    const scale = 60 + bass * 20;
+    const rotation = time * 0.0008;
+
+    // Simplified artistic representation of 6D manifold projection
+    for (let layer = 0; layer < 3; layer++) {
+      ctx.save();
+      ctx.rotate(rotation + layer * Math.PI / 3);
+
+      for (let u = 0; u < Math.PI * 2; u += 0.15) {
+        for (let v = 0; v < Math.PI; v += 0.2) {
+          // Artistic interpretation of Calabi-Yau surface
+          const r = scale * (0.5 + 0.5 * Math.sin(3 * u) * Math.sin(2 * v));
+          const x = r * Math.sin(v) * Math.cos(u);
+          const y = r * Math.sin(v) * Math.sin(u) + r * Math.cos(v) * 0.3;
+
+          const brightness = 0.3 + Math.sin(u * 3) * 0.3;
+          ctx.beginPath();
+          ctx.arc(x, y, 1.5 + beat, 0, Math.PI * 2);
+          ctx.fillStyle = palette.colors[layer % palette.colors.length] + Math.floor(brightness * 255).toString(16).padStart(2, '0');
+          ctx.fill();
+        }
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // Hyperbolic geometry (Poincaré disk)
+  if (type === 'hyperbolic') {
+    const radius = 100 + bass * 20;
+
+    // Boundary circle
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = palette.colors[0] + '60';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Hyperbolic tiling pattern
+    const drawHyperbolicLine = (x1: number, y1: number, x2: number, y2: number) => {
+      // In hyperbolic geometry, "straight lines" are arcs
+      const midX = (x1 + x2) / 2;
+      const midY = (y1 + y2) / 2;
+      const dist = Math.sqrt(midX * midX + midY * midY);
+
+      if (dist < radius * 0.95) {
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.quadraticCurveTo(midX * 1.2, midY * 1.2, x2, y2);
+        ctx.strokeStyle = palette.colors[1] + '80';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    };
+
+    // Create hyperbolic tiling
+    const n = 7; // Heptagonal tiling
+    for (let ring = 1; ring <= 4; ring++) {
+      const ringRadius = radius * (1 - Math.pow(0.6, ring));
+      for (let i = 0; i < n * ring; i++) {
+        const angle = (i / (n * ring)) * Math.PI * 2 + time * 0.0003 * ring;
+        const x = Math.cos(angle) * ringRadius;
+        const y = Math.sin(angle) * ringRadius;
+
+        // Connect to neighbors
+        const nextAngle = ((i + 1) / (n * ring)) * Math.PI * 2 + time * 0.0003 * ring;
+        const nx = Math.cos(nextAngle) * ringRadius;
+        const ny = Math.sin(nextAngle) * ringRadius;
+        drawHyperbolicLine(x, y, nx, ny);
+
+        // Vertex marker
+        ctx.beginPath();
+        ctx.arc(x, y, 2 + beat, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[ring % palette.colors.length] + 'cc';
+        ctx.fill();
+      }
+    }
+  }
+
+  // Impossible Object
+  if (type === 'impossible') {
+    const size = 70 + bass * 20;
+    const rotation = time * 0.0008;
+
+    ctx.save();
+    ctx.rotate(rotation);
+
+    // Impossible cube / Necker cube illusion
+    const d = size * 0.4; // Depth offset
+
+    // Back face
+    ctx.strokeStyle = palette.colors[1] + '80';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-size / 2 + d, -size / 2 + d, size, size);
+
+    // Front face
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.strokeRect(-size / 2, -size / 2, size, size);
+
+    // Connecting lines (the "impossible" part)
+    ctx.beginPath();
+    ctx.moveTo(-size / 2, -size / 2);
+    ctx.lineTo(-size / 2 + d, -size / 2 + d);
+    ctx.moveTo(size / 2, -size / 2);
+    ctx.lineTo(size / 2 + d, -size / 2 + d);
+    ctx.moveTo(-size / 2, size / 2);
+    ctx.lineTo(-size / 2 + d, size / 2 + d);
+    ctx.moveTo(size / 2, size / 2);
+    ctx.lineTo(size / 2 + d, size / 2 + d);
+    ctx.strokeStyle = palette.colors[2 % palette.colors.length] + 'aa';
+    ctx.stroke();
+
+    ctx.restore();
+  }
+}
+
+// ============================================
+// CONSCIOUSNESS LAYER - Beyond physical reality
+// ============================================
+function drawConsciousnessLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
+
+  // Third Eye - Ajna chakra visualization
+  if (type === 'third-eye') {
+    const scale = 1 + bass * 0.3;
+    const pulse = Math.sin(time * 0.003) * 0.2 + 0.8;
+
+    ctx.save();
+    ctx.scale(scale, scale);
+
+    // Eye shape
+    ctx.beginPath();
+    ctx.moveTo(-80, 0);
+    ctx.quadraticCurveTo(0, -50 * pulse, 80, 0);
+    ctx.quadraticCurveTo(0, 50 * pulse, -80, 0);
+    ctx.strokeStyle = '#4b0082cc';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Iris - indigo spiral
+    for (let r = 5; r < 35; r += 5) {
+      ctx.beginPath();
+      ctx.arc(0, 0, r, time * 0.002, time * 0.002 + Math.PI * 1.8);
+      ctx.strokeStyle = `rgba(75, 0, 130, ${0.8 - r * 0.02})`;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    // Central point of awareness
+    const innerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
+    innerGlow.addColorStop(0, '#ffffff');
+    innerGlow.addColorStop(0.5, '#8b00ff');
+    innerGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = innerGlow;
+    ctx.fillRect(-25, -25, 50, 50);
+
+    // Emanating rays of perception
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2 + time * 0.001;
+      const len = 100 + Math.sin(time * 0.005 + i) * 20 + beat * 30;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * 40, Math.sin(angle) * 25);
+      ctx.lineTo(Math.cos(angle) * len, Math.sin(angle) * len * 0.6);
+      ctx.strokeStyle = `rgba(138, 43, 226, ${0.3 + beat * 0.3})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  // Akashic Records - infinite library of all knowledge
+  if (type === 'akashic') {
+    // Floating symbols/glyphs representing universal knowledge
+    const symbols = '∞◯△□◇☆✦✧⚡☯♾';
+
+    for (let i = 0; i < 30; i++) {
+      const t = (time * 0.0003 + i * 0.1) % 1;
+      const spiral = t * Math.PI * 4;
+      const dist = 50 + t * 150;
+      const x = Math.cos(spiral + i) * dist * (1 - t * 0.3);
+      const y = Math.sin(spiral + i) * dist * 0.5 - t * 100 + 50;
+
+      ctx.font = `${14 + bass * 8}px serif`;
+      ctx.fillStyle = palette.colors[i % palette.colors.length] + Math.floor((1 - t) * 200).toString(16).padStart(2, '0');
+      ctx.fillText(symbols[i % symbols.length], x, y);
+    }
+
+    // Central book/portal
+    const bookGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 60 + bass * 20);
+    bookGlow.addColorStop(0, 'rgba(200, 150, 255, 0.8)');
+    bookGlow.addColorStop(0.5, 'rgba(100, 50, 200, 0.3)');
+    bookGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = bookGlow;
+    ctx.fillRect(-80, -80, 160, 160);
+  }
+
+  // Morphic Field - Sheldrake's morphic resonance
+  if (type === 'morphic') {
+    // Interconnected field of resonating forms
+    const nodes: {x: number, y: number, phase: number}[] = [];
+
+    for (let i = 0; i < 40; i++) {
+      nodes.push({
+        x: Math.sin(i * 1.7 + time * 0.0002) * w * 0.35,
+        y: Math.cos(i * 2.3 + time * 0.0003) * h * 0.35,
+        phase: (time * 0.003 + i * 0.2) % (Math.PI * 2)
+      });
+    }
+
+    // Field connections
+    nodes.forEach((n1, i) => {
+      nodes.slice(i + 1).forEach((n2) => {
+        const dist = Math.sqrt((n1.x - n2.x) ** 2 + (n1.y - n2.y) ** 2);
+        if (dist < 150) {
+          const resonance = Math.sin(n1.phase - n2.phase);
+          ctx.beginPath();
+          ctx.moveTo(n1.x, n1.y);
+          ctx.lineTo(n2.x, n2.y);
+          ctx.strokeStyle = `rgba(100, 200, 150, ${0.1 + Math.abs(resonance) * 0.3})`;
+          ctx.lineWidth = 1 + Math.abs(resonance) * 2;
+          ctx.stroke();
+        }
+      });
+
+      // Node visualization
+      const size = 5 + Math.sin(n1.phase) * 3 + bass * 5;
+      ctx.beginPath();
+      ctx.arc(n1.x, n1.y, size, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[i % palette.colors.length] + '80';
+      ctx.fill();
+    });
+  }
+
+  // Dreamtime - Aboriginal concept of eternal dream
+  if (type === 'dreamtime') {
+    // Concentric waves emanating from multiple dream points
+    const dreamCenters = [
+      { x: -60, y: -40 },
+      { x: 80, y: 20 },
+      { x: 0, y: 60 },
+      { x: -40, y: 80 },
+    ];
+
+    dreamCenters.forEach((center, ci) => {
+      for (let r = 10; r < 120; r += 20) {
+        const wave = Math.sin(time * 0.002 - r * 0.05 + ci) * 0.5 + 0.5;
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, r + wave * 10 + bass * 10, 0, Math.PI * 2);
+        ctx.strokeStyle = palette.colors[ci % palette.colors.length] + Math.floor(wave * 100 + 50).toString(16).padStart(2, '0');
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    });
+
+    // Dot painting style elements
+    for (let i = 0; i < 50; i++) {
+      const angle = (i / 50) * Math.PI * 2;
+      const dist = 100 + Math.sin(i * 0.5 + time * 0.001) * 30;
+      const x = Math.cos(angle) * dist;
+      const y = Math.sin(angle) * dist;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 3 + beat * 2, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[i % palette.colors.length] + 'cc';
+      ctx.fill();
+    }
+  }
+
+  // Void Source - the primordial emptiness
+  if (type === 'void-source') {
+    // Deep black center with subtle presence
+    const voidGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 150 + bass * 50);
+    voidGrad.addColorStop(0, '#000000');
+    voidGrad.addColorStop(0.3, '#050505');
+    voidGrad.addColorStop(0.6, '#0a0a15');
+    voidGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = voidGrad;
+    ctx.fillRect(-200, -200, 400, 400);
+
+    // Subtle particles emerging/returning to void
+    for (let i = 0; i < 30; i++) {
+      const t = (time * 0.0005 + i * 0.1) % 1;
+      const angle = i * 2.4 + time * 0.0003;
+      const dist = t * 150;
+
+      const x = Math.cos(angle) * dist;
+      const y = Math.sin(angle) * dist;
+      const alpha = Math.sin(t * Math.PI); // Fade in and out
+
+      ctx.beginPath();
+      ctx.arc(x, y, 1 + beat, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(100, 100, 150, ${alpha * 0.5})`;
+      ctx.fill();
+    }
+  }
+
+  // Infinity - endless recursion
+  if (type === 'infinity') {
+    const scale = 60 + bass * 20;
+
+    // Lemniscate (infinity symbol)
+    ctx.beginPath();
+    for (let t = 0; t < Math.PI * 2; t += 0.05) {
+      const x = scale * Math.cos(t) / (1 + Math.sin(t) * Math.sin(t));
+      const y = scale * Math.sin(t) * Math.cos(t) / (1 + Math.sin(t) * Math.sin(t));
+      if (t === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+
+    // Rainbow gradient stroke
+    const grad = ctx.createLinearGradient(-scale, 0, scale, 0);
+    palette.colors.forEach((color, i) => {
+      grad.addColorStop(i / (palette.colors.length - 1), color);
+    });
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 6 + beat * 4;
+    ctx.stroke();
+
+    // Nested infinities
+    for (let layer = 1; layer <= 3; layer++) {
+      const layerScale = scale * (1 - layer * 0.25);
+      const offset = Math.sin(time * 0.002 + layer) * 5;
+
+      ctx.beginPath();
+      for (let t = 0; t < Math.PI * 2; t += 0.1) {
+        const x = layerScale * Math.cos(t) / (1 + Math.sin(t) * Math.sin(t)) + offset;
+        const y = layerScale * Math.sin(t) * Math.cos(t) / (1 + Math.sin(t) * Math.sin(t));
+        if (t === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = palette.colors[layer % palette.colors.length] + '60';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  // Unity - all is one
+  if (type === 'unity') {
+    const radius = 80 + bass * 30;
+
+    // All colors merging into white center
+    for (let r = radius; r > 0; r -= 5) {
+      const t = r / radius;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+
+      if (t > 0.7) {
+        ctx.strokeStyle = palette.colors[Math.floor((1 - t) * palette.colors.length * 3) % palette.colors.length] + 'aa';
+      } else if (t > 0.3) {
+        ctx.strokeStyle = `rgba(200, 200, 255, ${0.5 + (1 - t) * 0.3})`;
+      } else {
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 + beat * 0.2})`;
+      }
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    }
+
+    // Central unity point
+    const unityGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 30);
+    unityGlow.addColorStop(0, '#ffffff');
+    unityGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = unityGlow;
+    ctx.fillRect(-40, -40, 80, 80);
+  }
+
+  // Transcendence - beyond form
+  if (type === 'transcendence') {
+    // Ascending light particles
+    for (let i = 0; i < 60; i++) {
+      const t = (time * 0.001 + i * 0.05) % 1;
+      const x = (Math.sin(i * 2.1) * 100) * (1 - t * 0.5);
+      const y = 150 - t * 300; // Rising upward
+
+      const size = (1 - t) * 5 + bass * 3;
+      const alpha = Math.sin(t * Math.PI);
+
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, size * 2);
+      glow.addColorStop(0, `rgba(255, 255, 200, ${alpha})`);
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.fillRect(x - size * 2, y - size * 2, size * 4, size * 4);
+    }
+
+    // Light rays from above
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI - Math.PI / 2 + Math.sin(time * 0.001) * 0.1;
+      const spread = 0.3;
+
+      ctx.beginPath();
+      ctx.moveTo(0, -h * 0.4);
+      ctx.lineTo(Math.cos(angle - spread) * w * 0.5, h * 0.4);
+      ctx.lineTo(Math.cos(angle + spread) * w * 0.5, h * 0.4);
+      ctx.closePath();
+
+      const rayGrad = ctx.createLinearGradient(0, -h * 0.4, 0, h * 0.4);
+      rayGrad.addColorStop(0, `rgba(255, 255, 200, ${0.1 + beat * 0.1})`);
+      rayGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = rayGrad;
+      ctx.fill();
     }
   }
 }

@@ -56,7 +56,9 @@ const geometryModes = [
   { id: 'chaos-field', label: 'CHAOS', color: 'bg-red-500' },
 ];
 
-// Sacred / Ancient geometry layers - expanded
+// ============================================
+// SACRED GEOMETRY - Universal patterns
+// ============================================
 const sacredGeometry = [
   { id: 'flower-of-life', label: 'FLOWER', color: 'bg-amber-400' },
   { id: 'metatron', label: 'METATRON', color: 'bg-violet-500' },
@@ -66,34 +68,73 @@ const sacredGeometry = [
   { id: 'seed-of-life', label: 'SEED', color: 'bg-green-400' },
   { id: 'merkaba', label: 'MERKABA', color: 'bg-yellow-400' },
   { id: 'golden-ratio', label: 'PHI', color: 'bg-amber-500' },
+  { id: 'tree-of-life', label: 'TREE', color: 'bg-emerald-500' },
+  { id: 'platonic', label: 'PLATONIC', color: 'bg-indigo-400' },
 ];
 
-// Quantum / Experiential layers - expanded
+// ============================================
+// ANCIENT WISDOM - Cultural sacred symbols
+// ============================================
+const ancientGeometry = [
+  { id: 'ankh', label: 'ANKH', color: 'bg-amber-500' },
+  { id: 'eye-of-horus', label: 'HORUS', color: 'bg-yellow-400' },
+  { id: 'ouroboros', label: 'OUROBOROS', color: 'bg-emerald-500' },
+  { id: 'enso', label: 'ENSO', color: 'bg-slate-400' },
+  { id: 'om', label: 'OM', color: 'bg-orange-500' },
+  { id: 'yin-yang', label: 'YINYANG', color: 'bg-zinc-400' },
+  { id: 'dharma-wheel', label: 'DHARMA', color: 'bg-amber-400' },
+  { id: 'triskele', label: 'TRISKELE', color: 'bg-green-500' },
+  { id: 'hunab-ku', label: 'HUNAB', color: 'bg-violet-500' },
+  { id: 'chakras', label: 'CHAKRA', color: 'bg-gradient-to-r from-red-500 via-yellow-500 to-violet-500' },
+];
+
+// ============================================
+// DIMENSIONAL - Higher dimensions & impossible geometry
+// ============================================
+const dimensionalGeometry = [
+  { id: 'tesseract', label: 'TESSERACT', color: 'bg-cyan-500' },
+  { id: 'hypersphere', label: 'HYPERSPHERE', color: 'bg-blue-500' },
+  { id: 'klein-bottle', label: 'KLEIN', color: 'bg-purple-500' },
+  { id: 'mobius', label: 'MÖBIUS', color: 'bg-pink-500' },
+  { id: 'penrose', label: 'PENROSE', color: 'bg-amber-400' },
+  { id: 'calabi-yau', label: 'CALABI', color: 'bg-indigo-500' },
+  { id: 'hyperbolic', label: 'HYPERBOLIC', color: 'bg-violet-500' },
+  { id: 'impossible', label: 'IMPOSSIBLE', color: 'bg-red-500' },
+];
+
+// ============================================
+// QUANTUM / Experiential - Subatomic reality
+// ============================================
 const quantumGeometry = [
-  { id: 'quantum-field', label: 'QUANTUM', color: 'bg-indigo-500' },
+  { id: 'quantum-field', label: 'FIELD', color: 'bg-indigo-500' },
   { id: 'wave-function', label: 'WAVE', color: 'bg-blue-500' },
-  { id: 'particle-grid', label: 'PARTICLES', color: 'bg-cyan-500' },
-  { id: 'neural-net', label: 'NEURAL', color: 'bg-pink-500' },
-  { id: 'dna-helix', label: 'DNA', color: 'bg-green-500' },
-  { id: 'singularity', label: 'SINGULARITY', color: 'bg-purple-600' },
+  { id: 'particle-grid', label: 'PARTICLE', color: 'bg-cyan-500' },
   { id: 'entanglement', label: 'ENTANGLE', color: 'bg-violet-500' },
   { id: 'superposition', label: 'SUPER', color: 'bg-blue-400' },
+  { id: 'quantum-foam', label: 'FOAM', color: 'bg-slate-400' },
+  { id: 'holographic', label: 'HOLO', color: 'bg-cyan-300' },
+  { id: 'string-theory', label: 'STRING', color: 'bg-amber-400' },
 ];
 
-// Cosmic / Nebula layers - expanded
+// ============================================
+// COSMIC - Universal phenomena
+// ============================================
 const cosmicLayers = [
-  { id: 'cosmic-surf', label: 'SURF', color: 'bg-cyan-500' },
-  { id: 'star-streaks', label: 'STREAKS', color: 'bg-yellow-400' },
-  { id: 'fluid-flow', label: 'FLUID', color: 'bg-pink-500' },
   { id: 'nebula', label: 'NEBULA', color: 'bg-purple-500' },
   { id: 'galaxy', label: 'GALAXY', color: 'bg-indigo-500' },
   { id: 'aurora', label: 'AURORA', color: 'bg-emerald-500' },
   { id: 'wormhole', label: 'WORMHOLE', color: 'bg-violet-600' },
   { id: 'pulsar', label: 'PULSAR', color: 'bg-yellow-300' },
   { id: 'cosmic-web', label: 'WEB', color: 'bg-blue-300' },
+  { id: 'event-horizon', label: 'HORIZON', color: 'bg-slate-600' },
+  { id: 'big-bang', label: 'BIGBANG', color: 'bg-orange-500' },
+  { id: 'dark-matter', label: 'DARKMATTER', color: 'bg-zinc-700' },
+  { id: 'multiverse', label: 'MULTIVERSE', color: 'bg-gradient-to-r from-violet-500 to-pink-500' },
 ];
 
-// NEW: Lifeforce / Biological layers
+// ============================================
+// LIFEFORCE - Biological & consciousness
+// ============================================
 const lifeforceGeometry = [
   { id: 'heartbeat', label: 'HEART', color: 'bg-red-500' },
   { id: 'breath', label: 'BREATH', color: 'bg-sky-400' },
@@ -101,8 +142,24 @@ const lifeforceGeometry = [
   { id: 'cells', label: 'CELLS', color: 'bg-green-400' },
   { id: 'mycelium', label: 'MYCELIUM', color: 'bg-amber-600' },
   { id: 'biolum', label: 'BIOLUM', color: 'bg-cyan-300' },
-  { id: 'roots', label: 'ROOTS', color: 'bg-emerald-600' },
-  { id: 'jellyfish', label: 'JELLY', color: 'bg-purple-400' },
+  { id: 'dna-helix', label: 'DNA', color: 'bg-green-500' },
+  { id: 'kundalini', label: 'KUNDALINI', color: 'bg-gradient-to-r from-red-500 to-violet-500' },
+  { id: 'aura', label: 'AURA', color: 'bg-gradient-to-r from-blue-400 to-purple-400' },
+  { id: 'cymatics', label: 'CYMATICS', color: 'bg-cyan-500' },
+];
+
+// ============================================
+// CONSCIOUSNESS - Beyond the physical
+// ============================================
+const consciousnessGeometry = [
+  { id: 'third-eye', label: '3RDEYE', color: 'bg-indigo-500' },
+  { id: 'akashic', label: 'AKASHIC', color: 'bg-violet-400' },
+  { id: 'morphic', label: 'MORPHIC', color: 'bg-emerald-400' },
+  { id: 'dreamtime', label: 'DREAM', color: 'bg-purple-400' },
+  { id: 'void-source', label: 'VOID', color: 'bg-slate-800' },
+  { id: 'infinity', label: 'INFINITY', color: 'bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500' },
+  { id: 'unity', label: 'UNITY', color: 'bg-white' },
+  { id: 'transcendence', label: 'TRANSCEND', color: 'bg-gradient-to-r from-amber-300 to-white' },
 ];
 
 // Motion directions
@@ -120,7 +177,7 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
   if (!state) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 overflow-x-hidden">
       {/* SLIDERS - Compact */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-1">
         {sliders.map((slider) => {
@@ -301,6 +358,84 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
                 onClick={() => onChange('geometryLayer5', layer.id as any)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer5 === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ANCIENT - Cultural sacred symbols */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">ANCIENT</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('geometryLayer6', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).geometryLayer6 || (state as any).geometryLayer6 === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {ancientGeometry.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('geometryLayer6', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).geometryLayer6 === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* DIMENSIONAL - 4D+ geometry */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">4D+</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('geometryLayer7', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).geometryLayer7 || (state as any).geometryLayer7 === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {dimensionalGeometry.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('geometryLayer7', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).geometryLayer7 === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* CONSCIOUSNESS - Beyond physical */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">CONSC</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('geometryLayer8', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).geometryLayer8 || (state as any).geometryLayer8 === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {consciousnessGeometry.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('geometryLayer8', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).geometryLayer8 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
               >
                 {layer.label}

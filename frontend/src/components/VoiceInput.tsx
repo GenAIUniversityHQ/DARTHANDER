@@ -66,6 +66,16 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
   const silenceTimerRef = useRef<number | null>(null);
   const lastSpeechTimeRef = useRef<number>(Date.now());
 
+  // CRITICAL: Use refs to avoid stale closure - always get latest values
+  const onTranscriptionRef = useRef(onTranscription);
+  onTranscriptionRef.current = onTranscription;
+
+  const liveModeRef = useRef(liveMode);
+  liveModeRef.current = liveMode;
+
+  const isActiveRef = useRef(isActive);
+  isActiveRef.current = isActive;
+
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -104,7 +114,8 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
 
       // When a phrase is finalized, submit it
       if (finalTranscript) {
-        onTranscription(finalTranscript.trim());
+        console.log('[VOICE] Sending transcription:', finalTranscript.trim());
+        onTranscriptionRef.current(finalTranscript.trim());
         setInterimText('');
 
         // In live mode, restart listening
@@ -119,13 +130,23 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
 
     recognition.onerror = (event: any) => {
       // Ignore no-speech errors in live mode - just keep listening
-      if (event.error === 'no-speech' && liveMode) {
+      if (event.error === 'no-speech' && liveModeRef.current) {
+        // Auto-restart in live mode after no-speech
+        try {
+          setTimeout(() => {
+            if (liveModeRef.current && isActiveRef.current) {
+              recognition.start();
+            }
+          }, 100);
+        } catch (e) {
+          // Ignore
+        }
         return;
       }
       console.error('Speech recognition error:', event.error);
       setIsRecording(false);
       setIsProcessing(false);
-      if (!liveMode) {
+      if (!liveModeRef.current) {
         onToggle();
       }
     };
@@ -135,15 +156,17 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
       setInterimText('');
 
       // In live mode, auto-restart recognition
-      if (liveMode && isActive) {
+      if (liveModeRef.current && isActiveRef.current) {
         try {
           setTimeout(() => {
-            recognition.start();
+            if (liveModeRef.current && isActiveRef.current) {
+              recognition.start();
+            }
           }, 100);
         } catch (e) {
           // Ignore restart errors
         }
-      } else if (isActive) {
+      } else if (isActiveRef.current) {
         onToggle();
       }
     };
@@ -158,7 +181,7 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
         clearInterval(silenceTimerRef.current);
       }
     };
-  }, [liveMode]);
+  }, []); // No dependencies - use refs for current values
 
   // Handle active state changes
   useEffect(() => {

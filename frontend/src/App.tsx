@@ -227,14 +227,77 @@ function App() {
       'neurons': 'neurons', 'neuron': 'neurons', 'brain': 'neurons',
       'cells': 'cells', 'cell': 'cells',
       'mycelium': 'mycelium', 'mushroom': 'mycelium', 'fungal': 'mycelium',
-      'biolum': 'biolum', 'bioluminescence': 'biolum', 'glow': 'biolum',
+      'biolum': 'biolum', 'bioluminescence': 'biolum',
       'roots': 'roots', 'root': 'roots', 'tree': 'roots',
       'jellyfish': 'jellyfish', 'jelly': 'jellyfish',
+      'dna': 'dna-helix', 'helix': 'dna-helix',
+      'kundalini': 'kundalini', 'serpent': 'kundalini',
+      'aura': 'aura', 'energy field': 'aura',
+      'cymatics': 'cymatics', 'sound waves': 'cymatics',
     };
     for (const [keyword, layer] of Object.entries(lifeMap)) {
       if (cmd.includes(keyword)) {
         updateVisualParameter('geometryLayer5', layer);
         setLastInterpretation(`🧬 LIFE: ${layer.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- ANCIENT WISDOM LAYER ---
+    const ancientMap: Record<string, string> = {
+      'ankh': 'ankh', 'key of life': 'ankh',
+      'horus': 'eye-of-horus', 'eye of horus': 'eye-of-horus', 'egyptian eye': 'eye-of-horus',
+      'ouroboros': 'ouroboros', 'serpent circle': 'ouroboros',
+      'enso': 'enso', 'zen circle': 'enso', 'zen': 'enso',
+      'om': 'om', 'ohm': 'om', 'aum': 'om',
+      'yin yang': 'yin-yang', 'yinyang': 'yin-yang', 'balance': 'yin-yang',
+      'dharma': 'dharma-wheel', 'dharma wheel': 'dharma-wheel', 'buddhist': 'dharma-wheel',
+      'triskele': 'triskele', 'triple spiral': 'triskele', 'celtic': 'triskele',
+      'hunab': 'hunab-ku', 'hunab ku': 'hunab-ku', 'mayan': 'hunab-ku',
+      'chakra': 'chakras', 'chakras': 'chakras', 'energy centers': 'chakras',
+    };
+    for (const [keyword, layer] of Object.entries(ancientMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryLayer6', layer);
+        setLastInterpretation(`🏛️ ANCIENT: ${layer.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- DIMENSIONAL LAYER (4D+) ---
+    const dimensionalMap: Record<string, string> = {
+      'tesseract': 'tesseract', 'hypercube': 'tesseract', '4d cube': 'tesseract',
+      'hypersphere': 'hypersphere', '4d sphere': 'hypersphere', 'glome': 'hypersphere',
+      'klein': 'klein-bottle', 'klein bottle': 'klein-bottle',
+      'mobius': 'mobius', 'möbius': 'mobius', 'mobius strip': 'mobius',
+      'penrose': 'penrose', 'impossible triangle': 'penrose',
+      'calabi': 'calabi-yau', 'calabi yau': 'calabi-yau', 'string theory': 'calabi-yau',
+      'hyperbolic': 'hyperbolic', 'poincare': 'hyperbolic',
+      'impossible': 'impossible', 'impossible geometry': 'impossible',
+    };
+    for (const [keyword, layer] of Object.entries(dimensionalMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryLayer7', layer);
+        setLastInterpretation(`🔮 4D+: ${layer.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- CONSCIOUSNESS LAYER ---
+    const consciousnessMap: Record<string, string> = {
+      'third eye': 'third-eye', 'thirdeye': 'third-eye', 'ajna': 'third-eye',
+      'akashic': 'akashic', 'akashic records': 'akashic', 'records': 'akashic',
+      'morphic': 'morphic', 'morphic field': 'morphic', 'resonance': 'morphic',
+      'dreamtime': 'dreamtime', 'dream': 'dreamtime', 'aboriginal': 'dreamtime',
+      'void source': 'void-source', 'source': 'void-source', 'emptiness': 'void-source',
+      'infinity': 'infinity', 'infinite': 'infinity', 'eternal': 'infinity',
+      'unity': 'unity', 'oneness': 'unity', 'all is one': 'unity',
+      'transcend': 'transcendence', 'transcendence': 'transcendence', 'ascend': 'transcendence',
+    };
+    for (const [keyword, layer] of Object.entries(consciousnessMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryLayer8', layer);
+        setLastInterpretation(`👁️ CONSC: ${layer.toUpperCase()}`);
         return true;
       }
     }
@@ -259,15 +322,41 @@ function App() {
 
     // --- COLOR PALETTES ---
     const colorMap: Record<string, string> = {
+      // Original
       'cosmos': 'cosmos', 'purple': 'cosmos',
-      'void': 'void', 'black': 'void',
+      'void': 'void',
       'fire': 'fire', 'red': 'fire', 'orange': 'fire',
-      'ice': 'ice', 'blue': 'ice', 'cyan': 'ice',
+      'ice': 'ice', 'cyan': 'ice',
       'earth': 'earth', 'green': 'earth',
-      'neon': 'neon', 'pink': 'neon', 'magenta': 'neon',
-      'sacred': 'sacred', 'gold': 'sacred', 'golden': 'sacred',
+      'neon': 'neon', 'magenta': 'neon',
+      'sacred': 'sacred',
       'ocean': 'ocean', 'sea': 'ocean',
       'sunset': 'sunset', 'warm': 'sunset',
+      // Full spectrum
+      'spectrum': 'spectrum', 'full spectrum': 'spectrum',
+      'rainbow': 'rainbow',
+      // Light palettes
+      'light': 'light', 'bright': 'light', 'white': 'light',
+      'ethereal': 'ethereal', 'heavenly': 'ethereal',
+      'pastel': 'pastel', 'soft': 'pastel',
+      // Ice variations
+      'glacier': 'glacier',
+      'arctic': 'arctic', 'frozen': 'arctic',
+      'frost': 'frost', 'cold': 'frost',
+      // Dark prism
+      'bloodmoon': 'bloodmoon', 'blood': 'bloodmoon',
+      'darkprism': 'darkprism', 'dark prism': 'darkprism',
+      'crimson': 'crimson', 'dark red': 'crimson',
+      'amethyst': 'amethyst',
+      'obsidian': 'obsidian',
+      // Monochrome
+      'monochrome': 'monochrome', 'black and white': 'monochrome', 'bw': 'monochrome',
+      'noir': 'noir', 'dark': 'noir',
+      'silver': 'silver', 'gray': 'silver', 'grey': 'silver',
+      // Mystical
+      'ancient': 'ancient', 'gold': 'ancient', 'golden': 'ancient',
+      'mystic': 'mystic', 'mystical': 'mystic',
+      'alchemical': 'alchemical', 'alchemy': 'alchemical',
     };
     for (const [keyword, palette] of Object.entries(colorMap)) {
       if (cmd.includes(keyword) && (cmd.includes('color') || cmd.includes('palette') || words.length <= 2)) {
@@ -326,12 +415,30 @@ function App() {
       setLastInterpretation('❌ LIFE OFF');
       return true;
     }
+    if (cmd.includes('ancient off') || cmd.includes('no ancient') || cmd.includes('remove ancient')) {
+      updateVisualParameter('geometryLayer6', 'none');
+      setLastInterpretation('❌ ANCIENT OFF');
+      return true;
+    }
+    if (cmd.includes('dimensional off') || cmd.includes('4d off') || cmd.includes('no 4d') || cmd.includes('remove 4d')) {
+      updateVisualParameter('geometryLayer7', 'none');
+      setLastInterpretation('❌ 4D OFF');
+      return true;
+    }
+    if (cmd.includes('consciousness off') || cmd.includes('no consciousness') || cmd.includes('consc off')) {
+      updateVisualParameter('geometryLayer8', 'none');
+      setLastInterpretation('❌ CONSC OFF');
+      return true;
+    }
     if (cmd.includes('clear') || cmd.includes('all off') || cmd.includes('clean')) {
       updateVisualParameter('geometryLayer2', 'none');
       updateVisualParameter('geometryLayer3', 'none');
       updateVisualParameter('geometryLayer4', 'none');
       updateVisualParameter('geometryLayer5', 'none');
-      setLastInterpretation('🧹 LAYERS CLEARED');
+      updateVisualParameter('geometryLayer6', 'none');
+      updateVisualParameter('geometryLayer7', 'none');
+      updateVisualParameter('geometryLayer8', 'none');
+      setLastInterpretation('🧹 ALL LAYERS CLEARED');
       return true;
     }
 
@@ -745,13 +852,13 @@ function App() {
         {/* Right: CONTROLS */}
         <div className="w-1/2 p-3 flex flex-col gap-2 min-h-0">
           {/* PRESETS - Compact row */}
-          <div className="bg-zinc-900/80 backdrop-blur rounded-xl border border-white/10 px-3 py-2">
+          <div className="bg-zinc-900/80 backdrop-blur rounded-xl border border-white/10 px-3 py-2 overflow-x-hidden">
             <PresetGrid presets={presets} onSelect={handleLoadPreset} currentPreset={presets.find(p => p.id === activePreset) || null} />
           </div>
 
           {/* CONTROLS - Takes remaining space */}
           <div className="bg-zinc-900/80 backdrop-blur rounded-xl border border-white/10 overflow-hidden flex-1 min-h-0 flex flex-col">
-            <div className="px-3 py-2 overflow-y-auto flex-1">
+            <div className="px-3 py-2 overflow-y-auto overflow-x-hidden flex-1">
               <ParameterSliders state={visualState} onChange={(p, v) => updateVisualParameter(p, v)} />
             </div>
           </div>
