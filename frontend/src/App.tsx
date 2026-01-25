@@ -1516,6 +1516,18 @@ function App() {
     }
   };
 
+  // Quick WebM download (instant, no conversion)
+  const downloadWebM = () => {
+    if (recordedChunks.length === 0) return;
+    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `darthander-${Date.now()}.webm`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // Popout window for fullscreen display
   const handlePopout = () => {
     if (popoutWindow && !popoutWindow.closed) {
@@ -1684,26 +1696,30 @@ function App() {
             </button>
           )}
 
-          {recordedChunks.length > 0 && !isRecording && (
+          {recordedChunks.length > 0 && !isRecording && !isConverting && (
+            <>
+              <button
+                onClick={downloadWebM}
+                className="px-3 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105"
+                title="Instant download (WebM) - works with YouTube & most editors"
+              >
+                <Download className="w-4 h-4" /> SAVE
+              </button>
+              <button
+                onClick={downloadRecording}
+                className="px-2 py-2 bg-cyan-700 hover:bg-cyan-600 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105"
+                title="Convert to MP4 (slow - re-encodes video)"
+              >
+                MP4
+              </button>
+            </>
+          )}
+          {isConverting && (
             <button
-              onClick={downloadRecording}
-              disabled={isConverting}
-              className={`px-3 py-2 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all ${
-                isConverting
-                  ? 'bg-cyan-800 cursor-wait'
-                  : 'bg-cyan-600 hover:bg-cyan-500 hover:scale-105'
-              }`}
-              title="Download as high-quality MP4 for YouTube"
+              disabled
+              className="px-3 py-2 bg-cyan-800 cursor-wait rounded-lg text-xs font-black flex items-center gap-1.5"
             >
-              {isConverting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> {conversionProgress}%
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" /> MP4
-                </>
-              )}
+              <Loader2 className="w-4 h-4 animate-spin" /> {conversionProgress}%
             </button>
           )}
 
