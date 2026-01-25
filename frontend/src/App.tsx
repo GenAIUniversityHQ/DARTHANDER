@@ -1559,36 +1559,21 @@ function App() {
     `);
     win.document.close();
 
-    // Sync the display canvas with our preview (16:9 YouTube optimized)
+    // Sync the display canvas with our preview
     const syncDisplay = () => {
       if (win.closed) return;
       const sourceCanvas = document.querySelector('#preview-canvas') as HTMLCanvasElement;
       const destCanvas = win.document.querySelector('#display-canvas') as HTMLCanvasElement;
       if (sourceCanvas && destCanvas) {
-        // Force 16:9 aspect ratio for YouTube
-        const targetWidth = win.innerWidth;
-        const targetHeight = win.innerHeight;
-        const aspectRatio = 16 / 9;
-
-        let renderWidth = targetWidth;
-        let renderHeight = targetWidth / aspectRatio;
-
-        if (renderHeight > targetHeight) {
-          renderHeight = targetHeight;
-          renderWidth = targetHeight * aspectRatio;
-        }
-
-        destCanvas.width = renderWidth;
-        destCanvas.height = renderHeight;
-        destCanvas.style.width = `${renderWidth}px`;
-        destCanvas.style.height = `${renderHeight}px`;
-        destCanvas.style.position = 'absolute';
-        destCanvas.style.left = `${(targetWidth - renderWidth) / 2}px`;
-        destCanvas.style.top = `${(targetHeight - renderHeight) / 2}px`;
-
         const ctx = destCanvas.getContext('2d');
         if (ctx) {
-          ctx.drawImage(sourceCanvas, 0, 0, destCanvas.width, destCanvas.height);
+          // Set dest canvas to match source (1920x1080)
+          if (destCanvas.width !== sourceCanvas.width || destCanvas.height !== sourceCanvas.height) {
+            destCanvas.width = sourceCanvas.width;
+            destCanvas.height = sourceCanvas.height;
+          }
+          // Draw the source canvas to display
+          ctx.drawImage(sourceCanvas, 0, 0);
         }
       }
       requestAnimationFrame(syncDisplay);
