@@ -10,6 +10,9 @@ export function AudioSourceSelector() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isSeeking, setIsSeeking] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -18,6 +21,7 @@ export function AudioSourceSelector() {
   const destinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
   const sourceCreatedRef = useRef(false);
   const animationRef = useRef<number | null>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
 
   // Audio analysis loop
   const analyzeAudio = () => {
@@ -68,6 +72,56 @@ export function AudioSourceSelector() {
       setAudioStream(null);
     }
   }, [isPlaying, setAudioStream]);
+
+  // Format time as MM:SS
+  const formatTime = (time: number) => {
+    if (isNaN(time) || !isFinite(time)) return '0:00';
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Handle seeking via progress bar click/drag
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!progressRef.current || !audioRef.current || !duration) return;
+
+    const rect = progressRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percent = Math.max(0, Math.min(1, x / rect.width));
+    const newTime = percent * duration;
+
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  const handleSeekStart = (e: React.MouseEvent<HTMLDivElement>) => {
+    setIsSeeking(true);
+    handleSeek(e);
+  };
+
+  const handleSeekMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isSeeking) {
+      handleSeek(e);
+    }
+  };
+
+  const handleSeekEnd = () => {
+    setIsSeeking(false);
+  };
+
+  // Update time display
+  const handleTimeUpdate = () => {
+    if (audioRef.current && !isSeeking) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+      setCurrentTime(0);
+    }
+  };
 
   const handleFileClick = () => {
     fileInputRef.current?.click();
@@ -203,7 +257,8 @@ export function AudioSourceSelector() {
   };
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2 flex-wrap">
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -219,6 +274,8 @@ export function AudioSourceSelector() {
           ref={audioRef}
           src={audioUrl}
           onEnded={() => setIsPlaying(false)}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
           preload="auto"
         />
       )}
@@ -283,6 +340,43 @@ export function AudioSourceSelector() {
             {fileName}
           </span>
         </>
+      )}
+      </div>
+
+      {/* Progress Bar - Show when file is loaded */}
+      {audioSource === 'upload' && audioUrl && duration > 0 && (
+        <div className="flex items-center gap-2 w-full mt-1">
+          {/* Current time */}
+          <span className="text-[9px] text-neon-cyan/80 font-mono w-10 text-right">
+            {formatTime(currentTime)}
+          </span>
+
+          {/* Progress bar */}
+          <div
+            ref={progressRef}
+            className="flex-1 h-2 bg-white/10 rounded-full cursor-pointer relative overflow-hidden group"
+            onMouseDown={handleSeekStart}
+            onMouseMove={handleSeekMove}
+            onMouseUp={handleSeekEnd}
+            onMouseLeave={handleSeekEnd}
+          >
+            {/* Filled progress */}
+            <div
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-neon-purple to-neon-cyan rounded-full transition-all"
+              style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+            />
+            {/* Hover/drag indicator */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+              style={{ left: `calc(${duration > 0 ? (currentTime / duration) * 100 : 0}% - 6px)` }}
+            />
+          </div>
+
+          {/* Duration */}
+          <span className="text-[9px] text-neon-cyan/80 font-mono w-10">
+            {formatTime(duration)}
+          </span>
+        </div>
       )}
     </div>
   );
