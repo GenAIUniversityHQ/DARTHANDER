@@ -1,6 +1,8 @@
 // DARTHANDER Visual Consciousness Engine
 // Parameter Sliders Component - STAGE READY
 
+import { Flame, Diamond, Zap, Rocket, Music } from 'lucide-react';
+
 interface VisualState {
   overallIntensity: number;
   geometryComplexity: number;
@@ -26,16 +28,16 @@ interface SliderConfig {
   key: string;
   label: string;
   color: string;
-  emoji: string;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
-// Sliders with emojis for quick visual recognition
+// Sliders with icons for quick visual recognition
 const sliders: SliderConfig[] = [
-  { key: 'overallIntensity', label: 'INTENSITY', color: 'from-purple-500 via-pink-500 to-red-500', emoji: '🔥' },
-  { key: 'geometryComplexity', label: 'COMPLEXITY', color: 'from-cyan-400 via-blue-500 to-purple-500', emoji: '💎' },
-  { key: 'chaosFactor', label: 'CHAOS', color: 'from-red-500 via-orange-500 to-yellow-500', emoji: '⚡' },
-  { key: 'motionSpeed', label: 'SPEED', color: 'from-green-400 via-cyan-500 to-blue-500', emoji: '🚀' },
-  { key: 'audioReactGeometry', label: 'AUDIO', color: 'from-pink-500 via-purple-500 to-indigo-500', emoji: '🎵' },
+  { key: 'overallIntensity', label: 'INTENSITY', color: 'from-purple-500 via-pink-500 to-red-500', icon: Flame },
+  { key: 'geometryComplexity', label: 'COMPLEXITY', color: 'from-cyan-400 via-blue-500 to-purple-500', icon: Diamond },
+  { key: 'chaosFactor', label: 'CHAOS', color: 'from-red-500 via-orange-500 to-yellow-500', icon: Zap },
+  { key: 'motionSpeed', label: 'SPEED', color: 'from-green-400 via-cyan-500 to-blue-500', icon: Rocket },
+  { key: 'audioReactGeometry', label: 'AUDIO', color: 'from-pink-500 via-purple-500 to-indigo-500', icon: Music },
 ];
 
 // Geometry modes with colors
@@ -84,7 +86,7 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
           <div key={slider.key} className="space-y-1">
             <div className="flex justify-between items-center">
               <span className="text-xs font-black text-white/80 tracking-wider flex items-center gap-2">
-                <span className="text-base">{slider.emoji}</span>
+                <slider.icon className="w-4 h-4" />
                 {slider.label}
               </span>
               <span className="text-sm font-black text-white tabular-nums">{percentage}%</span>

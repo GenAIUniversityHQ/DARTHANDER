@@ -10,7 +10,7 @@ import { VoiceInput } from './components/VoiceInput';
 import { PresetGrid } from './components/PresetGrid';
 import { ParameterSliders } from './components/ParameterSliders';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
-import { Square, Settings, Key, Video, Download, ExternalLink, X } from 'lucide-react';
+import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Sparkles, Flame, Snowflake, Zap, Leaf, Star, Moon, ChevronDown, ChevronRight } from 'lucide-react';
 
 function App() {
   const [lastInterpretation, setLastInterpretation] = useState('');
@@ -20,11 +20,15 @@ function App() {
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [activePreset, setActivePreset] = useState<string | null>(null);
 
+  // Collapsible sections (like Ableton)
+  const [showPresets, setShowPresets] = useState(true);
+  const [showControls, setShowControls] = useState(true);
+  const [showAudio, setShowAudio] = useState(true);
+
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [hasAudioInRecording, setHasAudioInRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingIntervalRef = useRef<number | null>(null);
 
@@ -155,11 +159,11 @@ function App() {
         ...videoStream.getVideoTracks(),
         ...audioTracks,
       ]);
-      setHasAudioInRecording(true);
+      // Audio included in recording
       console.log('Recording with audio:', audioTracks.length, 'tracks');
     } else {
       combinedStream = videoStream;
-      setHasAudioInRecording(false);
+      // No audio in recording
       console.log('Recording without audio - no audio stream available');
     }
 
@@ -302,38 +306,64 @@ function App() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Recording Controls - BIG and clear */}
+        <div className="flex items-center gap-2">
+          {/* LIVE CONTROLS - Quick access */}
+          <button
+            onClick={handleHold}
+            className="px-3 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105"
+            title="Freeze motion (Space)"
+          >
+            <Pause className="w-4 h-4" /> HOLD
+          </button>
+          <button
+            onClick={handleKill}
+            className="px-3 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105"
+            title="Blackout (Esc)"
+          >
+            <Power className="w-4 h-4" /> KILL
+          </button>
+          <button
+            onClick={handleReset}
+            className="px-3 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105"
+            title="Reset to default (R)"
+          >
+            <RotateCcw className="w-4 h-4" /> RESET
+          </button>
+
+          <div className="w-px h-6 bg-white/20 mx-1" />
+
+          {/* Recording Controls */}
           {!isRecording ? (
             <button
               onClick={startRecording}
-              className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-xl text-sm font-black flex items-center gap-2 transition-all hover:scale-105"
+              className="px-3 py-2 bg-red-600/80 hover:bg-red-500 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105"
             >
               <Video className="w-4 h-4" /> REC
             </button>
           ) : (
             <button
               onClick={stopRecording}
-              className="px-4 py-2 bg-red-600 rounded-xl text-sm font-black flex items-center gap-2 animate-pulse"
+              className="px-3 py-2 bg-red-600 rounded-lg text-xs font-black flex items-center gap-1.5 animate-pulse"
             >
               <Square className="w-4 h-4" /> {formatTime(recordingTime)}
-              {hasAudioInRecording && <span className="text-[10px] opacity-75">🔊</span>}
             </button>
           )}
 
           {recordedChunks.length > 0 && !isRecording && (
             <button
               onClick={downloadRecording}
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-xl text-sm font-black flex items-center gap-2 transition-all hover:scale-105"
+              className="px-3 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105"
             >
               <Download className="w-4 h-4" /> SAVE
             </button>
           )}
 
+          <div className="w-px h-6 bg-white/20 mx-1" />
+
           {/* Popout Display */}
           <button
             onClick={handlePopout}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-xl text-sm font-black flex items-center gap-2 transition-all hover:scale-105"
+            className="px-3 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105"
             title="Open display window (F)"
           >
             <ExternalLink className="w-4 h-4" /> DISPLAY
@@ -341,7 +371,7 @@ function App() {
 
           <button
             onClick={() => setShowSettings(true)}
-            className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
+            className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all"
             title="Settings"
           >
             <Settings className="w-5 h-5" />
@@ -371,73 +401,84 @@ function App() {
 
         {/* Right: CONTROLS - Big and Bold */}
         <div className="w-1/2 p-3 flex flex-col gap-3 min-h-0 overflow-y-auto">
-          {/* ACTION BUTTONS - HUGE */}
-          <div className="flex gap-2">
-            <button
-              onClick={handleHold}
-              className="flex-1 py-4 bg-cyan-600 hover:bg-cyan-500 rounded-xl text-lg font-black transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              ⏸️ HOLD
-            </button>
-            <button
-              onClick={handleKill}
-              className="flex-1 py-4 bg-red-600 hover:bg-red-500 rounded-xl text-lg font-black transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              🔴 KILL
-            </button>
-            <button
-              onClick={handleReset}
-              className="flex-1 py-4 bg-purple-600 hover:bg-purple-500 rounded-xl text-lg font-black transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              🔄 RESET
-            </button>
-          </div>
-
           {/* QUICK COLOR PALETTE - One-tap color switching */}
           <div className="flex gap-2">
             {[
-              { id: 'cosmos', colors: ['#8B5CF6', '#EC4899'], label: '🌌' },
-              { id: 'fire', colors: ['#f97316', '#ef4444'], label: '🔥' },
-              { id: 'ice', colors: ['#06b6d4', '#3b82f6'], label: '❄️' },
-              { id: 'neon', colors: ['#ff00ff', '#00ffff'], label: '⚡' },
-              { id: 'earth', colors: ['#22c55e', '#eab308'], label: '🌿' },
-              { id: 'sacred', colors: ['#ffd700', '#8B5CF6'], label: '✨' },
-              { id: 'void', colors: ['#1e293b', '#334155'], label: '🌑' },
-            ].map((palette) => (
-              <button
-                key={palette.id}
-                onClick={() => updateVisualParameter('colorPalette', palette.id)}
-                className={`flex-1 py-3 rounded-xl text-2xl font-black transition-all hover:scale-105 active:scale-95 ${
-                  visualState.colorPalette === palette.id
-                    ? 'ring-2 ring-white ring-offset-2 ring-offset-black scale-105'
-                    : 'opacity-80 hover:opacity-100'
-                }`}
-                style={{
-                  background: `linear-gradient(135deg, ${palette.colors[0]}, ${palette.colors[1]})`
-                }}
-                title={palette.id.toUpperCase()}
-              >
-                {palette.label}
-              </button>
-            ))}
+              { id: 'cosmos', colors: ['#8B5CF6', '#EC4899'], icon: Sparkles },
+              { id: 'fire', colors: ['#f97316', '#ef4444'], icon: Flame },
+              { id: 'ice', colors: ['#06b6d4', '#3b82f6'], icon: Snowflake },
+              { id: 'neon', colors: ['#ff00ff', '#00ffff'], icon: Zap },
+              { id: 'earth', colors: ['#22c55e', '#eab308'], icon: Leaf },
+              { id: 'sacred', colors: ['#ffd700', '#8B5CF6'], icon: Star },
+              { id: 'void', colors: ['#1e293b', '#334155'], icon: Moon },
+            ].map((palette) => {
+              const Icon = palette.icon;
+              return (
+                <button
+                  key={palette.id}
+                  onClick={() => updateVisualParameter('colorPalette', palette.id)}
+                  className={`flex-1 py-3 rounded-xl font-black transition-all hover:scale-105 active:scale-95 flex items-center justify-center ${
+                    visualState.colorPalette === palette.id
+                      ? 'ring-2 ring-white ring-offset-2 ring-offset-black scale-105'
+                      : 'opacity-80 hover:opacity-100'
+                  }`}
+                  style={{
+                    background: `linear-gradient(135deg, ${palette.colors[0]}, ${palette.colors[1]})`
+                  }}
+                  title={palette.id.toUpperCase()}
+                >
+                  <Icon className="w-6 h-6 drop-shadow-lg" />
+                </button>
+              );
+            })}
           </div>
 
-          {/* PRESETS - Colorful Grid */}
-          <div className="bg-zinc-900/80 backdrop-blur rounded-2xl p-4 border border-white/10">
-            <h2 className="text-sm font-black text-white/60 tracking-widest mb-3">PRESETS</h2>
-            <PresetGrid presets={presets} onSelect={handleLoadPreset} currentPreset={presets.find(p => p.id === activePreset) || null} />
+          {/* PRESETS - Collapsible */}
+          <div className="bg-zinc-900/80 backdrop-blur rounded-2xl border border-white/10 overflow-hidden">
+            <button
+              onClick={() => setShowPresets(!showPresets)}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+            >
+              <h2 className="text-sm font-black text-white/60 tracking-widest">PRESETS</h2>
+              {showPresets ? <ChevronDown className="w-4 h-4 text-white/40" /> : <ChevronRight className="w-4 h-4 text-white/40" />}
+            </button>
+            {showPresets && (
+              <div className="px-4 pb-4">
+                <PresetGrid presets={presets} onSelect={handleLoadPreset} currentPreset={presets.find(p => p.id === activePreset) || null} />
+              </div>
+            )}
           </div>
 
-          {/* SLIDERS & CONTROLS */}
-          <div className="bg-zinc-900/80 backdrop-blur rounded-2xl p-4 border border-white/10 flex-1 min-h-0 overflow-y-auto">
-            <h2 className="text-sm font-black text-white/60 tracking-widest mb-2">CONTROLS</h2>
-            <ParameterSliders state={visualState} onChange={(p, v) => updateVisualParameter(p, v)} />
+          {/* CONTROLS - Collapsible */}
+          <div className={`bg-zinc-900/80 backdrop-blur rounded-2xl border border-white/10 overflow-hidden ${showControls ? 'flex-1 min-h-0 flex flex-col' : ''}`}>
+            <button
+              onClick={() => setShowControls(!showControls)}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors shrink-0"
+            >
+              <h2 className="text-sm font-black text-white/60 tracking-widest">CONTROLS</h2>
+              {showControls ? <ChevronDown className="w-4 h-4 text-white/40" /> : <ChevronRight className="w-4 h-4 text-white/40" />}
+            </button>
+            {showControls && (
+              <div className="px-4 pb-4 overflow-y-auto flex-1">
+                <ParameterSliders state={visualState} onChange={(p, v) => updateVisualParameter(p, v)} />
+              </div>
+            )}
           </div>
 
-          {/* AUDIO - Clear and prominent */}
-          <div className="bg-zinc-900/80 backdrop-blur rounded-2xl p-4 border border-white/10">
-            <h2 className="text-sm font-black text-white/60 tracking-widest mb-3">AUDIO SOURCE</h2>
-            <AudioSourceSelector />
+          {/* AUDIO - Collapsible */}
+          <div className="bg-zinc-900/80 backdrop-blur rounded-2xl border border-white/10 overflow-hidden">
+            <button
+              onClick={() => setShowAudio(!showAudio)}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+            >
+              <h2 className="text-sm font-black text-white/60 tracking-widest">AUDIO</h2>
+              {showAudio ? <ChevronDown className="w-4 h-4 text-white/40" /> : <ChevronRight className="w-4 h-4 text-white/40" />}
+            </button>
+            {showAudio && (
+              <div className="px-4 pb-4">
+                <AudioSourceSelector />
+              </div>
+            )}
           </div>
         </div>
       </div>
