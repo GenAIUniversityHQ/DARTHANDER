@@ -87,6 +87,7 @@ const cosmicLayers = [
 
 // Motion directions
 const motionDirs = [
+  { id: 'flow', label: 'FLOW', color: 'bg-gradient-to-r from-pink-500 to-purple-500' },
   { id: 'outward', label: 'OUT', color: 'bg-cyan-500' },
   { id: 'inward', label: 'IN', color: 'bg-purple-500' },
   { id: 'clockwise', label: 'CW', color: 'bg-green-500' },

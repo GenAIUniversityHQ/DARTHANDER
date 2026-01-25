@@ -46,11 +46,39 @@ const palettes: Record<string, { bg: string; colors: string[] }> = {
   sunset: { bg: '#0a0505', colors: ['#ff6b6b', '#feca57', '#ff9f43', '#ee5a24', '#f368e0'] },
 };
 
+// Flow state for dancer-like movement
+interface FlowState {
+  energy: number;          // Accumulated energy from beats
+  momentum: { x: number; y: number };  // Current movement momentum
+  rotation: number;        // Current rotation velocity
+  scale: number;           // Current scale momentum
+  sway: number;            // Side-to-side sway phase
+  bounce: number;          // Up-down bounce phase
+  lean: number;            // Leaning direction (-1 to 1)
+  lastBass: number;        // Previous frame bass for detecting hits
+  beatHistory: number[];   // Recent beat intensities for pattern detection
+  anticipation: number;    // Pre-movement before beats
+}
+
 export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const timeRef = useRef(0);
   const particlesRef = useRef<Array<{x: number; y: number; vx: number; vy: number; size: number; hue: number}>>([]);
+
+  // Flow state for dancer-like adaptive movement
+  const flowRef = useRef<FlowState>({
+    energy: 0,
+    momentum: { x: 0, y: 0 },
+    rotation: 0,
+    scale: 1,
+    sway: 0,
+    bounce: 0,
+    lean: 0,
+    lastBass: 0,
+    beatHistory: [],
+    anticipation: 0,
+  });
 
   const audioState = useStore((s) => s.audioState);
 
@@ -125,14 +153,89 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
 
       const motionDir = state?.motionDirection ?? 'clockwise';
       let rotation = timeRef.current * 0.0005;
-      if (motionDir === 'counter') rotation = -rotation;
-      if (motionDir === 'breathing' || motionDir === 'still') rotation = 0;
-      ctx.rotate(rotation);
-
       let breathScale = 1 + bass * 0.2 * audioReact;
-      if (motionDir === 'breathing') {
-        breathScale = 1 + Math.sin(timeRef.current * 0.002) * 0.1 + bass * 0.25 * audioReact;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      // === FLOW MODE - Dancer-like adaptive movement ===
+      if (motionDir === 'flow') {
+        const flow = flowRef.current;
+        const dt = 0.016; // ~60fps frame time
+
+        // Detect beat hits (bass spike)
+        const bassHit = bass > flow.lastBass + 0.15 && bass > 0.3;
+        flow.lastBass = bass;
+
+        // Track beat history for pattern detection
+        flow.beatHistory.push(beat);
+        if (flow.beatHistory.length > 30) flow.beatHistory.shift();
+
+        // Calculate average beat intensity for anticipation
+        const avgBeat = flow.beatHistory.reduce((a, b) => a + b, 0) / Math.max(flow.beatHistory.length, 1);
+
+        // === ENERGY SYSTEM - Like a dancer building up and releasing ===
+        // Energy builds on beats, decays smoothly
+        if (bassHit) {
+          flow.energy = Math.min(flow.energy + bass * 0.8, 2);
+          // Random lean direction on hit (like a dancer shifting weight)
+          flow.lean += (Math.random() - 0.5) * bass * 2;
+        }
+        flow.energy *= 0.98; // Smooth decay
+        flow.lean *= 0.95; // Lean returns to center
+        flow.lean = Math.max(-1, Math.min(1, flow.lean));
+
+        // === MOMENTUM - Smooth follow-through like a dancer ===
+        // Add impulse on beats
+        if (bassHit) {
+          flow.momentum.x += (Math.random() - 0.5) * bass * 40;
+          flow.momentum.y += (Math.random() - 0.5) * bass * 40;
+          flow.rotation += (Math.random() - 0.5) * bass * 0.1;
+        }
+        // Apply friction (dancers have smooth deceleration)
+        flow.momentum.x *= 0.92;
+        flow.momentum.y *= 0.92;
+        flow.rotation *= 0.95;
+
+        // === SWAY - Side-to-side body movement ===
+        // Sway speed increases with energy, like dancing harder
+        flow.sway += dt * (2 + flow.energy * 3 + mid * 2);
+        const swayAmount = Math.sin(flow.sway) * (20 + flow.energy * 30) * audioReact;
+
+        // === BOUNCE - Up-down movement synced to beat ===
+        flow.bounce += dt * (3 + bass * 5);
+        const bounceAmount = Math.abs(Math.sin(flow.bounce)) * (10 + flow.energy * 25) * audioReact;
+
+        // === ANTICIPATION - Slight pre-movement before expected beats ===
+        // Creates that "feeling the beat" effect dancers have
+        flow.anticipation = avgBeat * 0.3 * Math.sin(timeRef.current * 0.008);
+
+        // === SCALE BREATHING - Organic expansion/contraction ===
+        const targetScale = 1 + flow.energy * 0.15 + bass * 0.2 * audioReact;
+        flow.scale += (targetScale - flow.scale) * 0.1; // Smooth interpolation
+
+        // Apply all flow transformations
+        offsetX = flow.momentum.x + swayAmount + flow.lean * 30;
+        offsetY = flow.momentum.y - bounceAmount + flow.anticipation * 20;
+        rotation = flow.rotation + Math.sin(flow.sway * 0.5) * 0.05 * (1 + flow.energy);
+        breathScale = flow.scale;
+
+        // Slight skew for organic feel (like a dancer's body isn't perfectly rigid)
+        const skewX = flow.lean * 0.03;
+        const skewY = Math.sin(flow.sway) * 0.02 * flow.energy;
+        ctx.transform(1, skewY, skewX, 1, 0, 0);
+
+      } else {
+        // Standard motion modes
+        if (motionDir === 'counter') rotation = -rotation;
+        if (motionDir === 'breathing' || motionDir === 'still') rotation = 0;
+
+        if (motionDir === 'breathing') {
+          breathScale = 1 + Math.sin(timeRef.current * 0.002) * 0.1 + bass * 0.25 * audioReact;
+        }
       }
+
+      ctx.translate(offsetX, offsetY);
+      ctx.rotate(rotation);
       ctx.scale(breathScale, breathScale);
 
       // === BASE GEOMETRY ===
