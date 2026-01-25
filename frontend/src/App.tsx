@@ -1386,13 +1386,36 @@ function App() {
       setConversionProgress(Math.round(progress * 100));
     });
 
-    // Load FFmpeg core-mt (multithreaded with full codec support including x264)
-    const baseURL = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm';
+    // Check if SharedArrayBuffer is available (required for multithreaded FFmpeg)
+    const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
+    console.log('[FFmpeg] SharedArrayBuffer available:', hasSharedArrayBuffer);
+
+    if (hasSharedArrayBuffer) {
+      // Try multithreaded core with full codec support (x264)
+      try {
+        console.log('[FFmpeg] Loading multithreaded core...');
+        const baseURL = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm';
+        await ffmpeg.load({
+          coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+          wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+          workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
+        });
+        console.log('[FFmpeg] Multithreaded core loaded successfully');
+        ffmpegLoadedRef.current = true;
+        return ffmpeg;
+      } catch (err) {
+        console.warn('[FFmpeg] Multithreaded core failed, trying single-threaded:', err);
+      }
+    }
+
+    // Fallback to single-threaded core
+    console.log('[FFmpeg] Loading single-threaded core...');
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-      workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
     });
+    console.log('[FFmpeg] Single-threaded core loaded');
 
     ffmpegLoadedRef.current = true;
     return ffmpeg;
@@ -1417,26 +1440,37 @@ function App() {
       const webmData = await fetchFile(webmBlob);
       await ffmpeg.writeFile('input.webm', webmData);
 
-      // Convert to MP4 with HIGH QUALITY settings for YouTube
-      // CRF 15 = very high quality (lower = better, 15-18 is excellent)
-      // preset fast = good balance of speed/quality
-      // yuv420p = maximum compatibility
-      // 320k audio = high quality audio matching source
-      const result = await ffmpeg.exec([
-        '-i', 'input.webm',
-        '-c:v', 'libx264',
-        '-preset', 'fast',
-        '-crf', '15',
-        '-pix_fmt', 'yuv420p',
-        '-r', '60',
-        '-c:a', 'aac',
-        '-b:a', '320k',
-        '-movflags', '+faststart',
-        '-y',
-        'output.mp4'
-      ]);
+      // Try H.264 conversion first (best quality), fall back to simpler methods
+      let result: number;
 
-      console.log('FFmpeg conversion result:', result);
+      try {
+        // Method 1: High quality H.264 (requires libx264 from MT core)
+        console.log('[FFmpeg] Trying H.264 encoding...');
+        result = await ffmpeg.exec([
+          '-i', 'input.webm',
+          '-c:v', 'libx264',
+          '-preset', 'fast',
+          '-crf', '15',
+          '-pix_fmt', 'yuv420p',
+          '-r', '60',
+          '-c:a', 'aac',
+          '-b:a', '320k',
+          '-movflags', '+faststart',
+          '-y',
+          'output.mp4'
+        ]);
+        console.log('[FFmpeg] H.264 conversion result:', result);
+      } catch (e) {
+        console.warn('[FFmpeg] H.264 failed, trying simple remux...', e);
+        // Method 2: Simple remux (copy streams, just change container)
+        result = await ffmpeg.exec([
+          '-i', 'input.webm',
+          '-c', 'copy',
+          '-y',
+          'output.mp4'
+        ]);
+        console.log('[FFmpeg] Remux result:', result);
+      }
 
       // Read the output MP4
       const mp4Data = await ffmpeg.readFile('output.mp4') as Uint8Array;

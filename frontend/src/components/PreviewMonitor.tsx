@@ -164,18 +164,19 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
       }
     }
 
+    // Fixed 1080p resolution for high quality recording
+    // Canvas always renders at 1920x1080, CSS scales it to fit
     const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * window.devicePixelRatio;
-      canvas.height = rect.height * window.devicePixelRatio;
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      canvas.width = 1920;
+      canvas.height = 1080;
     };
     resize();
-    window.addEventListener('resize', resize);
+    // No need to listen for resize since we use fixed resolution
 
     const draw = () => {
-      const width = canvas.offsetWidth;
-      const height = canvas.offsetHeight;
+      // Use canvas internal resolution (1920x1080)
+      const width = canvas.width;
+      const height = canvas.height;
       const centerX = width / 2;
       const centerY = height / 2;
 
