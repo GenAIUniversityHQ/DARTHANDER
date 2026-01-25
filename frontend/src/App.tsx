@@ -10,9 +10,7 @@ import { VoiceInput } from './components/VoiceInput';
 import { PresetGrid } from './components/PresetGrid';
 import { ParameterSliders } from './components/ParameterSliders';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
-import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Play, Loader2 } from 'lucide-react';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Play } from 'lucide-react';
 
 function App() {
   const [lastInterpretation, setLastInterpretation] = useState('');
@@ -34,12 +32,6 @@ function App() {
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingIntervalRef = useRef<number | null>(null);
-
-  // MP4 conversion state
-  const [isConverting, setIsConverting] = useState(false);
-  const [conversionProgress, setConversionProgress] = useState(0);
-  const ffmpegRef = useRef<FFmpeg | null>(null);
-  const ffmpegLoadedRef = useRef(false);
 
   // Popout window
   const [popoutWindow, setPopoutWindow] = useState<Window | null>(null);
@@ -1371,152 +1363,7 @@ function App() {
     }
   };
 
-  // Load FFmpeg library (lazy loaded on first use)
-  const loadFFmpeg = async () => {
-    if (ffmpegLoadedRef.current && ffmpegRef.current) return ffmpegRef.current;
-
-    const ffmpeg = new FFmpeg();
-    ffmpegRef.current = ffmpeg;
-
-    ffmpeg.on('log', ({ message }) => {
-      console.log('[FFmpeg]', message);
-    });
-
-    ffmpeg.on('progress', ({ progress }) => {
-      // Clamp progress to valid range (FFmpeg can return weird values)
-      const pct = Math.min(100, Math.max(0, Math.round(progress * 100)));
-      setConversionProgress(pct);
-    });
-
-    // Check if SharedArrayBuffer is available (required for multithreaded FFmpeg)
-    const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
-    console.log('[FFmpeg] SharedArrayBuffer available:', hasSharedArrayBuffer);
-
-    if (hasSharedArrayBuffer) {
-      // Try multithreaded core with full codec support (x264)
-      try {
-        console.log('[FFmpeg] Loading multithreaded core...');
-        const baseURL = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm';
-        await ffmpeg.load({
-          coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-          wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-          workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
-        });
-        console.log('[FFmpeg] Multithreaded core loaded successfully');
-        ffmpegLoadedRef.current = true;
-        return ffmpeg;
-      } catch (err) {
-        console.warn('[FFmpeg] Multithreaded core failed, trying single-threaded:', err);
-      }
-    }
-
-    // Fallback to single-threaded core
-    console.log('[FFmpeg] Loading single-threaded core...');
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    });
-    console.log('[FFmpeg] Single-threaded core loaded');
-
-    ffmpegLoadedRef.current = true;
-    return ffmpeg;
-  };
-
-  // Download as high-quality MP4 (converts from WebM)
-  const downloadRecording = async () => {
-    if (recordedChunks.length === 0) return;
-
-    setIsConverting(true);
-    setConversionProgress(0);
-
-    try {
-      // Create WebM blob from recorded chunks
-      const webmBlob = new Blob(recordedChunks, { type: 'video/webm' });
-      console.log('WebM size:', (webmBlob.size / 1024 / 1024).toFixed(2), 'MB');
-
-      // Load FFmpeg
-      const ffmpeg = await loadFFmpeg();
-
-      // Write WebM to FFmpeg virtual filesystem
-      const webmData = await fetchFile(webmBlob);
-      await ffmpeg.writeFile('input.webm', webmData);
-
-      // Try H.264 conversion first (best quality), fall back to simpler methods
-      let result: number;
-
-      try {
-        // Method 1: High quality H.264 (requires libx264 from MT core)
-        console.log('[FFmpeg] Trying H.264 encoding...');
-        result = await ffmpeg.exec([
-          '-i', 'input.webm',
-          '-c:v', 'libx264',
-          '-preset', 'fast',
-          '-crf', '15',
-          '-pix_fmt', 'yuv420p',
-          '-r', '60',
-          '-c:a', 'aac',
-          '-b:a', '320k',
-          '-movflags', '+faststart',
-          '-y',
-          'output.mp4'
-        ]);
-        console.log('[FFmpeg] H.264 conversion result:', result);
-      } catch (e) {
-        console.warn('[FFmpeg] H.264 failed, trying simple remux...', e);
-        // Method 2: Simple remux (copy streams, just change container)
-        result = await ffmpeg.exec([
-          '-i', 'input.webm',
-          '-c', 'copy',
-          '-y',
-          'output.mp4'
-        ]);
-        console.log('[FFmpeg] Remux result:', result);
-      }
-
-      // Read the output MP4
-      const mp4Data = await ffmpeg.readFile('output.mp4') as Uint8Array;
-      console.log('MP4 size:', (mp4Data.length / 1024 / 1024).toFixed(2), 'MB');
-
-      // Verify we got actual data
-      if (mp4Data.length < 1000) {
-        throw new Error('MP4 output too small - conversion may have failed');
-      }
-
-      // Create a new ArrayBuffer copy to satisfy TypeScript
-      const mp4Buffer = new Uint8Array(mp4Data).buffer;
-      const mp4Blob = new Blob([mp4Buffer], { type: 'video/mp4' });
-
-      // Clean up virtual filesystem
-      await ffmpeg.deleteFile('input.webm');
-      await ffmpeg.deleteFile('output.mp4');
-
-      // Download the MP4
-      const url = URL.createObjectURL(mp4Blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `darthander-${Date.now()}.mp4`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-    } catch (error) {
-      console.error('MP4 conversion failed:', error);
-      // Fallback to WebM download if conversion fails
-      const webmBlob = new Blob(recordedChunks, { type: 'video/webm' });
-      const url = URL.createObjectURL(webmBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `darthander-${Date.now()}.webm`;
-      a.click();
-      URL.revokeObjectURL(url);
-      alert('MP4 conversion failed - downloaded as WebM instead. YouTube accepts WebM format too!');
-    } finally {
-      setIsConverting(false);
-      setConversionProgress(0);
-    }
-  };
-
-  // Quick WebM download (instant, no conversion)
+  // Download recording as WebM (instant, YouTube-compatible)
   const downloadWebM = () => {
     if (recordedChunks.length === 0) return;
     const blob = new Blob(recordedChunks, { type: 'video/webm' });
@@ -1681,7 +1528,7 @@ function App() {
             </button>
           )}
 
-          {recordedChunks.length > 0 && !isRecording && !isConverting && (
+          {recordedChunks.length > 0 && !isRecording && (
             <>
               <button
                 onClick={downloadWebM}
@@ -1690,22 +1537,7 @@ function App() {
               >
                 <Download className="w-4 h-4" /> SAVE
               </button>
-              <button
-                onClick={downloadRecording}
-                className="px-2 py-2 bg-cyan-700 hover:bg-cyan-600 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105"
-                title="Convert to MP4 (slow - re-encodes video)"
-              >
-                MP4
-              </button>
             </>
-          )}
-          {isConverting && (
-            <button
-              disabled
-              className="px-3 py-2 bg-cyan-800 cursor-wait rounded-lg text-xs font-black flex items-center gap-1.5"
-            >
-              <Loader2 className="w-4 h-4 animate-spin" /> {conversionProgress}%
-            </button>
           )}
 
           <div className="w-px h-6 bg-white/20 mx-1" />
