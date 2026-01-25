@@ -4,6 +4,143 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // ============================================
+// SESSION CONTEXT - Learning from your style
+// ============================================
+
+export interface SessionContext {
+  recentCommands: Array<{
+    prompt: string;
+    interpretation: string;
+    timestamp: number;
+  }>;
+  detectedStyle: {
+    energy: 'calm' | 'moderate' | 'intense' | 'chaotic';
+    mood: 'dark' | 'neutral' | 'bright' | 'transcendent';
+    aesthetic: string[]; // e.g., ['sacred', 'cosmic', 'organic']
+    preferredPalettes: string[];
+    preferredLayers: string[];
+  };
+  userPreferences: {
+    prefersComplex: boolean;
+    prefersSubtle: boolean;
+    favorsMotion: boolean;
+    bassResponsive: boolean;
+  };
+  currentVibe: string; // Natural language description of current direction
+}
+
+// Initialize empty session context
+export function createSessionContext(): SessionContext {
+  return {
+    recentCommands: [],
+    detectedStyle: {
+      energy: 'moderate',
+      mood: 'neutral',
+      aesthetic: [],
+      preferredPalettes: [],
+      preferredLayers: [],
+    },
+    userPreferences: {
+      prefersComplex: false,
+      prefersSubtle: false,
+      favorsMotion: true,
+      bassResponsive: true,
+    },
+    currentVibe: 'Starting fresh - ready to create',
+  };
+}
+
+// Update session context based on a command
+export function updateSessionContext(
+  context: SessionContext,
+  prompt: string,
+  interpretation: string,
+  parameterChanges: Record<string, string | number>
+): SessionContext {
+  const newContext = { ...context };
+  const lower = prompt.toLowerCase();
+
+  // Add to recent commands (keep last 10)
+  newContext.recentCommands = [
+    { prompt, interpretation, timestamp: Date.now() },
+    ...context.recentCommands.slice(0, 9),
+  ];
+
+  // Analyze energy level
+  if (lower.includes('intense') || lower.includes('chaos') || lower.includes('wild') || lower.includes('crazy') || lower.includes('fast')) {
+    newContext.detectedStyle.energy = 'chaotic';
+  } else if (lower.includes('energetic') || lower.includes('powerful') || lower.includes('strong')) {
+    newContext.detectedStyle.energy = 'intense';
+  } else if (lower.includes('calm') || lower.includes('peaceful') || lower.includes('gentle') || lower.includes('slow') || lower.includes('subtle')) {
+    newContext.detectedStyle.energy = 'calm';
+  }
+
+  // Analyze mood
+  if (lower.includes('dark') || lower.includes('void') || lower.includes('abyss') || lower.includes('shadow')) {
+    newContext.detectedStyle.mood = 'dark';
+  } else if (lower.includes('bright') || lower.includes('light') || lower.includes('radiant')) {
+    newContext.detectedStyle.mood = 'bright';
+  } else if (lower.includes('transcend') || lower.includes('enlighten') || lower.includes('divine') || lower.includes('cosmic')) {
+    newContext.detectedStyle.mood = 'transcendent';
+  }
+
+  // Track aesthetic preferences
+  const aestheticKeywords = ['sacred', 'cosmic', 'organic', 'geometric', 'fractal', 'ancient', 'futuristic', 'minimal', 'complex', 'psychedelic'];
+  for (const kw of aestheticKeywords) {
+    if (lower.includes(kw) && !newContext.detectedStyle.aesthetic.includes(kw)) {
+      newContext.detectedStyle.aesthetic.push(kw);
+      if (newContext.detectedStyle.aesthetic.length > 5) {
+        newContext.detectedStyle.aesthetic.shift();
+      }
+    }
+  }
+
+  // Track palette preferences
+  if (parameterChanges.colorPalette && typeof parameterChanges.colorPalette === 'string') {
+    if (!newContext.detectedStyle.preferredPalettes.includes(parameterChanges.colorPalette)) {
+      newContext.detectedStyle.preferredPalettes.unshift(parameterChanges.colorPalette);
+      if (newContext.detectedStyle.preferredPalettes.length > 3) {
+        newContext.detectedStyle.preferredPalettes.pop();
+      }
+    }
+  }
+
+  // Track layer preferences
+  const layerKeys = ['geometryLayer2', 'geometryLayer3', 'geometryLayer4', 'geometryLayer5', 'geometryLayer6', 'geometryLayer7', 'geometryLayer8'];
+  for (const key of layerKeys) {
+    const val = parameterChanges[key];
+    if (val && val !== 'none' && typeof val === 'string') {
+      if (!newContext.detectedStyle.preferredLayers.includes(val)) {
+        newContext.detectedStyle.preferredLayers.unshift(val);
+        if (newContext.detectedStyle.preferredLayers.length > 5) {
+          newContext.detectedStyle.preferredLayers.pop();
+        }
+      }
+    }
+  }
+
+  // Update user preferences
+  if (lower.includes('complex') || lower.includes('detailed') || lower.includes('intricate')) {
+    newContext.userPreferences.prefersComplex = true;
+  }
+  if (lower.includes('simple') || lower.includes('minimal') || lower.includes('clean')) {
+    newContext.userPreferences.prefersSubtle = true;
+  }
+  if (lower.includes('bass') || lower.includes('reactive') || lower.includes('punch')) {
+    newContext.userPreferences.bassResponsive = true;
+  }
+
+  // Update current vibe description
+  const vibeWords = [];
+  if (newContext.detectedStyle.energy !== 'moderate') vibeWords.push(newContext.detectedStyle.energy);
+  if (newContext.detectedStyle.mood !== 'neutral') vibeWords.push(newContext.detectedStyle.mood);
+  if (newContext.detectedStyle.aesthetic.length > 0) vibeWords.push(...newContext.detectedStyle.aesthetic.slice(0, 2));
+  newContext.currentVibe = vibeWords.length > 0 ? vibeWords.join(', ') : 'exploring';
+
+  return newContext;
+}
+
+// ============================================
 // INTELLIGENT VISUAL CONDUCTOR SYSTEM PROMPT
 // ============================================
 
@@ -641,7 +778,8 @@ function handleFallbackPrompt(prompt: string): PromptResult | null {
 export async function interpretPrompt(
   prompt: string,
   currentState: VisualState,
-  apiKey?: string
+  apiKey?: string,
+  sessionContext?: SessionContext
 ): Promise<PromptResult> {
   // First try fallback (works without API)
   const fallbackResult = handleFallbackPrompt(prompt);
@@ -705,6 +843,26 @@ export async function interpretPrompt(
       },
     };
 
+    // Build session history for context
+    const sessionHistory = sessionContext?.recentCommands?.slice(0, 5).map(c =>
+      `"${c.prompt}" → ${c.interpretation}`
+    ).join('\n  ') || 'No previous commands';
+
+    const styleContext = sessionContext ? {
+      currentVibe: sessionContext.currentVibe,
+      energy: sessionContext.detectedStyle.energy,
+      mood: sessionContext.detectedStyle.mood,
+      aestheticDirection: sessionContext.detectedStyle.aesthetic.join(', ') || 'not yet defined',
+      preferredPalettes: sessionContext.detectedStyle.preferredPalettes.join(', ') || 'exploring',
+      favoredLayers: sessionContext.detectedStyle.preferredLayers.join(', ') || 'exploring',
+      userTendencies: [
+        sessionContext.userPreferences.prefersComplex ? 'likes complexity' : null,
+        sessionContext.userPreferences.prefersSubtle ? 'prefers subtle' : null,
+        sessionContext.userPreferences.bassResponsive ? 'wants bass reactivity' : null,
+        sessionContext.userPreferences.favorsMotion ? 'enjoys motion' : null,
+      ].filter(Boolean).join(', ') || 'still learning',
+    } : null;
+
     // Call Gemini with rich context
     const geminiPrompt = `${SYSTEM_PROMPT}
 
@@ -715,7 +873,31 @@ USER PROMPT: "${prompt}"
 CURRENT VISUAL STATE:
 ${JSON.stringify(context, null, 2)}
 
-Think about what the user wants to achieve, consider the current state, and respond with a COMBINATION of complementary parameters. Use multiple layers together for rich, layered visuals.
+${styleContext ? `═══════════════════════════════════════════════
+SESSION CONTEXT - User's Style & Direction:
+═══════════════════════════════════════════════
+Current Vibe: ${styleContext.currentVibe}
+Energy Level: ${styleContext.energy}
+Mood Direction: ${styleContext.mood}
+Aesthetic Direction: ${styleContext.aestheticDirection}
+Preferred Palettes: ${styleContext.preferredPalettes}
+Favored Layers: ${styleContext.favoredLayers}
+User Tendencies: ${styleContext.userTendencies}
+
+Recent Commands (building context):
+  ${sessionHistory}
+` : ''}
+═══════════════════════════════════════════════
+INTERPRETATION GUIDANCE:
+═══════════════════════════════════════════════
+1. Consider the user's established style/vibe direction
+2. Build upon their recent commands - create continuity
+3. Match the energy and mood they've been cultivating
+4. Use their preferred palettes and layers when appropriate
+5. If they say something vague, lean into their established aesthetic
+6. Make choices that feel like a natural evolution of their session
+
+Think about what the user wants to achieve, consider BOTH the current state AND their session context. Respond with parameters that feel like a natural progression of their artistic vision.
 
 Respond with ONLY valid JSON.`;
 

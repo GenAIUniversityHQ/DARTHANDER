@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useStore } from './store';
-import { interpretPrompt, DEFAULT_VISUAL_STATE } from './services/gemini';
+import { interpretPrompt, DEFAULT_VISUAL_STATE, createSessionContext, updateSessionContext, SessionContext } from './services/gemini';
 import { PreviewMonitor } from './components/PreviewMonitor';
 import { PromptInput } from './components/PromptInput';
 import { VoiceInput } from './components/VoiceInput';
@@ -19,6 +19,9 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [activePreset, setActivePreset] = useState<string | null>(null);
+
+  // Session context - learns from your style as you give commands
+  const [sessionContext, setSessionContext] = useState<SessionContext>(() => createSessionContext());
 
   // Saved state for GO/RESUME after HOLD/KILL
   const savedStateRef = useRef<typeof visualState | null>(null);
@@ -1008,12 +1011,20 @@ function App() {
     return false; // Not a recognized command - will fall through to AI
   };
 
+  // Update session context after a command (learns your style)
+  const updateContext = (prompt: string, interpretation: string, changes: Record<string, string | number>) => {
+    setSessionContext(prev => updateSessionContext(prev, prompt, interpretation, changes));
+    console.log('[CONTEXT] Updated session context:', sessionContext.currentVibe);
+  };
+
   // Handle prompt submission (voice or typed)
   const handlePromptSubmit = async (prompt: string) => {
     if (!prompt.trim()) return;
 
     // Try instant keyword processing first
     if (processVoiceCommand(prompt)) {
+      // Update context even for instant commands
+      updateContext(prompt, lastInterpretation, {});
       return; // Command was handled instantly
     }
 
@@ -1023,10 +1034,18 @@ function App() {
     setLastInterpretation('🤖 AI thinking...');
 
     try {
-      const result = await interpretPrompt(prompt, visualState, apiKey || undefined);
+      // Pass session context to AI for style-aware interpretation
+      const result = await interpretPrompt(prompt, visualState, apiKey || undefined, sessionContext);
       if (result.success && result.parameterChanges) {
         applyParameterChanges(result.parameterChanges);
         setLastInterpretation(result.interpretation || 'Applied');
+
+        // Update session context with what the AI learned
+        updateContext(prompt, result.interpretation || 'Applied', result.parameterChanges);
+
+        // Log the current vibe for debugging
+        console.log('[SESSION] Current vibe:', sessionContext.currentVibe);
+        console.log('[SESSION] Detected style:', sessionContext.detectedStyle);
       } else {
         setLastInterpretation(result.error || 'Could not interpret');
       }
@@ -1380,6 +1399,20 @@ function App() {
               {lastInterpretation || 'Ready'}
             </div>
           </div>
+
+          {/* Session Context Indicator - Shows what AI is learning about your style */}
+          {sessionContext.recentCommands.length > 0 && (
+            <div className="mt-1 flex items-center gap-2 text-[9px] text-white/40 px-2">
+              <span className="text-purple-400/60">VIBE:</span>
+              <span className="text-white/50">{sessionContext.currentVibe}</span>
+              {sessionContext.detectedStyle.preferredLayers.length > 0 && (
+                <>
+                  <span className="text-purple-400/40">•</span>
+                  <span className="text-cyan-400/50">{sessionContext.detectedStyle.preferredLayers.slice(0, 2).join(', ')}</span>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right: CONTROLS */}
