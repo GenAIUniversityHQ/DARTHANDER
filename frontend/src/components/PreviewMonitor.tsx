@@ -541,19 +541,6 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
         }
       }
 
-      // Audio bars
-      const barWidth = 3;
-      const barGap = 1;
-      const barCount = 32;
-      const startX = centerX - (barCount * (barWidth + barGap)) / 2;
-      for (let i = 0; i < barCount; i++) {
-        const freq = i < 8 ? bass : i < 16 ? audioState?.lowMid || 0 : i < 24 ? mid : high;
-        const barHeight = freq * 30 * intensity + 2;
-        const hue = (i / barCount) * 60 + 260;
-        ctx.fillStyle = `hsla(${hue}, 80%, 60%, ${0.3 + freq * 0.5})`;
-        ctx.fillRect(startX + i * (barWidth + barGap), height - barHeight - 8, barWidth, barHeight);
-      }
-
       animationRef.current = requestAnimationFrame(draw);
     };
 
