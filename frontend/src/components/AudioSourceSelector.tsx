@@ -118,6 +118,7 @@ export function AudioSourceSelector() {
 
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
+      console.log('[AUDIO] Metadata loaded, duration:', audioRef.current.duration);
       setDuration(audioRef.current.duration);
       setCurrentTime(0);
     }
@@ -129,6 +130,7 @@ export function AudioSourceSelector() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    console.log('[AUDIO] File selected:', file?.name);
     if (!file) return;
 
     // Stop current playback
@@ -143,55 +145,77 @@ export function AudioSourceSelector() {
 
     // Create new URL and update state
     const url = URL.createObjectURL(file);
+    console.log('[AUDIO] Created blob URL:', url);
     setAudioUrl(url);
     setFileName(file.name);
     setAudioSource('upload');
+    setDuration(0); // Reset duration for new file
+    setCurrentTime(0); // Reset time for new file
     sourceCreatedRef.current = false; // Reset for new audio
+    console.log('[AUDIO] State updated, sourceCreatedRef reset to false');
   };
 
   const setupAudioContext = () => {
     const audio = audioRef.current;
-    if (!audio || sourceCreatedRef.current) return;
-
-    // Create AudioContext on first play (user gesture required)
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext();
+    console.log('[AUDIO] setupAudioContext called, audio:', audio, 'sourceCreated:', sourceCreatedRef.current);
+    if (!audio || sourceCreatedRef.current) {
+      console.log('[AUDIO] Skipping setup - audio missing or source already created');
+      return;
     }
-    const ctx = audioContextRef.current;
 
-    // Create source, analyser, and destination for recording
-    const source = ctx.createMediaElementSource(audio);
-    const analyser = ctx.createAnalyser();
-    analyser.fftSize = 256;
-    analyserRef.current = analyser;
+    try {
+      // Create AudioContext on first play (user gesture required)
+      if (!audioContextRef.current) {
+        console.log('[AUDIO] Creating new AudioContext');
+        audioContextRef.current = new AudioContext();
+      }
+      const ctx = audioContextRef.current;
+      console.log('[AUDIO] AudioContext state:', ctx.state);
 
-    // Create a destination node for capturing audio stream
-    const destination = ctx.createMediaStreamDestination();
-    destinationRef.current = destination;
+      // Create source, analyser, and destination for recording
+      console.log('[AUDIO] Creating MediaElementSource...');
+      const source = ctx.createMediaElementSource(audio);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
 
-    // Connect: source -> analyser -> destination (for recording)
-    //          analyser -> speakers (for playback)
-    source.connect(analyser);
-    analyser.connect(ctx.destination); // Play through speakers
-    analyser.connect(destination); // Capture for recording
+      // Create a destination node for capturing audio stream
+      const destination = ctx.createMediaStreamDestination();
+      destinationRef.current = destination;
 
-    // Store the audio stream for recording
-    setAudioStream(destination.stream);
+      // Connect: source -> analyser -> destination (for recording)
+      //          analyser -> speakers (for playback)
+      source.connect(analyser);
+      analyser.connect(ctx.destination); // Play through speakers
+      analyser.connect(destination); // Capture for recording
+      console.log('[AUDIO] Audio nodes connected successfully');
 
-    sourceCreatedRef.current = true;
+      // Store the audio stream for recording
+      setAudioStream(destination.stream);
+
+      sourceCreatedRef.current = true;
+    } catch (err) {
+      console.error('[AUDIO] setupAudioContext error:', err);
+    }
   };
 
   const handlePlay = async () => {
     const audio = audioRef.current;
-    if (!audio || !audioUrl) return;
+    console.log('[AUDIO] handlePlay called, audioRef:', audio, 'audioUrl:', audioUrl);
+    if (!audio || !audioUrl) {
+      console.log('[AUDIO] Early return - no audio element or URL');
+      return;
+    }
 
     try {
       // Resume AudioContext if suspended
       if (audioContextRef.current?.state === 'suspended') {
+        console.log('[AUDIO] Resuming suspended AudioContext');
         await audioContextRef.current.resume();
       }
 
       // Setup audio nodes on first play
+      console.log('[AUDIO] Setting up audio context, sourceCreated:', sourceCreatedRef.current);
       setupAudioContext();
 
       // Update stream in store (in case it was cleared)
@@ -199,10 +223,12 @@ export function AudioSourceSelector() {
         setAudioStream(destinationRef.current.stream);
       }
 
+      console.log('[AUDIO] Calling audio.play()...');
       await audio.play();
+      console.log('[AUDIO] Play succeeded!');
       setIsPlaying(true);
     } catch (err) {
-      console.error('Play failed:', err);
+      console.error('[AUDIO] Play failed:', err);
     }
   };
 
