@@ -89,6 +89,7 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
+      console.log('[VOICE] Recognition started - LISTENING');
       setIsRecording(true);
       setIsProcessing(false);
       lastSpeechTimeRef.current = Date.now();
@@ -118,8 +119,8 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
         onTranscriptionRef.current(finalTranscript.trim());
         setInterimText('');
 
-        // In live mode, restart listening
-        if (liveMode) {
+        // In live mode, restart listening (use ref to avoid stale closure!)
+        if (liveModeRef.current) {
           // Brief pause before accepting next command
           setTimeout(() => {
             lastSpeechTimeRef.current = Date.now();
@@ -129,12 +130,15 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
     };
 
     recognition.onerror = (event: any) => {
-      // Ignore no-speech errors in live mode - just keep listening
-      if (event.error === 'no-speech' && liveModeRef.current) {
-        // Auto-restart in live mode after no-speech
+      console.log('[VOICE] Error:', event.error);
+
+      // Ignore no-speech errors - just keep listening
+      if (event.error === 'no-speech') {
+        console.log('[VOICE] No speech detected, continuing to listen...');
+        // Auto-restart after no-speech
         try {
           setTimeout(() => {
-            if (liveModeRef.current && isActiveRef.current) {
+            if (isActiveRef.current) {
               recognition.start();
             }
           }, 100);
@@ -143,7 +147,13 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
         }
         return;
       }
-      console.error('Speech recognition error:', event.error);
+
+      // Ignore aborted errors (happens when stopping)
+      if (event.error === 'aborted') {
+        return;
+      }
+
+      console.error('[VOICE] Speech recognition error:', event.error);
       setIsRecording(false);
       setIsProcessing(false);
       if (!liveModeRef.current) {
@@ -152,22 +162,22 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
     };
 
     recognition.onend = () => {
+      console.log('[VOICE] Recognition ended');
       setIsRecording(false);
       setInterimText('');
 
-      // In live mode, auto-restart recognition
-      if (liveModeRef.current && isActiveRef.current) {
+      // Auto-restart recognition when active (keep listening until user turns it off)
+      if (isActiveRef.current) {
+        console.log('[VOICE] Auto-restarting recognition...');
         try {
           setTimeout(() => {
-            if (liveModeRef.current && isActiveRef.current) {
+            if (isActiveRef.current) {
               recognition.start();
             }
           }, 100);
         } catch (e) {
-          // Ignore restart errors
+          console.log('[VOICE] Restart error:', e);
         }
-      } else if (isActiveRef.current) {
-        onToggle();
       }
     };
 
@@ -267,10 +277,17 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
         </button>
       )}
 
+      {/* Status indicator */}
+      {isActive && !interimText && isRecording && (
+        <span className="text-[10px] text-green-400 animate-pulse font-bold">
+          LISTENING...
+        </span>
+      )}
+
       {/* Show what you're saying */}
       {interimText && (
-        <span className="text-[10px] text-cyan-400 animate-pulse max-w-[120px] truncate">
-          {interimText}...
+        <span className="text-[10px] text-cyan-400 animate-pulse max-w-[150px] truncate font-bold">
+          "{interimText}"
         </span>
       )}
     </div>
