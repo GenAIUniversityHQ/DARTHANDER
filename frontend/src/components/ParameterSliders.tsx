@@ -295,8 +295,27 @@ const motionDirs = [
 export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
   if (!state) return null;
 
+  const beamsOn = (state.coronaIntensity ?? 0) > 0.05;
+
   return (
     <div className="space-y-2 overflow-x-hidden">
+      {/* BEAMS TOGGLE - Big clear button */}
+      <div className="flex items-center gap-3 pb-2 border-b border-white/20">
+        <button
+          onClick={() => onChange('coronaIntensity', beamsOn ? 0 : 0.7)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all
+                     ${beamsOn
+                       ? 'bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/30'
+                       : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
+        >
+          <Sun className="w-5 h-5" />
+          BEAMS {beamsOn ? 'ON' : 'OFF'}
+        </button>
+        <span className="text-[10px] text-white/40">
+          Click to toggle corona rays
+        </span>
+      </div>
+
       {/* SLIDERS - Compact */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-1">
         {sliders.map((slider) => {
