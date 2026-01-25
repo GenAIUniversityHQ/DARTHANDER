@@ -43,7 +43,7 @@ const sliders: SliderConfig[] = [
   { key: 'bassImpact', label: 'BASS IMPACT', color: 'from-red-600 via-red-500 to-orange-500', icon: Waves },
 ];
 
-// Primary geometry modes
+// Primary geometry modes - expanded
 const geometryModes = [
   { id: 'stars', label: 'STARS', color: 'bg-purple-500' },
   { id: 'mandala', label: 'MANDALA', color: 'bg-amber-500' },
@@ -52,19 +52,23 @@ const geometryModes = [
   { id: 'spiral', label: 'SPIRAL', color: 'bg-green-500' },
   { id: 'tunnel', label: 'TUNNEL', color: 'bg-blue-500' },
   { id: 'void', label: 'VOID', color: 'bg-slate-600' },
+  { id: 'fibonacci', label: 'FIB', color: 'bg-amber-400' },
+  { id: 'chaos-field', label: 'CHAOS', color: 'bg-red-500' },
 ];
 
-// Sacred / Ancient geometry layers
+// Sacred / Ancient geometry layers - expanded
 const sacredGeometry = [
-  { id: 'flower-of-life', label: 'FLOWER OF LIFE', color: 'bg-amber-400' },
+  { id: 'flower-of-life', label: 'FLOWER', color: 'bg-amber-400' },
   { id: 'metatron', label: 'METATRON', color: 'bg-violet-500' },
-  { id: 'sri-yantra', label: 'SRI YANTRA', color: 'bg-red-500' },
+  { id: 'sri-yantra', label: 'SRI', color: 'bg-red-500' },
   { id: 'torus', label: 'TORUS', color: 'bg-cyan-400' },
   { id: 'vesica', label: 'VESICA', color: 'bg-blue-400' },
   { id: 'seed-of-life', label: 'SEED', color: 'bg-green-400' },
+  { id: 'merkaba', label: 'MERKABA', color: 'bg-yellow-400' },
+  { id: 'golden-ratio', label: 'PHI', color: 'bg-amber-500' },
 ];
 
-// Quantum / Experiential layers
+// Quantum / Experiential layers - expanded
 const quantumGeometry = [
   { id: 'quantum-field', label: 'QUANTUM', color: 'bg-indigo-500' },
   { id: 'wave-function', label: 'WAVE', color: 'bg-blue-500' },
@@ -72,9 +76,11 @@ const quantumGeometry = [
   { id: 'neural-net', label: 'NEURAL', color: 'bg-pink-500' },
   { id: 'dna-helix', label: 'DNA', color: 'bg-green-500' },
   { id: 'singularity', label: 'SINGULARITY', color: 'bg-purple-600' },
+  { id: 'entanglement', label: 'ENTANGLE', color: 'bg-violet-500' },
+  { id: 'superposition', label: 'SUPER', color: 'bg-blue-400' },
 ];
 
-// Cosmic / Nebula layers
+// Cosmic / Nebula layers - expanded
 const cosmicLayers = [
   { id: 'cosmic-surf', label: 'SURF', color: 'bg-cyan-500' },
   { id: 'star-streaks', label: 'STREAKS', color: 'bg-yellow-400' },
@@ -83,6 +89,20 @@ const cosmicLayers = [
   { id: 'galaxy', label: 'GALAXY', color: 'bg-indigo-500' },
   { id: 'aurora', label: 'AURORA', color: 'bg-emerald-500' },
   { id: 'wormhole', label: 'WORMHOLE', color: 'bg-violet-600' },
+  { id: 'pulsar', label: 'PULSAR', color: 'bg-yellow-300' },
+  { id: 'cosmic-web', label: 'WEB', color: 'bg-blue-300' },
+];
+
+// NEW: Lifeforce / Biological layers
+const lifeforceGeometry = [
+  { id: 'heartbeat', label: 'HEART', color: 'bg-red-500' },
+  { id: 'breath', label: 'BREATH', color: 'bg-sky-400' },
+  { id: 'neurons', label: 'NEURONS', color: 'bg-pink-400' },
+  { id: 'cells', label: 'CELLS', color: 'bg-green-400' },
+  { id: 'mycelium', label: 'MYCELIUM', color: 'bg-amber-600' },
+  { id: 'biolum', label: 'BIOLUM', color: 'bg-cyan-300' },
+  { id: 'roots', label: 'ROOTS', color: 'bg-emerald-600' },
+  { id: 'jellyfish', label: 'JELLY', color: 'bg-purple-400' },
 ];
 
 // Motion directions
@@ -255,6 +275,32 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
                 onClick={() => onChange('geometryLayer4', layer.id as any)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer4 === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* LIFEFORCE - Biological/Organic */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">LIFE</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('geometryLayer5', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).geometryLayer5 || (state as any).geometryLayer5 === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {lifeforceGeometry.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('geometryLayer5', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).geometryLayer5 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
               >
                 {layer.label}

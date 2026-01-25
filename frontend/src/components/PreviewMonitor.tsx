@@ -265,6 +265,14 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
         ctx.globalAlpha = 1;
       }
 
+      // === LIFEFORCE LAYER ===
+      const layer5 = (state as any)?.geometryLayer5;
+      if (layer5 && layer5 !== 'none') {
+        ctx.globalAlpha = 0.5;
+        drawLifeforceLayer(ctx, layer5, width, height, bass, mid, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
       ctx.restore();
 
       // === ECLIPSE - Audio-reactive with awe-inspiring corona ===
@@ -866,6 +874,303 @@ function drawCosmicLayer(ctx: CanvasRenderingContext2D, type: string, w: number,
         ctx.fillStyle = `hsla(${hue}, 80%, 60%, ${0.15 + bass * 0.15})`;
         ctx.fill();
       }
+    }
+  }
+
+  // Pulsar - rotating beam of light
+  if (type === 'pulsar') {
+    const beamAngle = time * 0.003;
+    for (let i = 0; i < 2; i++) {
+      const angle = beamAngle + i * Math.PI;
+      const length = Math.min(w, h) * 0.6;
+
+      ctx.save();
+      ctx.rotate(angle);
+      const gradient = ctx.createLinearGradient(0, 0, length, 0);
+      gradient.addColorStop(0, `rgba(255, 255, 200, ${0.8 + bass * 0.2})`);
+      gradient.addColorStop(0.3, `rgba(255, 200, 100, ${0.4 + beat * 0.3})`);
+      gradient.addColorStop(1, 'transparent');
+
+      ctx.beginPath();
+      ctx.moveTo(0, -10 - beat * 5);
+      ctx.lineTo(length, 0);
+      ctx.lineTo(0, 10 + beat * 5);
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Core glow
+    const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 30 + bass * 20);
+    coreGrad.addColorStop(0, `rgba(255, 255, 255, ${0.9 + beat * 0.1})`);
+    coreGrad.addColorStop(0.5, `rgba(200, 200, 255, 0.5)`);
+    coreGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = coreGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, 30 + bass * 20, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Cosmic web - large scale structure of universe
+  if (type === 'cosmic-web') {
+    const nodes: {x: number, y: number}[] = [];
+    for (let i = 0; i < 30; i++) {
+      nodes.push({
+        x: Math.sin(i * 1.3 + time * 0.0003) * w * 0.4,
+        y: Math.cos(i * 1.7 + time * 0.0004) * h * 0.4
+      });
+    }
+
+    // Draw filaments between nearby nodes
+    nodes.forEach((n1, i) => {
+      nodes.forEach((n2, j) => {
+        if (i < j) {
+          const dist = Math.sqrt((n1.x - n2.x) ** 2 + (n1.y - n2.y) ** 2);
+          if (dist < 200) {
+            const alpha = (1 - dist / 200) * 0.3;
+            ctx.beginPath();
+            ctx.moveTo(n1.x, n1.y);
+            ctx.lineTo(n2.x, n2.y);
+            ctx.strokeStyle = palette.colors[i % palette.colors.length] + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+            ctx.lineWidth = 1 + beat;
+            ctx.stroke();
+          }
+        }
+      });
+
+      // Node glow
+      ctx.beginPath();
+      ctx.arc(n1.x, n1.y, 3 + bass * 5, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[i % palette.colors.length] + '60';
+      ctx.fill();
+    });
+  }
+}
+
+// Draw lifeforce / biological layer
+function drawLifeforceLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, _mid: number, beat: number, time: number, palette: {colors: string[]}) {
+
+  // Heartbeat - pulsing concentric rings
+  if (type === 'heartbeat') {
+    const heartRate = 1.2; // ~72 bpm feel
+    const pulse = Math.sin(time * 0.006 * heartRate);
+    const isPeak = pulse > 0.8;
+
+    for (let i = 0; i < 5; i++) {
+      const baseRadius = 30 + i * 40;
+      const pulseRadius = baseRadius * (1 + (isPeak ? 0.3 : 0.1) * (1 - i * 0.15)) + bass * 30;
+
+      ctx.beginPath();
+      ctx.arc(0, 0, pulseRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255, ${50 + i * 30}, ${50 + i * 20}, ${0.6 - i * 0.1 + (isPeak ? 0.2 : 0)})`;
+      ctx.lineWidth = 3 + (isPeak ? beat * 3 : 0);
+      ctx.stroke();
+    }
+
+    // Heart center glow
+    const heartGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 50 + bass * 30);
+    heartGlow.addColorStop(0, `rgba(255, 80, 80, ${0.8 + (isPeak ? 0.2 : 0)})`);
+    heartGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = heartGlow;
+    ctx.fillRect(-100, -100, 200, 200);
+  }
+
+  // Breath - expanding/contracting organic waves
+  if (type === 'breath') {
+    const breathCycle = Math.sin(time * 0.002) * 0.5 + 0.5; // 0-1 breath cycle
+
+    for (let ring = 0; ring < 8; ring++) {
+      ctx.beginPath();
+      for (let a = 0; a < Math.PI * 2; a += 0.1) {
+        const baseR = 50 + ring * 30;
+        const breathR = baseR * (0.8 + breathCycle * 0.4);
+        const wobble = Math.sin(a * 3 + time * 0.003 + ring) * 10 * breathCycle;
+        const r = breathR + wobble + bass * 20;
+        const x = Math.cos(a) * r;
+        const y = Math.sin(a) * r;
+        if (a === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = `rgba(100, 200, 255, ${0.4 - ring * 0.04})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  // Neurons - synaptic firing network
+  if (type === 'neurons') {
+    const neurons: {x: number, y: number, firing: boolean}[] = [];
+    for (let i = 0; i < 25; i++) {
+      neurons.push({
+        x: Math.sin(i * 2.1 + time * 0.0002) * w * 0.35,
+        y: Math.cos(i * 2.7 + time * 0.0003) * h * 0.35,
+        firing: Math.sin(time * 0.01 + i * 0.5) > 0.7
+      });
+    }
+
+    // Axons (connections)
+    neurons.forEach((n1, i) => {
+      neurons.slice(i + 1, i + 4).forEach((n2) => {
+        ctx.beginPath();
+        ctx.moveTo(n1.x, n1.y);
+        // Curved axon
+        const cx = (n1.x + n2.x) / 2 + Math.sin(time * 0.002 + i) * 20;
+        const cy = (n1.y + n2.y) / 2 + Math.cos(time * 0.002 + i) * 20;
+        ctx.quadraticCurveTo(cx, cy, n2.x, n2.y);
+        ctx.strokeStyle = n1.firing ? 'rgba(255, 200, 100, 0.6)' : 'rgba(150, 100, 200, 0.2)';
+        ctx.lineWidth = n1.firing ? 2 + beat : 1;
+        ctx.stroke();
+      });
+
+      // Neuron body
+      ctx.beginPath();
+      ctx.arc(n1.x, n1.y, n1.firing ? 8 + bass * 5 : 4, 0, Math.PI * 2);
+      ctx.fillStyle = n1.firing ? 'rgba(255, 220, 100, 0.9)' : 'rgba(180, 140, 220, 0.5)';
+      ctx.fill();
+    });
+  }
+
+  // Cells - dividing and flowing
+  if (type === 'cells') {
+    for (let i = 0; i < 40; i++) {
+      const x = Math.sin(i * 1.7 + time * 0.0005) * w * 0.4;
+      const y = Math.cos(i * 2.3 + time * 0.0004) * h * 0.4;
+      const size = 10 + Math.sin(i + time * 0.003) * 5 + bass * 8;
+
+      // Cell membrane
+      ctx.beginPath();
+      ctx.ellipse(x, y, size, size * 0.8, time * 0.001 + i, 0, Math.PI * 2);
+      ctx.strokeStyle = palette.colors[i % palette.colors.length] + '60';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Nucleus
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[(i + 1) % palette.colors.length] + '80';
+      ctx.fill();
+    }
+  }
+
+  // Mycelium - underground fungal network
+  if (type === 'mycelium') {
+    const drawBranch = (x: number, y: number, angle: number, len: number, depth: number) => {
+      if (depth === 0 || len < 5) return;
+
+      const endX = x + Math.cos(angle) * len;
+      const endY = y + Math.sin(angle) * len;
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(endX, endY);
+      ctx.strokeStyle = `rgba(255, 200, 150, ${0.3 + depth * 0.05})`;
+      ctx.lineWidth = depth * 0.5;
+      ctx.stroke();
+
+      // Branches
+      const branches = 2 + Math.floor(Math.random() * 2);
+      for (let i = 0; i < branches; i++) {
+        const newAngle = angle + (Math.random() - 0.5) * 1.2;
+        drawBranch(endX, endY, newAngle, len * 0.7, depth - 1);
+      }
+    };
+
+    // Multiple root points
+    for (let i = 0; i < 5; i++) {
+      const startX = Math.sin(i * 1.5) * 50;
+      const startY = Math.cos(i * 1.5) * 50;
+      const angle = Math.atan2(-startY, -startX) + Math.sin(time * 0.001 + i) * 0.3;
+      drawBranch(startX, startY, angle, 60 + bass * 30, 5);
+    }
+  }
+
+  // Bioluminescence - glowing particles
+  if (type === 'biolum') {
+    for (let i = 0; i < 60; i++) {
+      const t = (time * 0.0005 + i * 0.1) % 1;
+      const x = Math.sin(i * 2.3 + t * Math.PI * 2) * w * 0.4 * t;
+      const y = Math.cos(i * 3.1 + t * Math.PI * 2) * h * 0.4 * t;
+      const glow = Math.sin(time * 0.005 + i) * 0.5 + 0.5;
+      const size = (3 + glow * 8) * (1 + bass * 0.5);
+
+      const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 2);
+      gradient.addColorStop(0, `rgba(100, 255, 200, ${0.8 * glow})`);
+      gradient.addColorStop(0.5, `rgba(50, 200, 255, ${0.4 * glow})`);
+      gradient.addColorStop(1, 'transparent');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(x - size * 2, y - size * 2, size * 4, size * 4);
+    }
+  }
+
+  // Roots - growing tree roots
+  if (type === 'roots') {
+    const drawRoot = (x: number, y: number, angle: number, thickness: number, depth: number) => {
+      if (depth === 0 || thickness < 1) return;
+
+      const len = 30 + thickness * 3 + bass * 10;
+      const endX = x + Math.cos(angle) * len;
+      const endY = y + Math.sin(angle) * len;
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.quadraticCurveTo(
+        x + Math.cos(angle) * len * 0.5 + Math.sin(time * 0.002 + depth) * 10,
+        y + Math.sin(angle) * len * 0.5,
+        endX, endY
+      );
+      ctx.strokeStyle = `rgba(139, 90, 43, ${0.6 + depth * 0.05})`;
+      ctx.lineWidth = thickness;
+      ctx.stroke();
+
+      // Branch into 2-3 roots
+      const numBranches = depth > 3 ? 3 : 2;
+      for (let i = 0; i < numBranches; i++) {
+        const spreadAngle = 0.4;
+        const newAngle = angle + (i - (numBranches - 1) / 2) * spreadAngle + Math.sin(time * 0.001 + i) * 0.1;
+        drawRoot(endX, endY, newAngle, thickness * 0.7, depth - 1);
+      }
+    };
+
+    drawRoot(0, -h * 0.3, Math.PI / 2, 8, 6);
+  }
+
+  // Jellyfish - pulsing bell with tentacles
+  if (type === 'jellyfish') {
+    const pulse = Math.sin(time * 0.004) * 0.3 + 0.7;
+
+    // Bell
+    ctx.beginPath();
+    for (let a = 0; a <= Math.PI; a += 0.1) {
+      const r = 80 * pulse + bass * 20;
+      const x = Math.cos(a) * r;
+      const y = Math.sin(a) * r * 0.6 - 30;
+      if (a === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+
+    const bellGrad = ctx.createRadialGradient(0, -30, 0, 0, -30, 100);
+    bellGrad.addColorStop(0, `rgba(200, 100, 255, ${0.6 + beat * 0.2})`);
+    bellGrad.addColorStop(1, `rgba(100, 50, 200, 0.2)`);
+    ctx.fillStyle = bellGrad;
+    ctx.fill();
+
+    // Tentacles
+    for (let i = 0; i < 8; i++) {
+      const startX = (i - 3.5) * 20;
+      ctx.beginPath();
+      ctx.moveTo(startX, 20);
+
+      for (let y = 0; y < 150; y += 10) {
+        const wave = Math.sin(y * 0.05 + time * 0.005 + i) * (20 + y * 0.1);
+        ctx.lineTo(startX + wave, 20 + y);
+      }
+
+      ctx.strokeStyle = `rgba(180, 100, 255, ${0.4 - i * 0.03})`;
+      ctx.lineWidth = 3 - i * 0.2;
+      ctx.stroke();
     }
   }
 }

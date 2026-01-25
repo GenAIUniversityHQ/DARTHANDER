@@ -1,8 +1,9 @@
 // DARTHANDER Visual Consciousness Engine
-// Voice Input Component (Client-side Web Speech API)
+// Voice Input Component - LIVE PERFORMANCE MODE
+// Continuous listening with auto-detect when you stop speaking
 
 import { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Loader } from 'lucide-react';
+import { Mic, MicOff, Loader, Radio } from 'lucide-react';
 
 interface VoiceInputProps {
   isActive: boolean;
@@ -58,45 +59,91 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
+  const [interimText, setInterimText] = useState('');
+  const [liveMode, setLiveMode] = useState(false); // Continuous listening mode
+
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const silenceTimerRef = useRef<number | null>(null);
+  const lastSpeechTimeRef = useRef<number>(Date.now());
 
   useEffect(() => {
-    // Check if Web Speech API is supported
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setIsSupported(false);
       return;
     }
 
-    // Initialize speech recognition
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true; // Keep listening
+    recognition.interimResults = true; // Show words as you speak
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
       setIsRecording(true);
       setIsProcessing(false);
+      lastSpeechTimeRef.current = Date.now();
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const result = event.results[event.resultIndex];
-      if (result.isFinal) {
-        const transcript = result[0].transcript;
-        onTranscription(transcript);
+      lastSpeechTimeRef.current = Date.now();
+
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript;
+        } else {
+          interimTranscript += result[0].transcript;
+        }
+      }
+
+      // Show interim text (what you're currently saying)
+      setInterimText(interimTranscript);
+
+      // When a phrase is finalized, submit it
+      if (finalTranscript) {
+        onTranscription(finalTranscript.trim());
+        setInterimText('');
+
+        // In live mode, restart listening
+        if (liveMode) {
+          // Brief pause before accepting next command
+          setTimeout(() => {
+            lastSpeechTimeRef.current = Date.now();
+          }, 500);
+        }
       }
     };
 
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event);
+    recognition.onerror = (event: any) => {
+      // Ignore no-speech errors in live mode - just keep listening
+      if (event.error === 'no-speech' && liveMode) {
+        return;
+      }
+      console.error('Speech recognition error:', event.error);
       setIsRecording(false);
       setIsProcessing(false);
-      onToggle();
+      if (!liveMode) {
+        onToggle();
+      }
     };
 
     recognition.onend = () => {
       setIsRecording(false);
-      if (isActive) {
+      setInterimText('');
+
+      // In live mode, auto-restart recognition
+      if (liveMode && isActive) {
+        try {
+          setTimeout(() => {
+            recognition.start();
+          }, 100);
+        } catch (e) {
+          // Ignore restart errors
+        }
+      } else if (isActive) {
         onToggle();
       }
     };
@@ -107,9 +154,13 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
       if (recognitionRef.current) {
         recognitionRef.current.abort();
       }
+      if (silenceTimerRef.current) {
+        clearInterval(silenceTimerRef.current);
+      }
     };
-  }, []);
+  }, [liveMode]);
 
+  // Handle active state changes
   useEffect(() => {
     if (!isSupported) return;
 
@@ -124,47 +175,81 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
       }
     } else if (!isActive && isRecording) {
       recognitionRef.current?.stop();
+      setLiveMode(false);
     }
   }, [isActive, isSupported]);
+
+  // Toggle live mode
+  const toggleLiveMode = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isActive) {
+      setLiveMode(!liveMode);
+    }
+  };
 
   if (!isSupported) {
     return (
       <button
         disabled
-        title="Speech recognition not supported in this browser"
-        className="p-3.5 rounded-full glass-button text-neon-purple/30 cursor-not-allowed"
+        title="Speech recognition not supported"
+        className="p-2.5 rounded-full bg-white/5 text-white/30 cursor-not-allowed"
       >
-        <MicOff className="w-5 h-5" />
+        <MicOff className="w-4 h-4" />
       </button>
     );
   }
 
   return (
-    <button
-      onClick={onToggle}
-      disabled={isProcessing && !isRecording}
-      title={isActive ? 'Click to stop' : 'Click to speak'}
-      className={`
-        relative p-3.5 rounded-full transition-all duration-300
-        ${isActive
-          ? 'bg-neon-red/20 text-neon-red border border-neon-red/50 shadow-glow-red'
-          : 'glass-button text-neon-purple/60 hover:text-neon-magenta hover:shadow-glow-magenta'}
-        ${isProcessing && !isRecording ? 'opacity-50' : ''}
-      `}
-    >
-      {/* Pulse ring when active */}
-      {isActive && (
-        <span className="absolute inset-0 rounded-full animate-ping bg-neon-red/30" />
-      )}
-      <span className="relative">
-        {isProcessing && !isRecording ? (
-          <Loader className="w-5 h-5 animate-spin" />
-        ) : isActive ? (
-          <Mic className="w-5 h-5" />
-        ) : (
-          <MicOff className="w-5 h-5" />
+    <div className="flex items-center gap-1">
+      {/* Main mic button */}
+      <button
+        onClick={onToggle}
+        disabled={isProcessing && !isRecording}
+        title={isActive ? 'Click to stop' : 'Click to speak (M)'}
+        className={`
+          relative p-2.5 rounded-full transition-all duration-300
+          ${isActive
+            ? 'bg-red-500/20 text-red-400 border border-red-500/50'
+            : 'bg-white/10 text-white/60 hover:text-white hover:bg-white/20'}
+          ${isProcessing && !isRecording ? 'opacity-50' : ''}
+        `}
+      >
+        {isActive && (
+          <span className="absolute inset-0 rounded-full animate-ping bg-red-500/30" />
         )}
-      </span>
-    </button>
+        <span className="relative">
+          {isProcessing && !isRecording ? (
+            <Loader className="w-4 h-4 animate-spin" />
+          ) : isActive ? (
+            <Mic className="w-4 h-4" />
+          ) : (
+            <MicOff className="w-4 h-4" />
+          )}
+        </span>
+      </button>
+
+      {/* Live mode toggle - continuous listening for performance */}
+      {isActive && (
+        <button
+          onClick={toggleLiveMode}
+          title={liveMode ? 'Live mode ON - continuous listening' : 'Enable live mode for performance'}
+          className={`
+            p-2 rounded-full transition-all text-[10px] font-bold
+            ${liveMode
+              ? 'bg-green-500/20 text-green-400 border border-green-500/50 animate-pulse'
+              : 'bg-white/10 text-white/40 hover:text-white'}
+          `}
+        >
+          <Radio className="w-3 h-3" />
+        </button>
+      )}
+
+      {/* Show what you're saying */}
+      {interimText && (
+        <span className="text-[10px] text-cyan-400 animate-pulse max-w-[120px] truncate">
+          {interimText}...
+        </span>
+      )}
+    </div>
   );
 }

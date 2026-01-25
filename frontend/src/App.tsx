@@ -10,7 +10,7 @@ import { VoiceInput } from './components/VoiceInput';
 import { PresetGrid } from './components/PresetGrid';
 import { ParameterSliders } from './components/ParameterSliders';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
-import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw } from 'lucide-react';
+import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Play } from 'lucide-react';
 
 function App() {
   const [lastInterpretation, setLastInterpretation] = useState('');
@@ -19,6 +19,9 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [activePreset, setActivePreset] = useState<string | null>(null);
+
+  // Saved state for GO/RESUME after HOLD/KILL
+  const savedStateRef = useRef<typeof visualState | null>(null);
 
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -61,6 +64,9 @@ function App() {
           break;
         case 'r':
           if (!e.metaKey && !e.ctrlKey) handleReset();
+          break;
+        case 'g':
+          handleGo();
           break;
         case 'm':
           setIsVoiceActive(!isVoiceActive);
@@ -114,13 +120,35 @@ function App() {
   };
 
   const handleHold = () => {
+    // Save current state before freezing
+    savedStateRef.current = { ...visualState };
     updateVisualParameter('motionSpeed', 0);
     setLastInterpretation('⏸️ HOLD');
   };
 
   const handleKill = () => {
+    // Save current state before killing
+    savedStateRef.current = { ...visualState };
     setVisualState({ ...visualState, overallIntensity: 0, starBrightness: 0, colorBrightness: 0 });
     setLastInterpretation('🔴 KILL');
+  };
+
+  const handleGo = () => {
+    // Restore saved state, or bring back to default values
+    if (savedStateRef.current) {
+      setVisualState(savedStateRef.current);
+      savedStateRef.current = null;
+      setLastInterpretation('▶️ GO');
+    } else {
+      // If no saved state, bring back to moderate levels
+      setVisualState({
+        ...visualState,
+        overallIntensity: 0.5,
+        motionSpeed: 0.3,
+        colorBrightness: 0.6,
+      });
+      setLastInterpretation('▶️ GO');
+    }
   };
 
   const handleReset = () => {
@@ -215,7 +243,8 @@ function App() {
       return;
     }
 
-    const win = window.open('', 'DARTHANDER Display', 'width=1920,height=1080');
+    // YouTube-optimized 16:9 aspect ratio (1920x1080)
+    const win = window.open('', 'DARTHANDER Display', 'width=1920,height=1080,menubar=no,toolbar=no,location=no,status=no');
     if (!win) return;
 
     setPopoutWindow(win);
@@ -238,14 +267,33 @@ function App() {
     `);
     win.document.close();
 
-    // Sync the display canvas with our preview
+    // Sync the display canvas with our preview (16:9 YouTube optimized)
     const syncDisplay = () => {
       if (win.closed) return;
       const sourceCanvas = document.querySelector('#preview-canvas') as HTMLCanvasElement;
       const destCanvas = win.document.querySelector('#display-canvas') as HTMLCanvasElement;
       if (sourceCanvas && destCanvas) {
-        destCanvas.width = win.innerWidth;
-        destCanvas.height = win.innerHeight;
+        // Force 16:9 aspect ratio for YouTube
+        const targetWidth = win.innerWidth;
+        const targetHeight = win.innerHeight;
+        const aspectRatio = 16 / 9;
+
+        let renderWidth = targetWidth;
+        let renderHeight = targetWidth / aspectRatio;
+
+        if (renderHeight > targetHeight) {
+          renderHeight = targetHeight;
+          renderWidth = targetHeight * aspectRatio;
+        }
+
+        destCanvas.width = renderWidth;
+        destCanvas.height = renderHeight;
+        destCanvas.style.width = `${renderWidth}px`;
+        destCanvas.style.height = `${renderHeight}px`;
+        destCanvas.style.position = 'absolute';
+        destCanvas.style.left = `${(targetWidth - renderWidth) / 2}px`;
+        destCanvas.style.top = `${(targetHeight - renderHeight) / 2}px`;
+
         const ctx = destCanvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(sourceCanvas, 0, 0, destCanvas.width, destCanvas.height);
@@ -303,6 +351,13 @@ function App() {
 
         <div className="flex items-center gap-2">
           {/* LIVE CONTROLS - Quick access */}
+          <button
+            onClick={handleGo}
+            className="px-3 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105"
+            title="Resume visuals (G)"
+          >
+            <Play className="w-4 h-4" /> GO
+          </button>
           <button
             onClick={handleHold}
             className="px-3 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105"
@@ -381,10 +436,14 @@ function App() {
 
       {/* Main Content - Split Layout */}
       <div className="flex-1 flex min-h-0">
-        {/* Left: VISUALIZER - The Star of the Show */}
+        {/* Left: VISUALIZER - The Star of the Show (16:9 YouTube optimized) */}
         <div className="w-1/2 p-3 flex flex-col min-h-0">
-          <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-purple-500/20">
-            <PreviewMonitor state={visualState} canvasId="preview-canvas" />
+          <div className="flex-1 min-h-0 flex items-center justify-center bg-black/50 rounded-2xl">
+            <div className="relative w-full h-0 pb-[56.25%] rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-purple-500/20">
+              <div className="absolute inset-0">
+                <PreviewMonitor state={visualState} canvasId="preview-canvas" />
+              </div>
+            </div>
           </div>
 
           {/* Prompt Bar - Clean and simple */}
