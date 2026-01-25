@@ -76,12 +76,12 @@ const quantumGeometry = [
 
 // Cosmic / Nebula layers
 const cosmicLayers = [
+  { id: 'cosmic-surf', label: 'SURF', color: 'bg-cyan-500' },
+  { id: 'star-streaks', label: 'STREAKS', color: 'bg-yellow-400' },
+  { id: 'fluid-flow', label: 'FLUID', color: 'bg-pink-500' },
   { id: 'nebula', label: 'NEBULA', color: 'bg-purple-500' },
   { id: 'galaxy', label: 'GALAXY', color: 'bg-indigo-500' },
-  { id: 'supernova', label: 'SUPERNOVA', color: 'bg-orange-500' },
-  { id: 'black-hole', label: 'BLACK HOLE', color: 'bg-slate-700' },
   { id: 'aurora', label: 'AURORA', color: 'bg-emerald-500' },
-  { id: 'cosmic-dust', label: 'COSMIC DUST', color: 'bg-pink-400' },
   { id: 'wormhole', label: 'WORMHOLE', color: 'bg-violet-600' },
 ];
 

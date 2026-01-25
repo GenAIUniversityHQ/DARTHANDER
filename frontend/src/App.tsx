@@ -10,7 +10,7 @@ import { VoiceInput } from './components/VoiceInput';
 import { PresetGrid } from './components/PresetGrid';
 import { ParameterSliders } from './components/ParameterSliders';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
-import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Sparkles, Flame, Snowflake, Zap, Leaf, Star, Moon, ChevronDown, ChevronRight } from 'lucide-react';
+import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Sparkles, Flame, Snowflake, Zap, Leaf, Star, Moon, Waves, Sunset, ChevronDown, ChevronRight } from 'lucide-react';
 
 function App() {
   const [lastInterpretation, setLastInterpretation] = useState('');
@@ -402,7 +402,7 @@ function App() {
         {/* Right: CONTROLS - Big and Bold */}
         <div className="w-1/2 p-3 flex flex-col gap-3 min-h-0 overflow-y-auto">
           {/* QUICK COLOR PALETTE - One-tap color switching */}
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 flex-wrap">
             {[
               { id: 'cosmos', colors: ['#8B5CF6', '#EC4899'], icon: Sparkles },
               { id: 'fire', colors: ['#f97316', '#ef4444'], icon: Flame },
@@ -411,6 +411,8 @@ function App() {
               { id: 'earth', colors: ['#22c55e', '#eab308'], icon: Leaf },
               { id: 'sacred', colors: ['#ffd700', '#8B5CF6'], icon: Star },
               { id: 'void', colors: ['#1e293b', '#334155'], icon: Moon },
+              { id: 'ocean', colors: ['#00b4d8', '#023e8a'], icon: Waves },
+              { id: 'sunset', colors: ['#ff6b6b', '#f368e0'], icon: Sunset },
             ].map((palette) => {
               const Icon = palette.icon;
               return (
