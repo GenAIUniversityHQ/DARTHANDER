@@ -1383,7 +1383,9 @@ function App() {
     });
 
     ffmpeg.on('progress', ({ progress }) => {
-      setConversionProgress(Math.round(progress * 100));
+      // Clamp progress to valid range (FFmpeg can return weird values)
+      const pct = Math.min(100, Math.max(0, Math.round(progress * 100)));
+      setConversionProgress(pct);
     });
 
     // Check if SharedArrayBuffer is available (required for multithreaded FFmpeg)
