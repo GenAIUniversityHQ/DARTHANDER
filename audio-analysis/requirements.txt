@@ -1,0 +1,11 @@
+# DARTHANDER Audio Analysis Service
+# Python Dependencies
+
+librosa==0.10.1
+numpy>=1.24.0
+scipy>=1.10.0
+soundfile>=0.12.0
+python-socketio[client]>=5.10.0
+requests>=2.31.0
+essentia>=2.1b6.dev1034
+aubio>=0.4.9
