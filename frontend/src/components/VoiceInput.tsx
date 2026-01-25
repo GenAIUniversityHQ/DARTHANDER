@@ -1,10 +1,8 @@
 // DARTHANDER Visual Consciousness Engine
-// Voice Input Component
+// Voice Input Component (Client-side Web Speech API)
 
 import { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Loader } from 'lucide-react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface VoiceInputProps {
   isActive: boolean;
@@ -12,95 +10,146 @@ interface VoiceInputProps {
   onTranscription: (text: string) => void;
 }
 
+// Extend window for SpeechRecognition
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onerror: ((event: Event) => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+  onstart: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
+
 export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  const [isSupported, setIsSupported] = useState(true);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    if (isActive && !isRecording) {
-      startRecording();
-    } else if (!isActive && isRecording) {
-      stopRecording();
+    // Check if Web Speech API is supported
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setIsSupported(false);
+      return;
     }
-  }, [isActive]);
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
+    // Initialize speech recognition
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
 
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          chunksRef.current.push(e.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        await processAudio(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      mediaRecorder.start();
+    recognition.onstart = () => {
       setIsRecording(true);
-
-      // Auto-stop after 10 seconds
-      setTimeout(() => {
-        if (mediaRecorderRef.current?.state === 'recording') {
-          stopRecording();
-        }
-      }, 10000);
-    } catch (error) {
-      console.error('Failed to start recording:', error);
-      onToggle(); // Turn off if failed
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current?.state === 'recording') {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    }
-  };
-
-  const processAudio = async (audioBlob: Blob) => {
-    setIsProcessing(true);
-
-    try {
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
-
-      const response = await fetch(`${API_URL}/api/prompt/voice`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-      
-      if (data.transcription) {
-        onTranscription(data.transcription);
-      }
-    } catch (error) {
-      console.error('Voice processing error:', error);
-    } finally {
       setIsProcessing(false);
+    };
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const result = event.results[event.resultIndex];
+      if (result.isFinal) {
+        const transcript = result[0].transcript;
+        onTranscription(transcript);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event);
+      setIsRecording(false);
+      setIsProcessing(false);
+      onToggle();
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+      if (isActive) {
+        onToggle();
+      }
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isSupported) return;
+
+    if (isActive && !isRecording) {
+      try {
+        setIsProcessing(true);
+        recognitionRef.current?.start();
+      } catch (error) {
+        console.error('Failed to start recognition:', error);
+        setIsProcessing(false);
+        onToggle();
+      }
+    } else if (!isActive && isRecording) {
+      recognitionRef.current?.stop();
     }
-  };
+  }, [isActive, isSupported]);
+
+  if (!isSupported) {
+    return (
+      <button
+        disabled
+        title="Speech recognition not supported in this browser"
+        className="p-3.5 rounded-full glass-button text-neon-purple/30 cursor-not-allowed"
+      >
+        <MicOff className="w-5 h-5" />
+      </button>
+    );
+  }
 
   return (
     <button
       onClick={onToggle}
-      disabled={isProcessing}
+      disabled={isProcessing && !isRecording}
+      title={isActive ? 'Click to stop' : 'Click to speak'}
       className={`
         relative p-3.5 rounded-full transition-all duration-300
         ${isActive
           ? 'bg-neon-red/20 text-neon-red border border-neon-red/50 shadow-glow-red'
           : 'glass-button text-neon-purple/60 hover:text-neon-magenta hover:shadow-glow-magenta'}
-        ${isProcessing ? 'opacity-50' : ''}
+        ${isProcessing && !isRecording ? 'opacity-50' : ''}
       `}
     >
       {/* Pulse ring when active */}
@@ -108,7 +157,7 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
         <span className="absolute inset-0 rounded-full animate-ping bg-neon-red/30" />
       )}
       <span className="relative">
-        {isProcessing ? (
+        {isProcessing && !isRecording ? (
           <Loader className="w-5 h-5 animate-spin" />
         ) : isActive ? (
           <Mic className="w-5 h-5" />

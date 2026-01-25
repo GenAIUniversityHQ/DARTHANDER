@@ -1,3 +1,6 @@
+# DARTHANDER Visual Consciousness Engine
+# Netlify Configuration (Frontend-only MVP)
+
 [build]
   command = "npm run build"
   publish = "dist"
@@ -5,19 +8,8 @@
 [build.environment]
   NODE_VERSION = "18"
 
-[[redirects]]
-  from = "/api/*"
-  to = "https://your-backend-url.railway.app/api/:splat"
-  status = 200
-  force = true
-
+# SPA routing - all routes go to index.html
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-[context.production.environment]
-  VITE_API_URL = "https://your-backend-url.railway.app"
-
-[context.deploy-preview.environment]
-  VITE_API_URL = "https://your-backend-url.railway.app"
