@@ -3876,8 +3876,7 @@ function drawParadoxLayer(ctx: CanvasRenderingContext2D, type: string, _w: numbe
 // ELEMENTAL LAYER - Fire, Water, Earth, Air, etc.
 // ============================================
 function drawElementalLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, mid: number, beat: number, time: number, palette: {colors: string[]}) {
-  ctx.save();
-  ctx.translate(w / 2, h / 2);
+  // Context already centered - draw relative to (0,0)
 
   // FIRE - Rising flames
   if (type === 'fire') {
@@ -4143,16 +4142,13 @@ function drawElementalLayer(ctx: CanvasRenderingContext2D, type: string, w: numb
       ctx.stroke();
     }
   }
-
-  ctx.restore();
 }
 
 // ============================================
 // ENERGY LAYER - Chi, Prana, Tesla, etc.
 // ============================================
 function drawEnergyLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, _mid: number, beat: number, time: number, palette: {colors: string[]}) {
-  ctx.save();
-  ctx.translate(w / 2, h / 2);
+  // Context already centered - draw relative to (0,0)
 
   // CHI - Flowing life force
   if (type === 'chi') {
@@ -4315,16 +4311,13 @@ function drawEnergyLayer(ctx: CanvasRenderingContext2D, type: string, w: number,
       ctx.stroke();
     }
   }
-
-  ctx.restore();
 }
 
 // ============================================
 // TEXTURE LAYER - Liquid, Metal, Glass, etc.
 // ============================================
 function drawTextureLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
-  ctx.save();
-  ctx.translate(w / 2, h / 2);
+  // Context already centered - draw relative to (0,0)
 
   // LIQUID - Flowing liquid effect
   if (type === 'liquid') {
@@ -4476,16 +4469,13 @@ function drawTextureLayer(ctx: CanvasRenderingContext2D, type: string, w: number
       ctx.fill();
     }
   }
-
-  ctx.restore();
 }
 
 // ============================================
 // ALTERED LAYER - Hypnotic, Trance, etc.
 // ============================================
-function drawAlteredLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, _mid: number, beat: number, time: number, palette: {colors: string[]}) {
-  ctx.save();
-  ctx.translate(w / 2, h / 2);
+function drawAlteredLayer(ctx: CanvasRenderingContext2D, type: string, w: number, _h: number, bass: number, _mid: number, beat: number, time: number, palette: {colors: string[]}) {
+  // Context already centered - draw relative to (0,0)
 
   // HYPNOTIC - Hypnotic spiral
   if (type === 'hypnotic') {
@@ -4655,16 +4645,13 @@ function drawAlteredLayer(ctx: CanvasRenderingContext2D, type: string, w: number
       ctx.fillRect(-50, -50, 100, 100);
     }
   }
-
-  ctx.restore();
 }
 
 // ============================================
 // CELESTIAL LAYER - Sun, Moon, Planets
 // ============================================
-function drawCelestialLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, beat: number, time: number, _palette: {colors: string[]}) {
-  ctx.save();
-  ctx.translate(w / 2, h / 2);
+function drawCelestialLayer(ctx: CanvasRenderingContext2D, type: string, _w: number, _h: number, bass: number, beat: number, time: number, _palette: {colors: string[]}) {
+  // Context already centered - draw relative to (0,0)
 
   // SUN - Radiant sun
   if (type === 'sun') {
@@ -4841,16 +4828,13 @@ function drawCelestialLayer(ctx: CanvasRenderingContext2D, type: string, w: numb
     ctx.fillStyle = grad;
     ctx.fill();
   }
-
-  ctx.restore();
 }
 
 // ============================================
 // EMOTION LAYER - Joy, Peace, Rage, etc.
 // ============================================
 function drawEmotionLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, _mid: number, beat: number, time: number, palette: {colors: string[]}) {
-  ctx.save();
-  ctx.translate(w / 2, h / 2);
+  // Context already centered - draw relative to (0,0)
 
   // JOY - Bright radiating energy
   if (type === 'joy') {
@@ -5005,16 +4989,13 @@ function drawEmotionLayer(ctx: CanvasRenderingContext2D, type: string, w: number
     ctx.fillStyle = serenityGrad;
     ctx.fillRect(-w/2, -h/2, w, h);
   }
-
-  ctx.restore();
 }
 
 // ============================================
 // NATURE LAYER - Forest, Ocean, Storm, etc.
 // ============================================
 function drawNatureLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, _mid: number, beat: number, time: number, _palette: {colors: string[]}) {
-  ctx.save();
-  ctx.translate(w / 2, h / 2);
+  // Context already centered - draw relative to (0,0)
 
   // FOREST - Tree silhouettes and leaves
   if (type === 'forest') {
@@ -5192,16 +5173,13 @@ function drawNatureLayer(ctx: CanvasRenderingContext2D, type: string, w: number,
     ctx.fillStyle = caveGrad;
     ctx.fillRect(-w/2, -h/2, w, h);
   }
-
-  ctx.restore();
 }
 
 // ============================================
 // MYTHIC LAYER - Dragon, Phoenix, Angel, etc.
 // ============================================
-function drawMythicLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
-  ctx.save();
-  ctx.translate(w / 2, h / 2);
+function drawMythicLayer(ctx: CanvasRenderingContext2D, type: string, _w: number, _h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
+  // Context already centered - draw relative to (0,0)
 
   // DRAGON - Fire breath and scales
   if (type === 'dragon') {
@@ -5389,16 +5367,13 @@ function drawMythicLayer(ctx: CanvasRenderingContext2D, type: string, w: number,
     ctx.lineWidth = 2;
     ctx.stroke();
   }
-
-  ctx.restore();
 }
 
 // ============================================
 // ALCHEMICAL LAYER - Transformation stages
 // ============================================
 function drawAlchemicalLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, beat: number, time: number, _palette: {colors: string[]}) {
-  ctx.save();
-  ctx.translate(w / 2, h / 2);
+  // Context already centered - draw relative to (0,0)
 
   // NIGREDO - Blackening/decomposition
   if (type === 'nigredo') {
@@ -5553,16 +5528,13 @@ function drawAlchemicalLayer(ctx: CanvasRenderingContext2D, type: string, w: num
       ctx.restore();
     }
   }
-
-  ctx.restore();
 }
 
 // ============================================
 // WAVEFORM LAYER - Audio visualization shapes
 // ============================================
-function drawWaveformLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, mid: number, beat: number, time: number, palette: {colors: string[]}) {
-  ctx.save();
-  ctx.translate(w / 2, h / 2);
+function drawWaveformLayer(ctx: CanvasRenderingContext2D, type: string, w: number, _h: number, bass: number, mid: number, beat: number, time: number, palette: {colors: string[]}) {
+  // Context already centered - draw relative to (0,0)
 
   const amplitude = 50 + bass * 50;
 
@@ -5682,16 +5654,13 @@ function drawWaveformLayer(ctx: CanvasRenderingContext2D, type: string, w: numbe
     ctx.lineWidth = 4 + beat * 3;
     ctx.stroke();
   }
-
-  ctx.restore();
 }
 
 // ============================================
 // TEMPORAL LAYER - Time-based effects
 // ============================================
 function drawTemporalLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
-  ctx.save();
-  ctx.translate(w / 2, h / 2);
+  // Context already centered - draw relative to (0,0)
 
   // PAST - Sepia/faded effect
   if (type === 'past') {
