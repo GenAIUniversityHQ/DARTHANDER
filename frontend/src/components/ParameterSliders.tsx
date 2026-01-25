@@ -273,11 +273,13 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               onClick={() => onChange('motionDirection', dir.id as any)}
               className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide
                          transition-all duration-200 transform hover:scale-105 active:scale-95
+                         ${dir.id === 'flow' ? 'relative' : ''}
                          ${state.motionDirection === dir.id
-                           ? `${dir.color} text-white shadow-lg`
+                           ? `${dir.color} text-white shadow-lg ${dir.id === 'flow' ? 'shadow-purple-500/50 animate-pulse' : ''}`
                            : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
                          }`}
             >
+              {dir.id === 'flow' && <span className="absolute -top-1 -right-1 text-[8px]">✦</span>}
               {dir.label}
             </button>
           ))}

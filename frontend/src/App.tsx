@@ -419,7 +419,7 @@ function App() {
                 <button
                   key={palette.id}
                   onClick={() => updateVisualParameter('colorPalette', palette.id)}
-                  className={`flex-1 py-3 rounded-xl font-black transition-all hover:scale-105 active:scale-95 flex items-center justify-center ${
+                  className={`flex-1 py-2 rounded-xl font-black transition-all hover:scale-105 active:scale-95 flex flex-col items-center justify-center gap-0.5 ${
                     visualState.colorPalette === palette.id
                       ? 'ring-2 ring-white ring-offset-2 ring-offset-black scale-105'
                       : 'opacity-80 hover:opacity-100'
@@ -429,7 +429,8 @@ function App() {
                   }}
                   title={palette.id.toUpperCase()}
                 >
-                  <Icon className="w-6 h-6 drop-shadow-lg" />
+                  <Icon className="w-5 h-5 drop-shadow-lg" />
+                  <span className="text-[8px] uppercase tracking-wider opacity-70 drop-shadow">{palette.id}</span>
                 </button>
               );
             })}
