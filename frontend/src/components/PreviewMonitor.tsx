@@ -462,6 +462,96 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
         ctx.globalAlpha = 1;
       }
 
+      // ====== NEW VIBE LAYERS ======
+
+      // === ELEMENTAL LAYER ===
+      const elementalLayer = (state as any)?.elementalLayer;
+      if (elementalLayer && elementalLayer !== 'none') {
+        ctx.globalAlpha = 0.7;
+        drawElementalLayer(ctx, elementalLayer, width, height, bass, mid, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === ENERGY LAYER ===
+      const energyLayer = (state as any)?.energyLayer;
+      if (energyLayer && energyLayer !== 'none') {
+        ctx.globalAlpha = 0.6;
+        drawEnergyLayer(ctx, energyLayer, width, height, bass, mid, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === TEXTURE LAYER ===
+      const textureLayer = (state as any)?.textureLayer;
+      if (textureLayer && textureLayer !== 'none') {
+        ctx.globalAlpha = 0.5;
+        drawTextureLayer(ctx, textureLayer, width, height, bass, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === ALTERED STATE LAYER ===
+      const alteredLayer = (state as any)?.alteredLayer;
+      if (alteredLayer && alteredLayer !== 'none') {
+        ctx.globalAlpha = 0.6;
+        drawAlteredLayer(ctx, alteredLayer, width, height, bass, mid, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === CELESTIAL LAYER ===
+      const celestialLayer = (state as any)?.celestialLayer;
+      if (celestialLayer && celestialLayer !== 'none') {
+        ctx.globalAlpha = 0.7;
+        drawCelestialLayer(ctx, celestialLayer, width, height, bass, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === EMOTION LAYER ===
+      const emotionLayer = (state as any)?.emotionLayer;
+      if (emotionLayer && emotionLayer !== 'none') {
+        ctx.globalAlpha = 0.5;
+        drawEmotionLayer(ctx, emotionLayer, width, height, bass, mid, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === NATURE LAYER ===
+      const natureLayer = (state as any)?.natureLayer;
+      if (natureLayer && natureLayer !== 'none') {
+        ctx.globalAlpha = 0.6;
+        drawNatureLayer(ctx, natureLayer, width, height, bass, mid, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === MYTHIC LAYER ===
+      const mythicLayer = (state as any)?.mythicLayer;
+      if (mythicLayer && mythicLayer !== 'none') {
+        ctx.globalAlpha = 0.6;
+        drawMythicLayer(ctx, mythicLayer, width, height, bass, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === ALCHEMICAL LAYER ===
+      const alchemicalLayer = (state as any)?.alchemicalLayer;
+      if (alchemicalLayer && alchemicalLayer !== 'none') {
+        ctx.globalAlpha = 0.6;
+        drawAlchemicalLayer(ctx, alchemicalLayer, width, height, bass, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === WAVEFORM LAYER ===
+      const waveformLayer = (state as any)?.waveformLayer;
+      if (waveformLayer && waveformLayer !== 'none') {
+        ctx.globalAlpha = 0.7;
+        drawWaveformLayer(ctx, waveformLayer, width, height, bass, mid, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === TEMPORAL LAYER ===
+      const temporalLayer = (state as any)?.temporalLayer;
+      if (temporalLayer && temporalLayer !== 'none') {
+        ctx.globalAlpha = 0.5;
+        drawTemporalLayer(ctx, temporalLayer, width, height, bass, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
       ctx.restore();
 
       // === ECLIPSE - Audio-reactive with awe-inspiring corona ===
@@ -3780,4 +3870,2018 @@ function drawParadoxLayer(ctx: CanvasRenderingContext2D, type: string, _w: numbe
     drawRecursive(0, 0, 150 + bass * 30, 6);
     ctx.restore();
   }
+}
+
+// ============================================
+// ELEMENTAL LAYER - Fire, Water, Earth, Air, etc.
+// ============================================
+function drawElementalLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, mid: number, beat: number, time: number, palette: {colors: string[]}) {
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+
+  // FIRE - Rising flames
+  if (type === 'fire') {
+    const flameCount = 20;
+    for (let i = 0; i < flameCount; i++) {
+      const x = (i - flameCount / 2) * 15;
+      const flicker = Math.sin(time * 0.01 + i * 0.5) * 10;
+      const height = 50 + bass * 80 + Math.sin(time * 0.005 + i) * 20;
+
+      const grad = ctx.createLinearGradient(x, 0, x, -height);
+      grad.addColorStop(0, '#ff4400dd');
+      grad.addColorStop(0.3, '#ff8800cc');
+      grad.addColorStop(0.6, '#ffcc00aa');
+      grad.addColorStop(1, 'transparent');
+
+      ctx.beginPath();
+      ctx.moveTo(x - 8, 0);
+      ctx.quadraticCurveTo(x + flicker, -height * 0.6, x, -height);
+      ctx.quadraticCurveTo(x - flicker, -height * 0.6, x + 8, 0);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    }
+    // Embers
+    for (let i = 0; i < 30; i++) {
+      const angle = (time * 0.002 + i * 0.3) % (Math.PI * 2);
+      const r = 30 + (time * 0.05 + i * 20) % 150;
+      const x = Math.sin(angle) * 30 + Math.cos(time * 0.003 + i) * 20;
+      const y = -r - bass * 30;
+      ctx.beginPath();
+      ctx.arc(x, y, 2 + beat * 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, ${150 + i * 3}, 0, ${0.8 - r / 200})`;
+      ctx.fill();
+    }
+  }
+
+  // WATER - Flowing waves
+  if (type === 'water') {
+    for (let layer = 0; layer < 5; layer++) {
+      ctx.beginPath();
+      const yOffset = layer * 20 - 40;
+      for (let x = -w / 2; x <= w / 2; x += 5) {
+        const wave = Math.sin(x * 0.02 + time * 0.003 + layer) * (20 + bass * 30);
+        const y = yOffset + wave;
+        if (x === -w / 2) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = `rgba(0, ${150 + layer * 20}, 255, ${0.6 - layer * 0.1})`;
+      ctx.lineWidth = 3 - layer * 0.4;
+      ctx.stroke();
+    }
+    // Water droplets
+    for (let i = 0; i < 20; i++) {
+      const x = Math.sin(time * 0.002 + i * 0.7) * 100;
+      const y = ((time * 0.1 + i * 30) % 200) - 100;
+      ctx.beginPath();
+      ctx.arc(x, y, 3 + beat * 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(100, 200, 255, ${0.5 + beat * 0.3})`;
+      ctx.fill();
+    }
+  }
+
+  // EARTH - Growing crystals/rocks
+  if (type === 'earth') {
+    const crystalCount = 8;
+    for (let i = 0; i < crystalCount; i++) {
+      const angle = (i / crystalCount) * Math.PI * 2;
+      const dist = 50 + bass * 40;
+      const x = Math.cos(angle) * dist;
+      const y = Math.sin(angle) * dist;
+      const size = 20 + mid * 30 + Math.sin(time * 0.002 + i) * 10;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle + time * 0.0005);
+
+      // Crystal shape
+      ctx.beginPath();
+      ctx.moveTo(0, -size);
+      ctx.lineTo(size * 0.3, -size * 0.3);
+      ctx.lineTo(size * 0.3, size * 0.5);
+      ctx.lineTo(0, size * 0.7);
+      ctx.lineTo(-size * 0.3, size * 0.5);
+      ctx.lineTo(-size * 0.3, -size * 0.3);
+      ctx.closePath();
+      ctx.fillStyle = palette.colors[i % palette.colors.length] + '99';
+      ctx.fill();
+      ctx.strokeStyle = palette.colors[(i + 1) % palette.colors.length] + 'cc';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // AIR - Swirling winds
+  if (type === 'air') {
+    for (let i = 0; i < 12; i++) {
+      const startAngle = (i / 12) * Math.PI * 2 + time * 0.002;
+      const spiralR = 30 + i * 10 + bass * 20;
+
+      ctx.beginPath();
+      for (let t = 0; t < Math.PI * 2; t += 0.1) {
+        const r = spiralR + t * 10;
+        const angle = startAngle + t;
+        const x = Math.cos(angle) * r;
+        const y = Math.sin(angle) * r * 0.6;
+        if (t === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = `rgba(200, 230, 255, ${0.4 - i * 0.02})`;
+      ctx.lineWidth = 2 + beat;
+      ctx.stroke();
+    }
+  }
+
+  // AETHER - Ethereal energy
+  if (type === 'aether') {
+    const rings = 6;
+    for (let r = 0; r < rings; r++) {
+      const radius = 40 + r * 25 + bass * 20;
+      const alpha = 0.5 - r * 0.07;
+
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(180, 130, 255, ${alpha})`;
+      ctx.lineWidth = 2 + Math.sin(time * 0.003 + r) * 2;
+      ctx.stroke();
+
+      // Ethereal particles on ring
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + time * 0.001 * (r + 1);
+        const px = Math.cos(angle) * radius;
+        const py = Math.sin(angle) * radius;
+        ctx.beginPath();
+        ctx.arc(px, py, 3 + beat * 3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(220, 180, 255, ${alpha + beat * 0.3})`;
+        ctx.fill();
+      }
+    }
+  }
+
+  // PLASMA - Electric plasma
+  if (type === 'plasma') {
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2 + time * 0.002;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+
+      let x = 0, y = 0;
+      for (let j = 0; j < 10; j++) {
+        const jitter = (Math.random() - 0.5) * 30 * (1 + bass);
+        x += Math.cos(angle) * 15 + jitter;
+        y += Math.sin(angle) * 15 + jitter;
+        ctx.lineTo(x, y);
+      }
+
+      ctx.strokeStyle = `rgba(255, 100, 255, ${0.7 + beat * 0.3})`;
+      ctx.lineWidth = 2 + beat * 2;
+      ctx.stroke();
+    }
+  }
+
+  // LIGHTNING - Electric bolts
+  if (type === 'lightning') {
+    if (beat > 0.3 || Math.random() < 0.1) {
+      for (let bolt = 0; bolt < 3; bolt++) {
+        const startX = (Math.random() - 0.5) * w * 0.8;
+        const startY = -h / 2 + 50;
+
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+
+        let x = startX, y = startY;
+        while (y < h / 2 - 50) {
+          x += (Math.random() - 0.5) * 40;
+          y += 20 + Math.random() * 30;
+          ctx.lineTo(x, y);
+        }
+
+        ctx.strokeStyle = `rgba(255, 255, 100, ${0.8 + beat * 0.2})`;
+        ctx.lineWidth = 2 + beat * 3;
+        ctx.stroke();
+
+        // Glow
+        ctx.strokeStyle = `rgba(200, 200, 255, 0.3)`;
+        ctx.lineWidth = 8 + beat * 5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // ICE - Frozen crystals
+  if (type === 'ice') {
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2 + time * 0.0005;
+      const len = 80 + bass * 40;
+
+      ctx.save();
+      ctx.rotate(angle);
+
+      // Main branch
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -len);
+      ctx.strokeStyle = `rgba(200, 240, 255, 0.8)`;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Side branches
+      for (let j = 1; j < 4; j++) {
+        const branchY = -len * j / 4;
+        const branchLen = len * 0.3 * (1 - j * 0.2);
+
+        ctx.beginPath();
+        ctx.moveTo(0, branchY);
+        ctx.lineTo(branchLen, branchY - branchLen);
+        ctx.moveTo(0, branchY);
+        ctx.lineTo(-branchLen, branchY - branchLen);
+        ctx.strokeStyle = `rgba(180, 220, 255, ${0.6 - j * 0.1})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  // SMOKE - Rising smoke
+  if (type === 'smoke') {
+    for (let i = 0; i < 25; i++) {
+      const baseX = (Math.sin(i * 0.5) * 50);
+      const age = (time * 0.05 + i * 20) % 200;
+      const y = 100 - age;
+      const x = baseX + Math.sin(age * 0.03 + i) * (age * 0.3);
+      const size = 10 + age * 0.3 + bass * 10;
+      const alpha = Math.max(0, 0.4 - age / 250);
+
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(100, 100, 100, ${alpha})`;
+      ctx.fill();
+    }
+  }
+
+  // CRYSTAL - Prismatic crystal
+  if (type === 'crystal') {
+    const facets = 8;
+    const outerR = 80 + bass * 30;
+
+    for (let i = 0; i < facets; i++) {
+      const angle1 = (i / facets) * Math.PI * 2 + time * 0.001;
+      const angle2 = ((i + 1) / facets) * Math.PI * 2 + time * 0.001;
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(angle1) * outerR, Math.sin(angle1) * outerR);
+      ctx.lineTo(Math.cos(angle2) * outerR, Math.sin(angle2) * outerR);
+      ctx.closePath();
+
+      const hue = (i / facets) * 360 + time * 0.05;
+      ctx.fillStyle = `hsla(${hue}, 70%, 60%, 0.5)`;
+      ctx.fill();
+      ctx.strokeStyle = `hsla(${hue}, 80%, 80%, 0.8)`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+}
+
+// ============================================
+// ENERGY LAYER - Chi, Prana, Tesla, etc.
+// ============================================
+function drawEnergyLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, _mid: number, beat: number, time: number, palette: {colors: string[]}) {
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+
+  // CHI - Flowing life force
+  if (type === 'chi') {
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath();
+      for (let t = 0; t < Math.PI * 4; t += 0.1) {
+        const r = 30 + t * 10 + i * 15 + bass * 20;
+        const x = Math.cos(t + time * 0.002) * r * Math.cos(t * 0.5);
+        const y = Math.sin(t + time * 0.002) * r;
+        if (t === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = `rgba(100, 255, 150, ${0.5 - i * 0.08})`;
+      ctx.lineWidth = 3 - i * 0.4;
+      ctx.stroke();
+    }
+  }
+
+  // PRANA - Breath energy
+  if (type === 'prana') {
+    const breathPhase = Math.sin(time * 0.002) * 0.5 + 0.5;
+    const maxR = 100 + breathPhase * 50 + bass * 30;
+
+    for (let r = 0; r < 5; r++) {
+      const radius = maxR * (r + 1) / 5;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255, 180, 100, ${0.5 - r * 0.08})`;
+      ctx.lineWidth = 2 + breathPhase * 2;
+      ctx.stroke();
+    }
+
+    // Prana particles flowing inward/outward
+    for (let i = 0; i < 20; i++) {
+      const angle = (i / 20) * Math.PI * 2;
+      const dist = (breathPhase * 100 + i * 5 + time * 0.05) % 150;
+      const x = Math.cos(angle + time * 0.001) * dist;
+      const y = Math.sin(angle + time * 0.001) * dist;
+      ctx.beginPath();
+      ctx.arc(x, y, 3 + beat * 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 200, 100, ${0.6 - dist / 200})`;
+      ctx.fill();
+    }
+  }
+
+  // REIKI - Healing energy
+  if (type === 'reiki') {
+    // Soft healing glow
+    const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 120 + bass * 40);
+    grad.addColorStop(0, `rgba(200, 150, 255, ${0.6 + beat * 0.2})`);
+    grad.addColorStop(0.5, `rgba(150, 100, 255, 0.3)`);
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fillRect(-w/2, -h/2, w, h);
+
+    // Healing symbols (simplified)
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2 + time * 0.001;
+      const r = 60 + Math.sin(time * 0.003 + i) * 20;
+      ctx.save();
+      ctx.translate(Math.cos(angle) * r, Math.sin(angle) * r);
+      ctx.rotate(time * 0.002);
+
+      ctx.beginPath();
+      ctx.moveTo(-10, -15);
+      ctx.lineTo(0, -20);
+      ctx.lineTo(10, -15);
+      ctx.lineTo(10, 15);
+      ctx.lineTo(0, 20);
+      ctx.lineTo(-10, 15);
+      ctx.closePath();
+      ctx.strokeStyle = palette.colors[i % palette.colors.length] + 'aa';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // TESLA - Electric energy
+  if (type === 'tesla') {
+    // Tesla coil effect
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2 + time * 0.003;
+      const len = 80 + bass * 60 + Math.sin(time * 0.005 + i) * 20;
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+
+      let x = 0, y = 0;
+      for (let j = 0; j < 8; j++) {
+        const jitter = (Math.random() - 0.5) * 15;
+        x += Math.cos(angle) * (len / 8) + jitter;
+        y += Math.sin(angle) * (len / 8) + jitter * 0.5;
+        ctx.lineTo(x, y);
+      }
+
+      ctx.strokeStyle = `rgba(100, 200, 255, ${0.6 + beat * 0.4})`;
+      ctx.lineWidth = 1 + beat;
+      ctx.stroke();
+    }
+
+    // Center orb
+    const orbGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 30 + bass * 20);
+    orbGrad.addColorStop(0, 'rgba(200, 255, 255, 0.9)');
+    orbGrad.addColorStop(0.5, 'rgba(100, 200, 255, 0.5)');
+    orbGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = orbGrad;
+    ctx.fillRect(-50, -50, 100, 100);
+  }
+
+  // VORTEX - Spinning energy vortex
+  if (type === 'vortex') {
+    for (let arm = 0; arm < 4; arm++) {
+      ctx.beginPath();
+      for (let t = 0; t < Math.PI * 6; t += 0.1) {
+        const r = t * 8 + bass * 20;
+        const angle = t + (arm / 4) * Math.PI * 2 + time * 0.003;
+        const x = Math.cos(angle) * r;
+        const y = Math.sin(angle) * r * 0.7;
+        if (t === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = palette.colors[arm % palette.colors.length] + 'aa';
+      ctx.lineWidth = 3 - arm * 0.5;
+      ctx.stroke();
+    }
+  }
+
+  // TOROIDAL - Torus energy field
+  if (type === 'toroidal') {
+    for (let ring = 0; ring < 20; ring++) {
+      const ringAngle = (ring / 20) * Math.PI * 2;
+      const ringR = 60 + Math.sin(ringAngle) * 40;
+      const ringY = Math.cos(ringAngle) * 40;
+
+      ctx.beginPath();
+      ctx.ellipse(0, ringY, ringR + bass * 20, 20, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = palette.colors[ring % palette.colors.length] + '60';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
+
+  // SCALAR, TACHYON, ORGONE similar patterns
+  if (type === 'scalar' || type === 'tachyon' || type === 'orgone') {
+    const color = type === 'scalar' ? '100, 100, 255' : type === 'tachyon' ? '255, 100, 200' : '100, 150, 255';
+
+    for (let wave = 0; wave < 8; wave++) {
+      ctx.beginPath();
+      for (let a = 0; a < Math.PI * 2; a += 0.1) {
+        const r = 40 + wave * 15 + Math.sin(a * 3 + time * 0.005 + wave) * 10 + bass * 20;
+        const x = Math.cos(a) * r;
+        const y = Math.sin(a) * r;
+        if (a === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = `rgba(${color}, ${0.5 - wave * 0.05})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+}
+
+// ============================================
+// TEXTURE LAYER - Liquid, Metal, Glass, etc.
+// ============================================
+function drawTextureLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+
+  // LIQUID - Flowing liquid effect
+  if (type === 'liquid') {
+    for (let y = -h/2; y < h/2; y += 20) {
+      ctx.beginPath();
+      for (let x = -w/2; x < w/2; x += 5) {
+        const wave = Math.sin(x * 0.02 + y * 0.01 + time * 0.003) * 10 +
+                     Math.sin(x * 0.01 - time * 0.002) * 5;
+        const py = y + wave + bass * 5;
+        if (x === -w/2) ctx.moveTo(x, py);
+        else ctx.lineTo(x, py);
+      }
+      ctx.strokeStyle = `rgba(100, 150, 255, ${0.2 + beat * 0.1})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  // METALLIC - Reflective metal
+  if (type === 'metallic') {
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2 + time * 0.001;
+      const r = 80 + bass * 30;
+
+      const grad = ctx.createLinearGradient(
+        Math.cos(angle) * r, Math.sin(angle) * r,
+        Math.cos(angle + Math.PI) * r, Math.sin(angle + Math.PI) * r
+      );
+      grad.addColorStop(0, '#666666');
+      grad.addColorStop(0.3, '#cccccc');
+      grad.addColorStop(0.5, '#ffffff');
+      grad.addColorStop(0.7, '#cccccc');
+      grad.addColorStop(1, '#666666');
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+      ctx.lineTo(Math.cos(angle + 0.2) * r, Math.sin(angle + 0.2) * r);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.globalAlpha = 0.3;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // GLASS - Refractive glass
+  if (type === 'glass') {
+    for (let i = 0; i < 5; i++) {
+      const offset = Math.sin(time * 0.002 + i) * 20;
+      ctx.beginPath();
+      ctx.ellipse(offset, 0, 80 - i * 10 + bass * 20, 60 - i * 8, time * 0.0005, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(200, 230, 255, ${0.3 - i * 0.05})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  // SILK - Flowing fabric
+  if (type === 'silk') {
+    for (let i = 0; i < 8; i++) {
+      ctx.beginPath();
+      const yBase = (i - 4) * 25;
+      for (let x = -w/2; x < w/2; x += 10) {
+        const wave = Math.sin(x * 0.02 + time * 0.002 + i * 0.5) * 20 * (1 + bass * 0.5);
+        const y = yBase + wave;
+        if (x === -w/2) ctx.moveTo(x, y);
+        else ctx.quadraticCurveTo(x - 5, y + 5, x, y);
+      }
+      ctx.strokeStyle = palette.colors[i % palette.colors.length] + '88';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+  }
+
+  // PARTICLE - Particle field
+  if (type === 'particle') {
+    for (let i = 0; i < 100; i++) {
+      const x = ((time * 0.1 + i * 37) % w) - w/2;
+      const y = ((time * 0.05 + i * 23) % h) - h/2;
+      const size = 1 + (Math.sin(time * 0.01 + i) + 1) * 2 + beat * 2;
+
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[i % palette.colors.length] + 'aa';
+      ctx.fill();
+    }
+  }
+
+  // GRAIN - Film grain texture
+  if (type === 'grain') {
+    ctx.globalAlpha = 0.15 + beat * 0.1;
+    for (let i = 0; i < 500; i++) {
+      const x = (Math.random() - 0.5) * w;
+      const y = (Math.random() - 0.5) * h;
+      const gray = Math.floor(Math.random() * 100) + 100;
+      ctx.fillStyle = `rgb(${gray}, ${gray}, ${gray})`;
+      ctx.fillRect(x, y, 2, 2);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // IRIDESCENT - Rainbow sheen
+  if (type === 'iridescent') {
+    for (let i = 0; i < 10; i++) {
+      const hue = (time * 0.05 + i * 36) % 360;
+      const r = 50 + i * 12 + bass * 20;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.strokeStyle = `hsla(${hue}, 80%, 60%, ${0.4 - i * 0.03})`;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+  }
+
+  // HOLOGRAPHIC - Hologram effect
+  if (type === 'holographic') {
+    for (let i = 0; i < 20; i++) {
+      const y = ((time * 0.2 + i * 15) % h) - h/2;
+      const hue = (y + time * 0.1) % 360;
+      ctx.beginPath();
+      ctx.moveTo(-w/2, y);
+      ctx.lineTo(w/2, y);
+      ctx.strokeStyle = `hsla(${hue}, 100%, 70%, ${0.3 + beat * 0.2})`;
+      ctx.lineWidth = 2 + Math.sin(y * 0.1) * 2;
+      ctx.stroke();
+    }
+  }
+
+  // NEON GLOW - Neon light effect
+  if (type === 'neon-glow') {
+    const shapes = 5;
+    for (let i = 0; i < shapes; i++) {
+      const angle = (i / shapes) * Math.PI * 2 + time * 0.001;
+      const r = 60 + bass * 30;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+
+      // Glow
+      ctx.beginPath();
+      ctx.arc(x, y, 20 + beat * 10, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[i % palette.colors.length] + '40';
+      ctx.fill();
+
+      // Core
+      ctx.beginPath();
+      ctx.arc(x, y, 8 + beat * 4, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[i % palette.colors.length] + 'ff';
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+// ============================================
+// ALTERED LAYER - Hypnotic, Trance, etc.
+// ============================================
+function drawAlteredLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, _mid: number, beat: number, time: number, palette: {colors: string[]}) {
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+
+  // HYPNOTIC - Hypnotic spiral
+  if (type === 'hypnotic') {
+    for (let arm = 0; arm < 2; arm++) {
+      ctx.beginPath();
+      for (let t = 0; t < Math.PI * 8; t += 0.1) {
+        const r = t * 6 + bass * 10;
+        const angle = t + arm * Math.PI + time * 0.003;
+        const x = Math.cos(angle) * r;
+        const y = Math.sin(angle) * r;
+        if (t === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = arm === 0 ? '#ffffffcc' : '#000000cc';
+      ctx.lineWidth = 15 + beat * 5;
+      ctx.stroke();
+    }
+  }
+
+  // TRANCE - Pulsing concentric
+  if (type === 'trance') {
+    for (let i = 0; i < 10; i++) {
+      const phase = (time * 0.005 + i * 0.3) % (Math.PI * 2);
+      const pulse = Math.sin(phase) * 0.5 + 0.5;
+      const r = 30 + i * 20 + pulse * 20 + bass * 30;
+
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.strokeStyle = palette.colors[i % palette.colors.length] + (pulse > 0.5 ? 'cc' : '66');
+      ctx.lineWidth = 3 + pulse * 3;
+      ctx.stroke();
+    }
+  }
+
+  // LUCID - Dream-like clarity
+  if (type === 'lucid') {
+    // Soft focus rings
+    for (let i = 0; i < 6; i++) {
+      const r = 50 + i * 25 + Math.sin(time * 0.002 + i) * 10;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(150, 200, 255, ${0.4 - i * 0.05})`;
+      ctx.lineWidth = 10 - i;
+      ctx.filter = `blur(${i * 2}px)`;
+      ctx.stroke();
+      ctx.filter = 'none';
+    }
+  }
+
+  // ASTRAL - Out of body visuals
+  if (type === 'astral') {
+    // Ethereal body outline
+    const bodyScale = 1 + bass * 0.2;
+    ctx.save();
+    ctx.scale(bodyScale, bodyScale);
+
+    for (let layer = 0; layer < 4; layer++) {
+      const offset = layer * 3;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 30 + offset, 80 + offset, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(150, 100, 255, ${0.5 - layer * 0.1})`;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Rising energy
+    for (let i = 0; i < 10; i++) {
+      const y = ((time * 0.1 + i * 30) % 200) - 100;
+      const x = Math.sin(y * 0.05 + i) * 30;
+      ctx.beginPath();
+      ctx.arc(x, y, 5 - Math.abs(y) / 30, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(180, 150, 255, ${0.5 - Math.abs(y) / 150})`;
+      ctx.fill();
+    }
+  }
+
+  // PEAK - Peak experience burst
+  if (type === 'peak') {
+    const burstIntensity = 0.5 + beat * 0.5 + bass * 0.3;
+
+    // Radial burst
+    for (let i = 0; i < 24; i++) {
+      const angle = (i / 24) * Math.PI * 2;
+      const len = 50 + burstIntensity * 100;
+
+      const grad = ctx.createLinearGradient(0, 0, Math.cos(angle) * len, Math.sin(angle) * len);
+      grad.addColorStop(0, `rgba(255, 255, 200, ${burstIntensity})`);
+      grad.addColorStop(1, 'transparent');
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(angle) * len, Math.sin(angle) * len);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 3 + burstIntensity * 5;
+      ctx.stroke();
+    }
+  }
+
+  // EGO-DEATH - Dissolution effect
+  if (type === 'ego-death') {
+    // Fragmenting self
+    for (let i = 0; i < 30; i++) {
+      const angle = (i / 30) * Math.PI * 2 + time * 0.001;
+      const dist = 20 + (time * 0.02 + i * 10) % 150;
+      const x = Math.cos(angle) * dist;
+      const y = Math.sin(angle) * dist;
+      const size = 15 - dist / 15;
+
+      if (size > 0) {
+        ctx.beginPath();
+        ctx.arc(x, y, size + beat * 3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(100, 100, 120, ${0.6 - dist / 200})`;
+        ctx.fill();
+      }
+    }
+  }
+
+  // FLOW-STATE - Zone flow
+  if (type === 'flow-state') {
+    for (let stream = 0; stream < 6; stream++) {
+      ctx.beginPath();
+      const yOffset = (stream - 3) * 30;
+      for (let x = -w/2; x < w/2; x += 10) {
+        const flow = Math.sin(x * 0.01 + time * 0.005 + stream) * 20;
+        const y = yOffset + flow + bass * 10;
+        if (x === -w/2) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = `rgba(100, 255, 180, ${0.5 - stream * 0.05})`;
+      ctx.lineWidth = 4 - stream * 0.4;
+      ctx.stroke();
+    }
+  }
+
+  // OBE, NDE similar patterns
+  if (type === 'obe' || type === 'nde') {
+    const isNDE = type === 'nde';
+    const tunnelDepth = 10;
+
+    for (let i = 0; i < tunnelDepth; i++) {
+      const scale = 1 - i / tunnelDepth;
+      const r = 150 * scale + bass * 20 * scale;
+
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+
+      if (isNDE) {
+        const brightness = i / tunnelDepth;
+        ctx.fillStyle = `rgba(255, 255, 255, ${brightness * 0.3})`;
+        ctx.fill();
+      }
+
+      ctx.strokeStyle = isNDE
+        ? `rgba(255, 220, 180, ${0.5 - i * 0.04})`
+        : `rgba(100, 150, 255, ${0.5 - i * 0.04})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Light at center
+    if (isNDE) {
+      const lightGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 30 + beat * 20);
+      lightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+      lightGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = lightGrad;
+      ctx.fillRect(-50, -50, 100, 100);
+    }
+  }
+
+  ctx.restore();
+}
+
+// ============================================
+// CELESTIAL LAYER - Sun, Moon, Planets
+// ============================================
+function drawCelestialLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, beat: number, time: number, _palette: {colors: string[]}) {
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+
+  // SUN - Radiant sun
+  if (type === 'sun') {
+    // Corona
+    for (let i = 0; i < 24; i++) {
+      const angle = (i / 24) * Math.PI * 2 + time * 0.001;
+      const len = 60 + Math.sin(time * 0.005 + i * 0.5) * 20 + bass * 30;
+
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * 40, Math.sin(angle) * 40);
+      ctx.lineTo(Math.cos(angle) * len, Math.sin(angle) * len);
+      ctx.strokeStyle = `rgba(255, 200, 50, ${0.6 + beat * 0.2})`;
+      ctx.lineWidth = 3 + Math.sin(time * 0.01 + i) * 2;
+      ctx.stroke();
+    }
+
+    // Sun body
+    const sunGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 40);
+    sunGrad.addColorStop(0, '#ffffff');
+    sunGrad.addColorStop(0.3, '#ffee88');
+    sunGrad.addColorStop(0.7, '#ffaa33');
+    sunGrad.addColorStop(1, '#ff6600');
+    ctx.beginPath();
+    ctx.arc(0, 0, 40 + bass * 10, 0, Math.PI * 2);
+    ctx.fillStyle = sunGrad;
+    ctx.fill();
+  }
+
+  // MOON - Lunar phases
+  if (type === 'moon') {
+    const moonR = 50 + bass * 10;
+
+    // Moon glow
+    const glowGrad = ctx.createRadialGradient(0, 0, moonR * 0.8, 0, 0, moonR * 1.5);
+    glowGrad.addColorStop(0, 'rgba(200, 200, 220, 0.3)');
+    glowGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = glowGrad;
+    ctx.fillRect(-100, -100, 200, 200);
+
+    // Moon body
+    ctx.beginPath();
+    ctx.arc(0, 0, moonR, 0, Math.PI * 2);
+    ctx.fillStyle = '#e8e8f0';
+    ctx.fill();
+
+    // Craters
+    const craters = [[10, -15, 8], [-20, 10, 6], [5, 20, 5], [-15, -10, 4]];
+    craters.forEach(([cx, cy, cr]) => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+      ctx.fillStyle = '#c8c8d0';
+      ctx.fill();
+    });
+  }
+
+  // MARS - Red planet
+  if (type === 'mars') {
+    const marsGrad = ctx.createRadialGradient(-10, -10, 0, 0, 0, 45);
+    marsGrad.addColorStop(0, '#ff8866');
+    marsGrad.addColorStop(0.5, '#cc4422');
+    marsGrad.addColorStop(1, '#882211');
+    ctx.beginPath();
+    ctx.arc(0, 0, 45 + bass * 10, 0, Math.PI * 2);
+    ctx.fillStyle = marsGrad;
+    ctx.fill();
+
+    // Surface features
+    ctx.beginPath();
+    ctx.arc(-10, 5, 15, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(100, 30, 20, 0.3)';
+    ctx.fill();
+  }
+
+  // JUPITER - Gas giant with bands
+  if (type === 'jupiter') {
+    const jupiterR = 60 + bass * 15;
+
+    // Planet body
+    ctx.beginPath();
+    ctx.arc(0, 0, jupiterR, 0, Math.PI * 2);
+    ctx.fillStyle = '#ddaa77';
+    ctx.fill();
+
+    // Bands
+    ctx.save();
+    ctx.clip();
+    for (let i = -5; i <= 5; i++) {
+      const bandY = i * 12;
+      const bandColor = i % 2 === 0 ? 'rgba(200, 150, 100, 0.6)' : 'rgba(180, 120, 80, 0.6)';
+      ctx.fillStyle = bandColor;
+      ctx.fillRect(-jupiterR, bandY - 5, jupiterR * 2, 10);
+    }
+    ctx.restore();
+
+    // Great Red Spot
+    ctx.beginPath();
+    ctx.ellipse(20, 10, 15, 10, time * 0.001, 0, Math.PI * 2);
+    ctx.fillStyle = '#cc6644';
+    ctx.fill();
+  }
+
+  // SATURN - Ringed planet
+  if (type === 'saturn') {
+    const saturnR = 45 + bass * 10;
+
+    // Rings (behind)
+    ctx.beginPath();
+    ctx.ellipse(0, 0, saturnR * 2, saturnR * 0.4, 0, Math.PI * 0.1, Math.PI * 0.9);
+    ctx.strokeStyle = 'rgba(200, 180, 150, 0.5)';
+    ctx.lineWidth = 15;
+    ctx.stroke();
+
+    // Planet
+    const saturnGrad = ctx.createRadialGradient(-10, -10, 0, 0, 0, saturnR);
+    saturnGrad.addColorStop(0, '#eecc99');
+    saturnGrad.addColorStop(1, '#aa8855');
+    ctx.beginPath();
+    ctx.arc(0, 0, saturnR, 0, Math.PI * 2);
+    ctx.fillStyle = saturnGrad;
+    ctx.fill();
+
+    // Rings (front)
+    ctx.beginPath();
+    ctx.ellipse(0, 0, saturnR * 2, saturnR * 0.4, 0, Math.PI * 1.1, Math.PI * 1.9);
+    ctx.strokeStyle = 'rgba(200, 180, 150, 0.7)';
+    ctx.lineWidth = 15;
+    ctx.stroke();
+  }
+
+  // ECLIPSE - Total eclipse
+  if (type === 'eclipse-total') {
+    // Corona
+    for (let i = 0; i < 36; i++) {
+      const angle = (i / 36) * Math.PI * 2 + time * 0.0005;
+      const len = 80 + Math.sin(time * 0.003 + i * 0.3) * 30 + bass * 40;
+
+      const grad = ctx.createLinearGradient(0, 0, Math.cos(angle) * len, Math.sin(angle) * len);
+      grad.addColorStop(0, `rgba(255, 150, 50, ${0.5 + beat * 0.3})`);
+      grad.addColorStop(1, 'transparent');
+
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * 35, Math.sin(angle) * 35);
+      ctx.lineTo(Math.cos(angle) * len, Math.sin(angle) * len);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Black disc
+    ctx.beginPath();
+    ctx.arc(0, 0, 35, 0, Math.PI * 2);
+    ctx.fillStyle = '#000000';
+    ctx.fill();
+  }
+
+  // Other planets with simpler renders
+  if (type === 'mercury' || type === 'venus' || type === 'neptune' || type === 'pluto') {
+    const colors: Record<string, string[]> = {
+      'mercury': ['#999999', '#666666'],
+      'venus': ['#ffffcc', '#ccaa66'],
+      'neptune': ['#4488ff', '#2244aa'],
+      'pluto': ['#998877', '#665544']
+    };
+
+    const [light, dark] = colors[type];
+    const planetR = 40 + bass * 10;
+
+    const grad = ctx.createRadialGradient(-10, -10, 0, 0, 0, planetR);
+    grad.addColorStop(0, light);
+    grad.addColorStop(1, dark);
+
+    ctx.beginPath();
+    ctx.arc(0, 0, planetR, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+// ============================================
+// EMOTION LAYER - Joy, Peace, Rage, etc.
+// ============================================
+function drawEmotionLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, _mid: number, beat: number, time: number, palette: {colors: string[]}) {
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+
+  // JOY - Bright radiating energy
+  if (type === 'joy') {
+    // Radiating warmth
+    const joyGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 150 + bass * 50);
+    joyGrad.addColorStop(0, 'rgba(255, 255, 100, 0.4)');
+    joyGrad.addColorStop(0.5, 'rgba(255, 200, 50, 0.2)');
+    joyGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = joyGrad;
+    ctx.fillRect(-w/2, -h/2, w, h);
+
+    // Floating sparkles
+    for (let i = 0; i < 20; i++) {
+      const angle = (i / 20) * Math.PI * 2 + time * 0.002;
+      const r = 50 + Math.sin(time * 0.005 + i) * 30 + bass * 20;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r - 20;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 3 + beat * 3, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 150, ${0.7 + beat * 0.3})`;
+      ctx.fill();
+    }
+  }
+
+  // PEACE - Calm ripples
+  if (type === 'peace') {
+    for (let i = 0; i < 8; i++) {
+      const r = 30 + i * 20 + Math.sin(time * 0.001) * 10;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(150, 200, 255, ${0.4 - i * 0.04})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  // ECSTASY - Explosive joy
+  if (type === 'ecstasy') {
+    for (let burst = 0; burst < 8; burst++) {
+      const angle = (burst / 8) * Math.PI * 2 + time * 0.002;
+
+      for (let p = 0; p < 10; p++) {
+        const dist = 20 + p * 15 + bass * 20;
+        const spread = Math.sin(p * 0.5) * 20;
+        const x = Math.cos(angle) * dist + Math.cos(angle + Math.PI/2) * spread;
+        const y = Math.sin(angle) * dist + Math.sin(angle + Math.PI/2) * spread;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 4 + beat * 3, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[p % palette.colors.length] + 'cc';
+        ctx.fill();
+      }
+    }
+  }
+
+  // RAGE - Intense sharp energy
+  if (type === 'rage') {
+    // Jagged energy
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const len = 80 + bass * 60 + Math.random() * 30;
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+
+      let x = 0, y = 0;
+      for (let j = 0; j < 5; j++) {
+        const jag = (Math.random() - 0.5) * 30;
+        x += Math.cos(angle) * (len / 5) + jag;
+        y += Math.sin(angle) * (len / 5) + jag;
+        ctx.lineTo(x, y);
+      }
+
+      ctx.strokeStyle = `rgba(255, 50, 50, ${0.7 + beat * 0.3})`;
+      ctx.lineWidth = 3 + beat * 2;
+      ctx.stroke();
+    }
+  }
+
+  // MELANCHOLY - Falling drops
+  if (type === 'melancholy') {
+    for (let i = 0; i < 30; i++) {
+      const x = (Math.sin(i * 0.7) * w * 0.4);
+      const y = ((time * 0.05 + i * 20) % h) - h/2;
+      const alpha = 0.5 - Math.abs(y) / h;
+
+      ctx.beginPath();
+      ctx.ellipse(x, y, 2, 6 + bass * 4, 0, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(100, 120, 180, ${alpha})`;
+      ctx.fill();
+    }
+  }
+
+  // LOVE - Heart energy
+  if (type === 'love') {
+    // Pulsing heart shape
+    const heartScale = 1 + bass * 0.3 + Math.sin(time * 0.005) * 0.1;
+    ctx.save();
+    ctx.scale(heartScale, heartScale);
+
+    ctx.beginPath();
+    ctx.moveTo(0, 20);
+    ctx.bezierCurveTo(-40, -20, -40, -50, 0, -30);
+    ctx.bezierCurveTo(40, -50, 40, -20, 0, 20);
+    ctx.fillStyle = `rgba(255, 100, 150, ${0.5 + beat * 0.3})`;
+    ctx.fill();
+    ctx.restore();
+
+    // Love particles
+    for (let i = 0; i < 15; i++) {
+      const angle = (i / 15) * Math.PI * 2 + time * 0.001;
+      const r = 60 + Math.sin(time * 0.003 + i) * 20;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 4 + beat * 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 150, 180, ${0.6 + beat * 0.2})`;
+      ctx.fill();
+    }
+  }
+
+  // AWE, WONDER, GRIEF, SERENITY - simplified versions
+  if (type === 'awe' || type === 'wonder') {
+    const grad = ctx.createRadialGradient(0, -30, 0, 0, 0, 150);
+    grad.addColorStop(0, 'rgba(200, 150, 255, 0.5)');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fillRect(-w/2, -h/2, w, h);
+
+    // Ascending particles
+    for (let i = 0; i < 25; i++) {
+      const x = (Math.sin(i * 1.3) * 100);
+      const y = h/2 - ((time * 0.1 + i * 15) % h);
+      ctx.beginPath();
+      ctx.arc(x, y, 3 + beat * 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200, 180, 255, ${0.7 - y / h})`;
+      ctx.fill();
+    }
+  }
+
+  if (type === 'grief') {
+    ctx.fillStyle = `rgba(50, 50, 80, ${0.2 + bass * 0.1})`;
+    ctx.fillRect(-w/2, -h/2, w, h);
+  }
+
+  if (type === 'serenity') {
+    const serenityGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 200);
+    serenityGrad.addColorStop(0, 'rgba(100, 200, 200, 0.3)');
+    serenityGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = serenityGrad;
+    ctx.fillRect(-w/2, -h/2, w, h);
+  }
+
+  ctx.restore();
+}
+
+// ============================================
+// NATURE LAYER - Forest, Ocean, Storm, etc.
+// ============================================
+function drawNatureLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, _mid: number, beat: number, time: number, _palette: {colors: string[]}) {
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+
+  // FOREST - Tree silhouettes and leaves
+  if (type === 'forest') {
+    // Floating leaves
+    for (let i = 0; i < 20; i++) {
+      const x = (Math.sin(time * 0.001 + i * 0.8) * w * 0.4);
+      const y = ((time * 0.03 + i * 25) % h) - h/2;
+      const rot = time * 0.003 + i;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 8, 4, 0, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(50, ${150 + i * 5}, 50, ${0.6 - Math.abs(y) / h})`;
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // OCEAN - Waves and depth
+  if (type === 'ocean') {
+    for (let layer = 0; layer < 6; layer++) {
+      ctx.beginPath();
+      const yBase = 50 - layer * 20;
+      for (let x = -w/2; x <= w/2; x += 10) {
+        const wave = Math.sin(x * 0.02 + time * 0.003 - layer * 0.5) * (15 + bass * 10);
+        const y = yBase + wave;
+        if (x === -w/2) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.lineTo(w/2, h/2);
+      ctx.lineTo(-w/2, h/2);
+      ctx.closePath();
+      ctx.fillStyle = `rgba(0, ${80 + layer * 20}, ${150 + layer * 15}, ${0.3 - layer * 0.03})`;
+      ctx.fill();
+    }
+  }
+
+  // STORM - Lightning and rain
+  if (type === 'storm') {
+    // Dark clouds
+    ctx.fillStyle = 'rgba(30, 30, 40, 0.3)';
+    ctx.fillRect(-w/2, -h/2, w, h);
+
+    // Rain
+    for (let i = 0; i < 50; i++) {
+      const x = ((time * 0.5 + i * 17) % w) - w/2;
+      const y = ((time * 2 + i * 23) % h) - h/2;
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - 2, y + 15);
+      ctx.strokeStyle = 'rgba(150, 180, 200, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Occasional lightning
+    if (beat > 0.5) {
+      ctx.beginPath();
+      let lx = (Math.random() - 0.5) * w * 0.6;
+      let ly = -h/2;
+      ctx.moveTo(lx, ly);
+      while (ly < h/4) {
+        lx += (Math.random() - 0.5) * 40;
+        ly += 30 + Math.random() * 20;
+        ctx.lineTo(lx, ly);
+      }
+      ctx.strokeStyle = 'rgba(255, 255, 200, 0.9)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  // VOLCANO - Lava and eruption
+  if (type === 'volcano') {
+    // Lava particles
+    for (let i = 0; i < 30; i++) {
+      const angle = (Math.random() - 0.5) * Math.PI * 0.5 - Math.PI/2;
+      const speed = 2 + Math.random() * 3;
+      const age = (time * 0.1 + i * 10) % 100;
+      const x = Math.cos(angle) * age * speed;
+      const y = Math.sin(angle) * age * speed + age * age * 0.02;
+
+      if (y < h/2) {
+        ctx.beginPath();
+        ctx.arc(x, y + 50, 4 + bass * 3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, ${100 + age}, 0, ${1 - age / 100})`;
+        ctx.fill();
+      }
+    }
+  }
+
+  // WATERFALL - Cascading water
+  if (type === 'waterfall') {
+    for (let stream = 0; stream < 10; stream++) {
+      const x = (stream - 5) * 15;
+      ctx.beginPath();
+      ctx.moveTo(x, -h/2);
+
+      for (let y = -h/2; y < h/2; y += 10) {
+        const wave = Math.sin(y * 0.05 + time * 0.01 + stream) * 5;
+        ctx.lineTo(x + wave, y);
+      }
+
+      ctx.strokeStyle = `rgba(150, 200, 255, ${0.4 + beat * 0.2})`;
+      ctx.lineWidth = 3 + Math.sin(stream) * 2;
+      ctx.stroke();
+    }
+
+    // Mist at bottom
+    const mistGrad = ctx.createRadialGradient(0, h/2 - 30, 0, 0, h/2, 100);
+    mistGrad.addColorStop(0, 'rgba(200, 220, 255, 0.4)');
+    mistGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = mistGrad;
+    ctx.fillRect(-w/2, h/4, w, h/2);
+  }
+
+  // NORTHERN-LIGHTS / AURORA
+  if (type === 'northern-lights') {
+    for (let band = 0; band < 5; band++) {
+      ctx.beginPath();
+      const yBase = -50 + band * 30;
+      for (let x = -w/2; x <= w/2; x += 10) {
+        const wave = Math.sin(x * 0.01 + time * 0.002 + band) * 30 +
+                     Math.sin(x * 0.02 - time * 0.001) * 15;
+        const y = yBase + wave;
+        if (x === -w/2) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+
+      const hue = 120 + band * 30 + Math.sin(time * 0.001) * 20;
+      ctx.strokeStyle = `hsla(${hue}, 80%, 60%, ${0.5 - band * 0.08})`;
+      ctx.lineWidth = 20 - band * 3;
+      ctx.stroke();
+    }
+  }
+
+  // MOUNTAIN, DESERT, CAVE - simplified
+  if (type === 'mountain') {
+    ctx.beginPath();
+    ctx.moveTo(-w/2, h/2);
+    ctx.lineTo(-50, -30 - bass * 20);
+    ctx.lineTo(0, -60 - bass * 30);
+    ctx.lineTo(50, -20 - bass * 15);
+    ctx.lineTo(w/2, h/2);
+    ctx.fillStyle = 'rgba(80, 80, 100, 0.4)';
+    ctx.fill();
+  }
+
+  if (type === 'desert') {
+    // Sand dunes
+    for (let dune = 0; dune < 3; dune++) {
+      ctx.beginPath();
+      const yBase = 30 + dune * 25;
+      for (let x = -w/2; x <= w/2; x += 10) {
+        const y = yBase + Math.sin(x * 0.01 + dune) * 20;
+        if (x === -w/2) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.lineTo(w/2, h/2);
+      ctx.lineTo(-w/2, h/2);
+      ctx.fillStyle = `rgba(200, 170, 100, ${0.3 - dune * 0.05})`;
+      ctx.fill();
+    }
+  }
+
+  if (type === 'cave') {
+    // Dark vignette
+    const caveGrad = ctx.createRadialGradient(0, 0, 50, 0, 0, 200);
+    caveGrad.addColorStop(0, 'transparent');
+    caveGrad.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
+    ctx.fillStyle = caveGrad;
+    ctx.fillRect(-w/2, -h/2, w, h);
+  }
+
+  ctx.restore();
+}
+
+// ============================================
+// MYTHIC LAYER - Dragon, Phoenix, Angel, etc.
+// ============================================
+function drawMythicLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+
+  // DRAGON - Fire breath and scales
+  if (type === 'dragon') {
+    // Dragon fire breath
+    for (let flame = 0; flame < 15; flame++) {
+      const angle = -Math.PI/4 + (Math.random() - 0.5) * 0.5;
+      const dist = 30 + flame * 8 + bass * 20;
+      const x = Math.cos(angle) * dist;
+      const y = Math.sin(angle) * dist;
+      const size = 15 - flame * 0.8 + beat * 5;
+
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, ${150 - flame * 8}, 0, ${0.8 - flame * 0.04})`;
+      ctx.fill();
+    }
+
+    // Scales pattern
+    for (let ring = 0; ring < 3; ring++) {
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + ring * 0.2 + time * 0.001;
+        const r = 80 + ring * 25;
+        const x = Math.cos(angle) * r;
+        const y = Math.sin(angle) * r;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 10 - ring * 2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(100, 50, 50, ${0.4 - ring * 0.1})`;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(200, 100, 50, 0.5)';
+        ctx.stroke();
+      }
+    }
+  }
+
+  // PHOENIX - Rising flames
+  if (type === 'phoenix') {
+    // Rising fire particles
+    for (let i = 0; i < 40; i++) {
+      const x = (Math.sin(i * 0.7 + time * 0.002) * 50);
+      const baseY = 100 - ((time * 0.15 + i * 8) % 200);
+      const y = baseY;
+      const size = 8 - Math.abs(baseY) / 30 + beat * 3;
+
+      if (size > 0) {
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        const hue = 30 + Math.abs(baseY) * 0.2;
+        ctx.fillStyle = `hsla(${hue}, 100%, 50%, ${0.7 - Math.abs(baseY) / 200})`;
+        ctx.fill();
+      }
+    }
+
+    // Wing shapes
+    for (let wing = -1; wing <= 1; wing += 2) {
+      ctx.beginPath();
+      const wingSpread = 50 + bass * 30 + Math.sin(time * 0.005) * 20;
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(wing * wingSpread, -30, wing * wingSpread * 1.5, 20);
+      ctx.quadraticCurveTo(wing * wingSpread * 0.8, 0, 0, 0);
+      ctx.fillStyle = 'rgba(255, 150, 50, 0.4)';
+      ctx.fill();
+    }
+  }
+
+  // ANGEL - Divine light
+  if (type === 'angel') {
+    // Halo
+    ctx.beginPath();
+    ctx.ellipse(0, -60 - bass * 10, 40, 10, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255, 255, 200, ${0.7 + beat * 0.3})`;
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    // Light rays
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2 - Math.PI/2;
+      const len = 100 + Math.sin(time * 0.003 + i) * 30 + bass * 40;
+
+      const grad = ctx.createLinearGradient(0, -40, Math.cos(angle) * len, -40 + Math.sin(angle) * len);
+      grad.addColorStop(0, 'rgba(255, 255, 220, 0.5)');
+      grad.addColorStop(1, 'transparent');
+
+      ctx.beginPath();
+      ctx.moveTo(0, -40);
+      ctx.lineTo(Math.cos(angle) * len, -40 + Math.sin(angle) * len);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    // Wings
+    for (let wing = -1; wing <= 1; wing += 2) {
+      ctx.beginPath();
+      const spread = 80 + bass * 30;
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(wing * 30, -50, wing * spread, -60, wing * spread, 20);
+      ctx.bezierCurveTo(wing * spread * 0.7, 0, wing * 20, 10, 0, 0);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.fill();
+    }
+  }
+
+  // DEMON - Dark energy
+  if (type === 'demon') {
+    // Dark aura
+    const demonGrad = ctx.createRadialGradient(0, 0, 20, 0, 0, 120);
+    demonGrad.addColorStop(0, 'rgba(100, 0, 0, 0.5)');
+    demonGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = demonGrad;
+    ctx.fillRect(-150, -150, 300, 300);
+
+    // Horns
+    for (let horn = -1; horn <= 1; horn += 2) {
+      ctx.beginPath();
+      ctx.moveTo(horn * 20, -40);
+      ctx.quadraticCurveTo(horn * 40, -80 - bass * 20, horn * 30, -100);
+      ctx.strokeStyle = 'rgba(50, 0, 0, 0.8)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+    }
+  }
+
+  // SPIRIT - Ethereal form
+  if (type === 'spirit') {
+    for (let layer = 0; layer < 5; layer++) {
+      const offset = Math.sin(time * 0.003 + layer) * 10;
+      ctx.beginPath();
+      ctx.ellipse(offset, 0, 30 + layer * 10, 60 + layer * 15, 0, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(150, 200, 255, ${0.2 - layer * 0.03})`;
+      ctx.fill();
+    }
+  }
+
+  // SHADOW - Dark presence
+  if (type === 'shadow') {
+    const shadowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 100 + bass * 30);
+    shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.8)');
+    shadowGrad.addColorStop(0.5, 'rgba(20, 20, 30, 0.5)');
+    shadowGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = shadowGrad;
+    ctx.fillRect(-150, -150, 300, 300);
+  }
+
+  // SERPENT, LIGHT-BEING, SHAPESHIFTER - variations
+  if (type === 'serpent') {
+    ctx.beginPath();
+    for (let t = 0; t < Math.PI * 4; t += 0.1) {
+      const x = Math.sin(t * 2 + time * 0.003) * (50 + t * 5);
+      const y = t * 15 - 100;
+      if (t === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = `rgba(50, 150, 50, ${0.6 + beat * 0.2})`;
+    ctx.lineWidth = 8 + bass * 4;
+    ctx.stroke();
+  }
+
+  if (type === 'light-being') {
+    const lightGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 100 + bass * 40);
+    lightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+    lightGrad.addColorStop(0.3, 'rgba(255, 250, 200, 0.5)');
+    lightGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = lightGrad;
+    ctx.fillRect(-150, -150, 300, 300);
+  }
+
+  if (type === 'shapeshifter') {
+    const morphPhase = (time * 0.001) % 1;
+    const sides = 3 + Math.floor(morphPhase * 5);
+
+    ctx.beginPath();
+    for (let i = 0; i <= sides; i++) {
+      const angle = (i / sides) * Math.PI * 2 + time * 0.002;
+      const r = 60 + bass * 30 + Math.sin(time * 0.005 + i) * 10;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = `rgba(150, 100, 200, 0.4)`;
+    ctx.fill();
+    ctx.strokeStyle = palette.colors[0] + 'aa';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// ============================================
+// ALCHEMICAL LAYER - Transformation stages
+// ============================================
+function drawAlchemicalLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, beat: number, time: number, _palette: {colors: string[]}) {
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+
+  // NIGREDO - Blackening/decomposition
+  if (type === 'nigredo') {
+    ctx.fillStyle = `rgba(0, 0, 0, ${0.4 + bass * 0.2})`;
+    ctx.fillRect(-w/2, -h/2, w, h);
+
+    // Decomposing particles
+    for (let i = 0; i < 30; i++) {
+      const x = (Math.sin(i * 0.9 + time * 0.001) * 100);
+      const y = ((time * 0.05 + i * 15) % 200) - 100;
+      ctx.beginPath();
+      ctx.arc(x, y, 3 + beat, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(30, 30, 40, ${0.8 - Math.abs(y) / 150})`;
+      ctx.fill();
+    }
+  }
+
+  // ALBEDO - Whitening/purification
+  if (type === 'albedo') {
+    const albeGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 150);
+    albeGrad.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+    albeGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = albeGrad;
+    ctx.fillRect(-w/2, -h/2, w, h);
+
+    // Pure light particles
+    for (let i = 0; i < 20; i++) {
+      const angle = (i / 20) * Math.PI * 2 + time * 0.002;
+      const r = 50 + Math.sin(time * 0.003 + i) * 20;
+      ctx.beginPath();
+      ctx.arc(Math.cos(angle) * r, Math.sin(angle) * r, 4 + beat * 2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fill();
+    }
+  }
+
+  // CITRINITAS - Yellowing/awakening
+  if (type === 'citrinitas') {
+    const citGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 120 + bass * 40);
+    citGrad.addColorStop(0, 'rgba(255, 220, 100, 0.5)');
+    citGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = citGrad;
+    ctx.fillRect(-w/2, -h/2, w, h);
+
+    // Golden rays
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2 + time * 0.001;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(angle) * (100 + bass * 30), Math.sin(angle) * (100 + bass * 30));
+      ctx.strokeStyle = 'rgba(255, 200, 50, 0.4)';
+      ctx.lineWidth = 5 + beat * 3;
+      ctx.stroke();
+    }
+  }
+
+  // RUBEDO - Reddening/completion
+  if (type === 'rubedo') {
+    const rubGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 100 + bass * 30);
+    rubGrad.addColorStop(0, 'rgba(200, 50, 50, 0.6)');
+    rubGrad.addColorStop(0.5, 'rgba(255, 100, 50, 0.3)');
+    rubGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = rubGrad;
+    ctx.fillRect(-w/2, -h/2, w, h);
+  }
+
+  // SOLVE - Dissolution
+  if (type === 'solve') {
+    for (let i = 0; i < 25; i++) {
+      const angle = (i / 25) * Math.PI * 2;
+      const dist = 30 + ((time * 0.05 + i * 8) % 120);
+      const x = Math.cos(angle + time * 0.001) * dist;
+      const y = Math.sin(angle + time * 0.001) * dist;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 6 - dist / 30 + beat * 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(100, 150, 255, ${0.7 - dist / 150})`;
+      ctx.fill();
+    }
+  }
+
+  // COAGULA - Coagulation
+  if (type === 'coagula') {
+    for (let i = 0; i < 25; i++) {
+      const angle = (i / 25) * Math.PI * 2;
+      const maxDist = 100 + bass * 30;
+      const dist = maxDist - ((time * 0.05 + i * 8) % maxDist);
+      const x = Math.cos(angle + time * 0.001) * dist;
+      const y = Math.sin(angle + time * 0.001) * dist;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 4 + (maxDist - dist) / 20 + beat * 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200, 150, 50, ${0.3 + (maxDist - dist) / maxDist * 0.5})`;
+      ctx.fill();
+    }
+  }
+
+  // TRANSMUTE - Transformation
+  if (type === 'transmute') {
+    const phase = (time * 0.001) % 1;
+
+    // Morphing shape
+    ctx.beginPath();
+    for (let i = 0; i <= 12; i++) {
+      const baseAngle = (i / 12) * Math.PI * 2;
+      const morph = Math.sin(phase * Math.PI * 2 + i * 0.5) * 20;
+      const r = 60 + morph + bass * 20;
+      const x = Math.cos(baseAngle) * r;
+      const y = Math.sin(baseAngle) * r;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+
+    const transGrad = ctx.createLinearGradient(-80, 0, 80, 0);
+    transGrad.addColorStop(0, 'rgba(100, 100, 100, 0.5)');
+    transGrad.addColorStop(0.5, 'rgba(255, 200, 100, 0.5)');
+    transGrad.addColorStop(1, 'rgba(100, 100, 100, 0.5)');
+    ctx.fillStyle = transGrad;
+    ctx.fill();
+  }
+
+  // PHILOSOPHERS-STONE - Ultimate achievement
+  if (type === 'philosophers-stone') {
+    // Glowing stone
+    const stoneGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 60 + bass * 20);
+    stoneGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+    stoneGrad.addColorStop(0.2, 'rgba(255, 200, 100, 0.7)');
+    stoneGrad.addColorStop(0.5, 'rgba(200, 50, 50, 0.5)');
+    stoneGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = stoneGrad;
+    ctx.fillRect(-100, -100, 200, 200);
+
+    // Radiating symbols
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2 + time * 0.001;
+      const r = 80 + Math.sin(time * 0.003 + i) * 10;
+
+      ctx.save();
+      ctx.translate(Math.cos(angle) * r, Math.sin(angle) * r);
+      ctx.rotate(angle + time * 0.002);
+
+      // Simple symbol (triangle)
+      ctx.beginPath();
+      ctx.moveTo(0, -10);
+      ctx.lineTo(8, 8);
+      ctx.lineTo(-8, 8);
+      ctx.closePath();
+      ctx.strokeStyle = `rgba(255, 200, 100, ${0.6 + beat * 0.3})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  ctx.restore();
+}
+
+// ============================================
+// WAVEFORM LAYER - Audio visualization shapes
+// ============================================
+function drawWaveformLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, mid: number, beat: number, time: number, palette: {colors: string[]}) {
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+
+  const amplitude = 50 + bass * 50;
+
+  // SINE - Smooth sine wave
+  if (type === 'sine') {
+    ctx.beginPath();
+    for (let x = -w/2; x <= w/2; x += 2) {
+      const y = Math.sin(x * 0.02 + time * 0.005) * amplitude;
+      if (x === -w/2) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.lineWidth = 3 + beat * 2;
+    ctx.stroke();
+  }
+
+  // SQUARE - Square wave
+  if (type === 'square') {
+    ctx.beginPath();
+    let high = true;
+    for (let x = -w/2; x <= w/2; x += 30) {
+      const y = high ? -amplitude : amplitude;
+      ctx.lineTo(x, y);
+      ctx.lineTo(x + 30, y);
+      high = !high;
+    }
+    ctx.strokeStyle = palette.colors[1 % palette.colors.length] + 'cc';
+    ctx.lineWidth = 3 + beat * 2;
+    ctx.stroke();
+  }
+
+  // SAWTOOTH - Sawtooth wave
+  if (type === 'sawtooth') {
+    ctx.beginPath();
+    const period = 60;
+    for (let x = -w/2; x <= w/2; x += 2) {
+      const phase = ((x + w/2 + time * 0.5) % period) / period;
+      const y = (phase * 2 - 1) * amplitude;
+      if (x === -w/2) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = palette.colors[2 % palette.colors.length] + 'cc';
+    ctx.lineWidth = 3 + beat * 2;
+    ctx.stroke();
+  }
+
+  // TRIANGLE - Triangle wave
+  if (type === 'triangle') {
+    ctx.beginPath();
+    const period = 80;
+    for (let x = -w/2; x <= w/2; x += 2) {
+      const phase = ((x + w/2 + time * 0.3) % period) / period;
+      const y = (Math.abs(phase * 4 - 2) - 1) * amplitude;
+      if (x === -w/2) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.lineWidth = 3 + beat * 2;
+    ctx.stroke();
+  }
+
+  // PULSE - Pulse wave with variable duty cycle
+  if (type === 'pulse') {
+    ctx.beginPath();
+    const dutyCycle = 0.3 + bass * 0.4;
+    const period = 50;
+    for (let x = -w/2; x <= w/2; x += 2) {
+      const phase = ((x + w/2 + time * 0.4) % period) / period;
+      const y = phase < dutyCycle ? -amplitude : amplitude;
+      if (x === -w/2) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = palette.colors[3 % palette.colors.length] + 'cc';
+    ctx.lineWidth = 3 + beat * 2;
+    ctx.stroke();
+  }
+
+  // NOISE - Random noise
+  if (type === 'noise') {
+    ctx.beginPath();
+    for (let x = -w/2; x <= w/2; x += 3) {
+      const y = (Math.random() - 0.5) * amplitude * 2;
+      if (x === -w/2) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = 'rgba(150, 150, 150, 0.7)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // HARMONIC - Multiple harmonics
+  if (type === 'harmonic') {
+    for (let harm = 1; harm <= 4; harm++) {
+      ctx.beginPath();
+      for (let x = -w/2; x <= w/2; x += 2) {
+        const y = Math.sin(x * 0.02 * harm + time * 0.003 * harm) * (amplitude / harm);
+        if (x === -w/2) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = palette.colors[(harm - 1) % palette.colors.length] + '88';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  // RESONANCE - Resonant peaks
+  if (type === 'resonance') {
+    const resonanceFreq = 0.05 + mid * 0.05;
+    ctx.beginPath();
+    for (let x = -w/2; x <= w/2; x += 2) {
+      const envelope = Math.exp(-Math.abs(x) / 100);
+      const y = Math.sin(x * resonanceFreq + time * 0.005) * amplitude * envelope;
+      if (x === -w/2) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.lineWidth = 4 + beat * 3;
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// ============================================
+// TEMPORAL LAYER - Time-based effects
+// ============================================
+function drawTemporalLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+
+  // PAST - Sepia/faded effect
+  if (type === 'past') {
+    ctx.fillStyle = 'rgba(100, 80, 50, 0.2)';
+    ctx.fillRect(-w/2, -h/2, w, h);
+
+    // Fading memories
+    for (let i = 0; i < 15; i++) {
+      const x = Math.sin(i * 1.2) * 80;
+      const y = Math.cos(i * 0.9) * 60;
+      const alpha = 0.3 - (time * 0.0001 + i * 0.02) % 0.3;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 20 + i * 2, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(150, 120, 80, ${alpha})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  // FUTURE - Cyan/digital effect
+  if (type === 'future') {
+    // Grid lines
+    ctx.strokeStyle = 'rgba(0, 200, 255, 0.2)';
+    ctx.lineWidth = 1;
+    for (let x = -w/2; x <= w/2; x += 30) {
+      ctx.beginPath();
+      ctx.moveTo(x, -h/2);
+      ctx.lineTo(x, h/2);
+      ctx.stroke();
+    }
+    for (let y = -h/2; y <= h/2; y += 30) {
+      ctx.beginPath();
+      ctx.moveTo(-w/2, y);
+      ctx.lineTo(w/2, y);
+      ctx.stroke();
+    }
+
+    // Data points
+    for (let i = 0; i < 10; i++) {
+      const x = ((time * 0.1 + i * 40) % w) - w/2;
+      const y = Math.sin(x * 0.02 + i) * 50;
+      ctx.beginPath();
+      ctx.arc(x, y, 5 + beat * 3, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0, 255, 255, ${0.7 + beat * 0.3})`;
+      ctx.fill();
+    }
+  }
+
+  // ETERNAL - Infinite loop
+  if (type === 'eternal') {
+    // Infinity symbol
+    ctx.beginPath();
+    for (let t = 0; t <= Math.PI * 2; t += 0.05) {
+      const scale = 60 + bass * 20;
+      const x = Math.sin(t) * scale;
+      const y = Math.sin(t) * Math.cos(t) * scale * 0.5;
+      if (t === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = palette.colors[0] + 'aa';
+    ctx.lineWidth = 4 + beat * 2;
+    ctx.stroke();
+
+    // Orbiting particles
+    for (let i = 0; i < 8; i++) {
+      const t = time * 0.002 + (i / 8) * Math.PI * 2;
+      const scale = 60 + bass * 20;
+      const x = Math.sin(t) * scale;
+      const y = Math.sin(t) * Math.cos(t) * scale * 0.5;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[i % palette.colors.length] + 'cc';
+      ctx.fill();
+    }
+  }
+
+  // LOOP - Repeating cycles
+  if (type === 'loop') {
+    const loopPhase = (time * 0.002) % 1;
+
+    for (let ring = 0; ring < 5; ring++) {
+      const ringPhase = (loopPhase + ring * 0.2) % 1;
+      const r = ringPhase * 150;
+      const alpha = 1 - ringPhase;
+
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(100, 255, 150, ${alpha * 0.5})`;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+  }
+
+  // REWIND - Reverse motion
+  if (type === 'rewind') {
+    // Backward arrows
+    for (let i = 0; i < 5; i++) {
+      const x = ((w/2 - time * 0.2 - i * 40) % w) - w/2 + w;
+      const y = 0;
+
+      ctx.beginPath();
+      ctx.moveTo(x + 15, y - 15);
+      ctx.lineTo(x, y);
+      ctx.lineTo(x + 15, y + 15);
+      ctx.strokeStyle = `rgba(100, 150, 255, ${0.5 - i * 0.08})`;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+  }
+
+  // FREEZE - Frozen moment
+  if (type === 'freeze') {
+    // Ice crystals
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2;
+      const len = 80 + bass * 20;
+
+      ctx.save();
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -len);
+      ctx.strokeStyle = 'rgba(200, 230, 255, 0.6)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Side branches
+      for (let j = 1; j < 4; j++) {
+        const bY = -len * j / 4;
+        const bLen = 15;
+        ctx.beginPath();
+        ctx.moveTo(0, bY);
+        ctx.lineTo(bLen, bY - bLen);
+        ctx.moveTo(0, bY);
+        ctx.lineTo(-bLen, bY - bLen);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // Frost overlay
+    ctx.fillStyle = 'rgba(200, 230, 255, 0.1)';
+    ctx.fillRect(-w/2, -h/2, w, h);
+  }
+
+  // DECAY - Entropy/breakdown
+  if (type === 'decay') {
+    for (let i = 0; i < 40; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 20 + Math.random() * 100;
+      const x = Math.cos(angle) * dist;
+      const y = Math.sin(angle) * dist + ((time * 0.1 + i * 10) % 100) - 50;
+      const size = 5 - dist / 30;
+
+      if (size > 0) {
+        ctx.beginPath();
+        ctx.arc(x, y, size + beat, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(100, 90, 80, ${0.5 - dist / 200})`;
+        ctx.fill();
+      }
+    }
+  }
+
+  // BLOOM - Growth/emergence
+  if (type === 'bloom') {
+    const bloomPhase = (Math.sin(time * 0.002) + 1) / 2;
+
+    for (let petal = 0; petal < 8; petal++) {
+      const angle = (petal / 8) * Math.PI * 2;
+      const petalLen = 30 + bloomPhase * 50 + bass * 20;
+
+      ctx.save();
+      ctx.rotate(angle);
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(15, -petalLen * 0.5, 0, -petalLen);
+      ctx.quadraticCurveTo(-15, -petalLen * 0.5, 0, 0);
+      ctx.fillStyle = `rgba(255, 150, 200, ${0.4 + bloomPhase * 0.3})`;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Center
+    ctx.beginPath();
+    ctx.arc(0, 0, 10 + bloomPhase * 5 + beat * 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 200, 100, 0.8)';
+    ctx.fill();
+  }
+
+  ctx.restore();
 }
