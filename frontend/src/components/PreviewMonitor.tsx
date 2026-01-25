@@ -267,17 +267,80 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
 
       ctx.restore();
 
-      // Eclipse
-      const eclipse = state?.eclipsePhase ?? 0;
-      if (eclipse > 0) {
-        ctx.fillStyle = `rgba(0, 0, 0, ${eclipse * 0.8})`;
+      // === ECLIPSE - Audio-reactive with awe-inspiring corona ===
+      const baseEclipse = state?.eclipsePhase ?? 0;
+      const coronaBase = state?.coronaIntensity ?? 0;
+
+      if (baseEclipse > 0) {
+        // Eclipse darkness deepens with overall audio intensity
+        const eclipseDepth = baseEclipse * (0.6 + overall * 0.4);
+        ctx.fillStyle = `rgba(0, 0, 0, ${eclipseDepth * 0.85})`;
         ctx.fillRect(0, 0, width, height);
-        if (eclipse > 0.5 && (state?.coronaIntensity ?? 0) > 0) {
-          const corona = ctx.createRadialGradient(centerX, centerY, 20, centerX, centerY, 150);
-          corona.addColorStop(0, `rgba(255, 200, 100, ${(eclipse - 0.5) * state!.coronaIntensity * 0.5})`);
-          corona.addColorStop(1, 'transparent');
-          ctx.fillStyle = corona;
+
+        // Corona effect - builds with music intensity
+        if (coronaBase > 0) {
+          const coronaPulse = coronaBase * (0.5 + bass * 0.5 + beat * 0.3);
+          const coronaSize = 80 + coronaBase * 120 + bass * 80 + beat * 60;
+
+          // Outer ethereal glow - subtle and expansive
+          const outerGlow = ctx.createRadialGradient(centerX, centerY, coronaSize * 0.3, centerX, centerY, coronaSize * 2);
+          outerGlow.addColorStop(0, `rgba(139, 92, 246, ${coronaPulse * 0.15})`);
+          outerGlow.addColorStop(0.3, `rgba(236, 72, 153, ${coronaPulse * 0.1})`);
+          outerGlow.addColorStop(0.6, `rgba(6, 182, 212, ${coronaPulse * 0.05})`);
+          outerGlow.addColorStop(1, 'transparent');
+          ctx.fillStyle = outerGlow;
           ctx.fillRect(0, 0, width, height);
+
+          // Corona rays - emanate on beats
+          if (beat > 0.2) {
+            const rayCount = 12;
+            for (let i = 0; i < rayCount; i++) {
+              const angle = (i / rayCount) * Math.PI * 2 + timeRef.current * 0.0002;
+              const rayLength = coronaSize * (0.8 + beat * 1.5);
+              const rayWidth = 2 + beat * 4;
+
+              ctx.save();
+              ctx.translate(centerX, centerY);
+              ctx.rotate(angle);
+
+              const rayGrad = ctx.createLinearGradient(30, 0, rayLength, 0);
+              rayGrad.addColorStop(0, `rgba(255, 200, 100, ${beat * coronaBase * 0.4})`);
+              rayGrad.addColorStop(0.5, `rgba(255, 150, 50, ${beat * coronaBase * 0.2})`);
+              rayGrad.addColorStop(1, 'transparent');
+
+              ctx.beginPath();
+              ctx.moveTo(30, -rayWidth/2);
+              ctx.lineTo(rayLength, 0);
+              ctx.lineTo(30, rayWidth/2);
+              ctx.closePath();
+              ctx.fillStyle = rayGrad;
+              ctx.fill();
+              ctx.restore();
+            }
+          }
+
+          // Inner corona - warm golden glow
+          const innerCorona = ctx.createRadialGradient(centerX, centerY, 15, centerX, centerY, coronaSize);
+          innerCorona.addColorStop(0, `rgba(255, 220, 150, ${coronaPulse * 0.6})`);
+          innerCorona.addColorStop(0.2, `rgba(255, 180, 100, ${coronaPulse * 0.4})`);
+          innerCorona.addColorStop(0.5, `rgba(255, 120, 50, ${coronaPulse * 0.2})`);
+          innerCorona.addColorStop(1, 'transparent');
+          ctx.fillStyle = innerCorona;
+          ctx.fillRect(0, 0, width, height);
+
+          // Central dark disc (the moon)
+          const discSize = 25 + baseEclipse * 15;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, discSize, 0, Math.PI * 2);
+          ctx.fillStyle = '#000000';
+          ctx.fill();
+
+          // Subtle rim light on the disc edge
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, discSize, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255, 200, 150, ${coronaPulse * 0.3})`;
+          ctx.lineWidth = 1 + beat;
+          ctx.stroke();
         }
       }
 

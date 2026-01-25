@@ -29,6 +29,32 @@ export interface Preset {
 
 export const DEFAULT_PRESETS: Preset[] = [
   {
+    id: 'awe',
+    name: 'AWE',
+    description: 'Stargazing wonder with eclipse crescendo',
+    category: 'cosmos',
+    isCore: true,
+    state: {
+      geometryMode: 'stars',
+      colorPalette: 'cosmos',
+      motionDirection: 'flow',
+      motionSpeed: 0.08,
+      overallIntensity: 0.35,
+      starDensity: 0.9,
+      starBrightness: 0.6,
+      geometryComplexity: 0.2,
+      chaosFactor: 0.0,
+      eclipsePhase: 0.3,
+      coronaIntensity: 0.4,
+      geometryLayer2: 'seed-of-life',
+      geometryLayer4: 'nebula',
+      audioReactGeometry: 0.6,
+      audioReactColor: 0.4,
+      audioReactMotion: 0.5,
+      bassImpact: 0.7,
+    },
+  },
+  {
     id: 'cosmos',
     name: 'Cosmos',
     description: 'Peaceful starfield',
