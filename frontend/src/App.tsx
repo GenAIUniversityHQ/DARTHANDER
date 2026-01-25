@@ -1375,15 +1375,20 @@ function App() {
     const ffmpeg = new FFmpeg();
     ffmpegRef.current = ffmpeg;
 
+    ffmpeg.on('log', ({ message }) => {
+      console.log('[FFmpeg]', message);
+    });
+
     ffmpeg.on('progress', ({ progress }) => {
       setConversionProgress(Math.round(progress * 100));
     });
 
-    // Load FFmpeg core from CDN
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+    // Load FFmpeg core-mt (multithreaded with full codec support including x264)
+    const baseURL = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm';
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+      workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
     });
 
     ffmpegLoadedRef.current = true;
@@ -1400,6 +1405,7 @@ function App() {
     try {
       // Create WebM blob from recorded chunks
       const webmBlob = new Blob(recordedChunks, { type: 'video/webm' });
+      console.log('WebM size:', (webmBlob.size / 1024 / 1024).toFixed(2), 'MB');
 
       // Load FFmpeg
       const ffmpeg = await loadFFmpeg();
@@ -1409,17 +1415,13 @@ function App() {
       await ffmpeg.writeFile('input.webm', webmData);
 
       // Convert to MP4 with high quality settings for YouTube
-      // -c:v libx264: H.264 video codec (YouTube recommended)
-      // -preset medium: Balance between speed and compression
-      // -crf 18: High quality (lower = better, 18 is visually lossless)
-      // -c:a aac: AAC audio codec
-      // -b:a 192k: 192kbps audio bitrate
-      // -movflags +faststart: Optimize for web streaming
-      await ffmpeg.exec([
+      // Using libx264 (H.264) and aac audio - universally compatible
+      const result = await ffmpeg.exec([
         '-i', 'input.webm',
         '-c:v', 'libx264',
-        '-preset', 'medium',
+        '-preset', 'fast',
         '-crf', '18',
+        '-pix_fmt', 'yuv420p',
         '-c:a', 'aac',
         '-b:a', '192k',
         '-movflags', '+faststart',
@@ -1427,8 +1429,17 @@ function App() {
         'output.mp4'
       ]);
 
+      console.log('FFmpeg conversion result:', result);
+
       // Read the output MP4
       const mp4Data = await ffmpeg.readFile('output.mp4') as Uint8Array;
+      console.log('MP4 size:', (mp4Data.length / 1024 / 1024).toFixed(2), 'MB');
+
+      // Verify we got actual data
+      if (mp4Data.length < 1000) {
+        throw new Error('MP4 output too small - conversion may have failed');
+      }
+
       // Create a new ArrayBuffer copy to satisfy TypeScript
       const mp4Buffer = new Uint8Array(mp4Data).buffer;
       const mp4Blob = new Blob([mp4Buffer], { type: 'video/mp4' });

@@ -12,9 +12,18 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    // Required headers for FFmpeg.wasm SharedArrayBuffer support
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
   },
   build: {
     outDir: 'dist',
     sourcemap: true,
+  },
+  // Optimize FFmpeg WASM loading
+  optimizeDeps: {
+    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
   },
 });
