@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Prompt Input Component
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, FormEvent, KeyboardEvent } from 'react';
 import { Send } from 'lucide-react';
 
 interface PromptInputProps {
@@ -20,7 +20,7 @@ export function PromptInput({ onSubmit, placeholder = "Enter prompt... (e.g., 'g
     inputRef.current?.focus();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!value.trim()) return;
 
@@ -30,7 +30,7 @@ export function PromptInput({ onSubmit, placeholder = "Enter prompt... (e.g., 'g
     setHistoryIndex(-1);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     // Navigate history with arrow keys
     if (e.key === 'ArrowUp') {
       e.preventDefault();
@@ -53,7 +53,7 @@ export function PromptInput({ onSubmit, placeholder = "Enter prompt... (e.g., 'g
   };
 
   return (
-    <form onSubmit={handleSubmit} className="relative">
+    <form onSubmit={handleSubmit} className="relative group">
       <input
         ref={inputRef}
         type="text"
@@ -61,19 +61,24 @@ export function PromptInput({ onSubmit, placeholder = "Enter prompt... (e.g., 'g
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 pr-12 
-                   text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500
-                   font-mono text-sm"
+        className="w-full glass-input rounded-xl px-5 py-3.5 pr-14
+                   text-white placeholder-neon-purple/40
+                   font-mono text-sm tracking-wide"
       />
       <button
         type="submit"
         disabled={!value.trim()}
-        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 
-                   text-zinc-500 hover:text-purple-400 disabled:opacity-30
-                   transition-colors"
+        className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5
+                   text-neon-purple/50 hover:text-neon-magenta disabled:opacity-20
+                   transition-all duration-200 hover:scale-110
+                   disabled:hover:scale-100"
       >
         <Send className="w-5 h-5" />
       </button>
+      {/* Glow effect on focus */}
+      <div className="absolute inset-0 rounded-xl opacity-0 group-focus-within:opacity-100
+                      pointer-events-none transition-opacity duration-300
+                      shadow-[0_0_30px_rgba(139,92,246,0.3)]" />
     </form>
   );
 }

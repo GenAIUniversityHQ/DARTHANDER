@@ -1,14 +1,13 @@
 // DARTHANDER Visual Consciousness Engine
 // Preset Grid Component
 
-import React from 'react';
-import { 
-  Star, 
-  Circle, 
-  Hexagon, 
-  Sparkles, 
-  Eye, 
-  Moon, 
+import type { ReactNode } from 'react';
+import {
+  Star,
+  Circle,
+  Sparkles,
+  Eye,
+  Moon,
   ArrowRight,
   Flame
 } from 'lucide-react';
@@ -28,7 +27,7 @@ interface PresetGridProps {
 }
 
 // Map preset names to icons
-const presetIcons: Record<string, React.ReactNode> = {
+const presetIcons: Record<string, ReactNode> = {
   COSMOS: <Star className="w-5 h-5" />,
   EMERGENCE: <Sparkles className="w-5 h-5" />,
   DESCENT: <ArrowRight className="w-5 h-5 rotate-90" />,
@@ -41,18 +40,18 @@ const presetIcons: Record<string, React.ReactNode> = {
   SPIRAL: <Circle className="w-5 h-5" />,
 };
 
-// Map preset names to colors
-const presetColors: Record<string, string> = {
-  COSMOS: 'from-blue-900/50 to-purple-900/50 border-blue-500/30',
-  EMERGENCE: 'from-purple-900/50 to-pink-900/50 border-purple-500/30',
-  DESCENT: 'from-gray-900/50 to-zinc-900/50 border-gray-500/30',
-  TOTALITY: 'from-black to-zinc-900/50 border-white/10',
-  PORTAL: 'from-indigo-900/50 to-violet-900/50 border-indigo-500/30',
-  FRACTAL_BLOOM: 'from-pink-900/50 to-orange-900/50 border-pink-500/30',
-  VOID: 'from-black to-black border-white/5',
-  RETURN: 'from-blue-900/30 to-cyan-900/30 border-cyan-500/20',
-  CLOSE: 'from-zinc-900/50 to-black border-zinc-500/20',
-  SPIRAL: 'from-violet-900/50 to-purple-900/50 border-violet-500/30',
+// Map preset names to colors - DARTHANDER brand palette with glassmorphism
+const presetColors: Record<string, { gradient: string; border: string; glow: string; iconColor: string }> = {
+  COSMOS: { gradient: 'from-deep-purple/60 to-neon-purple/20', border: 'border-neon-purple/30', glow: 'hover:shadow-glow-purple', iconColor: 'text-neon-purple' },
+  EMERGENCE: { gradient: 'from-neon-purple/30 to-neon-magenta/20', border: 'border-neon-magenta/30', glow: 'hover:shadow-glow-magenta', iconColor: 'text-neon-magenta' },
+  DESCENT: { gradient: 'from-void-black/80 to-deep-purple/40', border: 'border-neon-purple/20', glow: 'hover:shadow-glow-purple', iconColor: 'text-neon-purple/70' },
+  TOTALITY: { gradient: 'from-void-black to-void-dark', border: 'border-white/10', glow: 'hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]', iconColor: 'text-white/50' },
+  PORTAL: { gradient: 'from-neon-purple/40 to-neon-cyan/20', border: 'border-neon-cyan/30', glow: 'hover:shadow-glow-cyan', iconColor: 'text-neon-cyan' },
+  FRACTAL_BLOOM: { gradient: 'from-neon-magenta/30 to-neon-red/20', border: 'border-neon-magenta/30', glow: 'hover:shadow-glow-magenta', iconColor: 'text-neon-magenta' },
+  VOID: { gradient: 'from-void-black to-void-black', border: 'border-white/5', glow: 'hover:shadow-none', iconColor: 'text-white/30' },
+  RETURN: { gradient: 'from-neon-cyan/20 to-neon-purple/20', border: 'border-neon-cyan/20', glow: 'hover:shadow-glow-cyan', iconColor: 'text-neon-cyan' },
+  CLOSE: { gradient: 'from-deep-purple/30 to-void-black', border: 'border-neon-purple/10', glow: 'hover:shadow-glow-purple', iconColor: 'text-neon-purple/50' },
+  SPIRAL: { gradient: 'from-neon-purple/30 to-neon-magenta/30', border: 'border-neon-purple/30', glow: 'hover:shadow-glow-purple', iconColor: 'text-neon-purple' },
 };
 
 export function PresetGrid({ presets, onSelect, currentPreset }: PresetGridProps) {
@@ -63,11 +62,13 @@ export function PresetGrid({ presets, onSelect, currentPreset }: PresetGridProps
     return 0;
   });
 
+  const defaultColors = { gradient: 'from-deep-purple/40 to-void-black', border: 'border-neon-purple/20', glow: 'hover:shadow-glow-purple', iconColor: 'text-neon-purple/60' };
+
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-4 gap-3">
       {sortedPresets.map((preset, index) => {
         const isActive = currentPreset === preset.name;
-        const colorClass = presetColors[preset.name] || 'from-zinc-800 to-zinc-900 border-zinc-700';
+        const colors = presetColors[preset.name] || defaultColors;
         const icon = presetIcons[preset.name] || <Circle className="w-5 h-5" />;
 
         return (
@@ -75,27 +76,35 @@ export function PresetGrid({ presets, onSelect, currentPreset }: PresetGridProps
             key={preset.id}
             onClick={() => onSelect(preset.name)}
             className={`
-              relative p-3 rounded-lg border transition-all
-              bg-gradient-to-br ${colorClass}
-              ${isActive ? 'ring-2 ring-white/50' : 'hover:border-white/30'}
+              relative p-3 rounded-xl border transition-all duration-300
+              bg-gradient-to-br ${colors.gradient} ${colors.border}
+              backdrop-blur-sm
+              ${isActive
+                ? 'ring-2 ring-neon-purple/60 shadow-glow-purple'
+                : `hover:border-neon-purple/50 ${colors.glow}`}
               group
             `}
           >
             {/* Keyboard shortcut */}
             {index < 8 && (
-              <span className="absolute top-1 left-2 text-[10px] text-zinc-500 font-mono">
+              <span className="absolute top-1 left-2 text-[9px] text-neon-purple/40 font-mono">
                 {index + 1}
               </span>
             )}
 
-            <div className="flex flex-col items-center gap-1">
-              <div className="text-zinc-300 group-hover:text-white transition-colors">
+            <div className="flex flex-col items-center gap-1.5">
+              <div className={`${colors.iconColor} group-hover:text-white transition-colors duration-200`}>
                 {icon}
               </div>
-              <span className="text-[10px] font-medium tracking-wider text-zinc-400 group-hover:text-white">
+              <span className="text-[9px] font-medium tracking-wider text-neon-purple/60 group-hover:text-white transition-colors">
                 {preset.name.replace('_', ' ')}
               </span>
             </div>
+
+            {/* Active indicator */}
+            {isActive && (
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-neon-purple shadow-glow-purple" />
+            )}
           </button>
         );
       })}

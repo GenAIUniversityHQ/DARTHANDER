@@ -1,7 +1,6 @@
 // DARTHANDER Visual Consciousness Engine
 // Audio Visualizer Component
 
-import React from 'react';
 
 interface AudioState {
   subBass: number;
@@ -21,66 +20,67 @@ interface AudioVisualizerProps {
 }
 
 export function AudioVisualizer({ state }: AudioVisualizerProps) {
+  // DARTHANDER brand gradient colors for frequency bands
   const bands = [
-    { key: 'subBass', label: 'SUB', color: 'bg-red-500' },
-    { key: 'bass', label: 'BASS', color: 'bg-orange-500' },
-    { key: 'lowMid', label: 'LOW', color: 'bg-yellow-500' },
-    { key: 'mid', label: 'MID', color: 'bg-green-500' },
-    { key: 'highMid', label: 'HIGH', color: 'bg-cyan-500' },
-    { key: 'presence', label: 'PRES', color: 'bg-blue-500' },
-    { key: 'brilliance', label: 'AIR', color: 'bg-purple-500' },
+    { key: 'subBass', label: 'SUB', gradient: 'from-crimson-deep to-neon-red' },
+    { key: 'bass', label: 'BASS', gradient: 'from-neon-red to-neon-magenta' },
+    { key: 'lowMid', label: 'LOW', gradient: 'from-neon-magenta to-neon-purple' },
+    { key: 'mid', label: 'MID', gradient: 'from-neon-purple to-neon-purple' },
+    { key: 'highMid', label: 'HIGH', gradient: 'from-neon-purple to-neon-cyan' },
+    { key: 'presence', label: 'PRES', gradient: 'from-neon-cyan to-neon-cyan' },
+    { key: 'brilliance', label: 'AIR', gradient: 'from-neon-cyan to-white/80' },
   ];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Frequency Bands */}
-      <div className="flex gap-1 h-16 items-end">
+      <div className="flex gap-1.5 h-16 items-end">
         {bands.map((band) => {
           const value = state ? (state as any)[band.key] ?? 0 : 0;
-          const height = Math.max(4, value * 100);
+          const height = Math.max(8, value * 100);
 
           return (
             <div
               key={band.key}
-              className="flex-1 flex flex-col items-center gap-1"
+              className="flex-1 flex flex-col items-center gap-1.5"
             >
-              <div className="w-full bg-zinc-900 rounded-t flex items-end h-12">
+              <div className="w-full glass rounded-t-lg flex items-end h-12 overflow-hidden">
                 <div
-                  className={`w-full ${band.color} rounded-t transition-all duration-75`}
+                  className={`w-full bg-gradient-to-t ${band.gradient} rounded-t-lg transition-all duration-100`}
                   style={{ height: `${height}%` }}
                 />
               </div>
-              <span className="text-[8px] text-zinc-500">{band.label}</span>
+              <span className="text-[8px] text-neon-purple/50 tracking-wider">{band.label}</span>
             </div>
           );
         })}
       </div>
 
       {/* BPM and Beat */}
-      <div className="flex justify-between items-center text-xs">
+      <div className="flex justify-between items-center text-xs glass px-3 py-2 rounded-lg">
         <div className="flex items-center gap-2">
-          <span className="text-zinc-500">BPM:</span>
-          <span className="font-mono text-white">
+          <span className="text-neon-purple/50">BPM:</span>
+          <span className="font-mono text-neon-magenta">
             {state?.detectedBpm ? Math.round(state.detectedBpm) : '--'}
           </span>
         </div>
-        
+
         <div className="flex items-center gap-2">
-          <span className="text-zinc-500">BEAT:</span>
-          <div 
-            className={`w-3 h-3 rounded-full transition-all duration-75 ${
-              (state?.beatIntensity ?? 0) > 0.5 
-                ? 'bg-white scale-110' 
-                : 'bg-zinc-700 scale-100'
+          <span className="text-neon-purple/50">BEAT:</span>
+          <div
+            className={`w-3 h-3 rounded-full transition-all duration-100 ${
+              (state?.beatIntensity ?? 0) > 0.5
+                ? 'bg-neon-magenta scale-125 shadow-glow-magenta'
+                : 'bg-neon-purple/30 scale-100'
             }`}
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-zinc-500">LEVEL:</span>
-          <div className="w-20 h-2 bg-zinc-800 rounded overflow-hidden">
+          <span className="text-neon-purple/50">LEVEL:</span>
+          <div className="w-20 h-2.5 glass rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 transition-all duration-75"
+              className="h-full bg-gradient-to-r from-neon-cyan via-neon-magenta to-neon-red transition-all duration-100"
               style={{ width: `${(state?.overallAmplitude ?? 0) * 100}%` }}
             />
           </div>

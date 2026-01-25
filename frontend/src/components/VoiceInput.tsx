@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Voice Input Component
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Loader } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -96,20 +96,26 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
       onClick={onToggle}
       disabled={isProcessing}
       className={`
-        p-3 rounded-full transition-all
-        ${isActive 
-          ? 'bg-red-500 text-white animate-pulse' 
-          : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}
+        relative p-3.5 rounded-full transition-all duration-300
+        ${isActive
+          ? 'bg-neon-red/20 text-neon-red border border-neon-red/50 shadow-glow-red'
+          : 'glass-button text-neon-purple/60 hover:text-neon-magenta hover:shadow-glow-magenta'}
         ${isProcessing ? 'opacity-50' : ''}
       `}
     >
-      {isProcessing ? (
-        <Loader className="w-5 h-5 animate-spin" />
-      ) : isActive ? (
-        <Mic className="w-5 h-5" />
-      ) : (
-        <MicOff className="w-5 h-5" />
+      {/* Pulse ring when active */}
+      {isActive && (
+        <span className="absolute inset-0 rounded-full animate-ping bg-neon-red/30" />
       )}
+      <span className="relative">
+        {isProcessing ? (
+          <Loader className="w-5 h-5 animate-spin" />
+        ) : isActive ? (
+          <Mic className="w-5 h-5" />
+        ) : (
+          <MicOff className="w-5 h-5" />
+        )}
+      </span>
     </button>
   );
 }

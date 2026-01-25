@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Session Status Component
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Circle, Play, Square } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -53,8 +53,10 @@ export function SessionStatus({ sessionId, onSessionChange }: SessionStatusProps
       <button
         onClick={startSession}
         disabled={isStarting}
-        className="flex items-center gap-2 px-3 py-1 bg-green-900/30 border border-green-500/30 
-                   rounded text-sm text-green-400 hover:bg-green-900/50 transition-colors"
+        className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all duration-200
+                   bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan
+                   hover:bg-neon-cyan/20 hover:border-neon-cyan/50 hover:shadow-glow-cyan
+                   disabled:opacity-50"
       >
         <Play className="w-3 h-3" />
         {isStarting ? 'Starting...' : 'Start Session'}
@@ -64,14 +66,15 @@ export function SessionStatus({ sessionId, onSessionChange }: SessionStatusProps
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2 text-sm">
-        <Circle className="w-2 h-2 fill-red-500 text-red-500 animate-pulse" />
-        <span className="text-zinc-400">Recording</span>
+      <div className="flex items-center gap-2 text-sm glass px-3 py-1.5 rounded-lg">
+        <Circle className="w-2 h-2 fill-neon-red text-neon-red animate-pulse" />
+        <span className="text-neon-red/70">Recording</span>
       </div>
       <button
         onClick={endSession}
-        className="flex items-center gap-2 px-3 py-1 bg-red-900/30 border border-red-500/30 
-                   rounded text-sm text-red-400 hover:bg-red-900/50 transition-colors"
+        className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm transition-all duration-200
+                   bg-neon-red/10 border border-neon-red/30 text-neon-red
+                   hover:bg-neon-red/20 hover:border-neon-red/50 hover:shadow-glow-red"
       >
         <Square className="w-3 h-3" />
         End

@@ -1,7 +1,6 @@
 // DARTHANDER Visual Consciousness Engine
 // Audio Source Selector Component
 
-import React from 'react';
 import { Radio, Upload, Wifi } from 'lucide-react';
 import { useStore } from '../store';
 
@@ -31,16 +30,16 @@ export function AudioSourceSelector() {
   };
 
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-1.5">
       {sources.map(({ key, label, icon: Icon }) => (
         <button
           key={key}
           onClick={() => handleSourceChange(key)}
           className={`
-            px-2 py-1 text-[10px] rounded flex items-center gap-1 transition-colors
+            px-2.5 py-1.5 text-[10px] rounded-lg flex items-center gap-1.5 transition-all duration-200
             ${audioSource === key
-              ? 'bg-purple-900/50 text-purple-300 border border-purple-500/50'
-              : 'bg-zinc-900 text-zinc-500 border border-zinc-800 hover:border-zinc-600'}
+              ? 'bg-neon-purple/20 text-neon-purple border border-neon-purple/40 shadow-glow-purple'
+              : 'glass-button text-neon-purple/50 hover:text-neon-purple'}
           `}
         >
           <Icon className="w-3 h-3" />

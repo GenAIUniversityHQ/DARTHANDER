@@ -1,8 +1,6 @@
 // DARTHANDER Visual Consciousness Engine
 // Parameter Sliders Component
 
-import React from 'react';
-
 interface VisualState {
   overallIntensity: number;
   geometryComplexity: number;
@@ -14,6 +12,9 @@ interface VisualState {
   depthFocalPoint: number;
   starDensity: number;
   coronaIntensity: number;
+  geometryMode?: string;
+  motionDirection?: string;
+  colorPalette?: string;
 }
 
 interface ParameterSlidersProps {
@@ -27,35 +28,44 @@ interface SliderConfig {
   color: string;
 }
 
+// DARTHANDER brand color sliders
 const sliders: SliderConfig[] = [
-  { key: 'overallIntensity', label: 'INTENSITY', color: 'bg-purple-500' },
-  { key: 'geometryComplexity', label: 'COMPLEXITY', color: 'bg-blue-500' },
-  { key: 'chaosFactor', label: 'CHAOS', color: 'bg-red-500' },
-  { key: 'motionSpeed', label: 'MOTION', color: 'bg-cyan-500' },
-  { key: 'audioReactGeometry', label: 'AUDIO REACT', color: 'bg-green-500' },
-  { key: 'eclipsePhase', label: 'ECLIPSE', color: 'bg-yellow-500' },
+  { key: 'overallIntensity', label: 'INTENSITY', color: 'bg-gradient-to-r from-neon-purple to-neon-magenta' },
+  { key: 'geometryComplexity', label: 'COMPLEXITY', color: 'bg-gradient-to-r from-neon-purple/80 to-neon-cyan' },
+  { key: 'chaosFactor', label: 'CHAOS', color: 'bg-gradient-to-r from-neon-red to-neon-magenta' },
+  { key: 'motionSpeed', label: 'MOTION', color: 'bg-gradient-to-r from-neon-cyan to-neon-purple' },
+  { key: 'audioReactGeometry', label: 'AUDIO REACT', color: 'bg-gradient-to-r from-neon-magenta to-neon-purple' },
+  { key: 'eclipsePhase', label: 'ECLIPSE', color: 'bg-gradient-to-r from-white/80 to-neon-purple/50' },
 ];
 
 export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
   if (!state) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {sliders.map((slider) => {
         const value = (state as any)[slider.key] ?? 0;
         const percentage = Math.round(value * 100);
 
         return (
-          <div key={slider.key} className="space-y-1">
+          <div key={slider.key} className="space-y-2">
             <div className="flex justify-between text-xs">
-              <span className="text-zinc-500">{slider.label}</span>
-              <span className="text-zinc-400 font-mono">{percentage}%</span>
+              <span className="text-neon-purple/60 tracking-wider">{slider.label}</span>
+              <span className="text-neon-cyan font-mono">{percentage}%</span>
             </div>
-            <div className="relative h-2 bg-zinc-800 rounded-full overflow-hidden">
+            <div className="relative h-2.5 glass rounded-full overflow-hidden">
               {/* Fill */}
               <div
-                className={`absolute inset-y-0 left-0 ${slider.color} rounded-full transition-all duration-150`}
+                className={`absolute inset-y-0 left-0 ${slider.color} rounded-full transition-all duration-200`}
                 style={{ width: `${percentage}%` }}
+              />
+              {/* Glow effect */}
+              <div
+                className="absolute inset-y-0 left-0 rounded-full blur-sm opacity-50 transition-all duration-200"
+                style={{
+                  width: `${percentage}%`,
+                  background: 'linear-gradient(to right, #8B5CF6, #EC4899)'
+                }}
               />
               {/* Slider Input */}
               <input
@@ -72,17 +82,17 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
       })}
 
       {/* Additional quick toggles */}
-      <div className="border-t border-zinc-800 pt-4 mt-4">
-        <h3 className="text-xs text-zinc-500 mb-3">GEOMETRY MODE</h3>
+      <div className="border-t border-neon-purple/10 pt-4 mt-4">
+        <h3 className="text-xs text-neon-purple/50 mb-3 tracking-widest">GEOMETRY MODE</h3>
         <div className="flex flex-wrap gap-2">
           {['stars', 'mandala', 'hexagon', 'fractal', 'spiral', 'tunnel', 'void'].map((mode) => (
             <button
               key={mode}
               onClick={() => onChange('geometryMode', mode as any)}
-              className={`px-3 py-1 text-xs rounded border transition-colors ${
+              className={`px-3 py-1.5 text-xs rounded-lg border transition-all duration-200 ${
                 state.geometryMode === mode
-                  ? 'bg-purple-900/50 border-purple-500 text-white'
-                  : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                  ? 'bg-neon-purple/20 border-neon-purple/50 text-neon-purple shadow-glow-purple'
+                  : 'glass-button text-neon-purple/50 hover:text-neon-purple'
               }`}
             >
               {mode}
@@ -91,17 +101,17 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
         </div>
       </div>
 
-      <div className="border-t border-zinc-800 pt-4">
-        <h3 className="text-xs text-zinc-500 mb-3">MOTION DIRECTION</h3>
+      <div className="border-t border-neon-purple/10 pt-4">
+        <h3 className="text-xs text-neon-purple/50 mb-3 tracking-widest">MOTION DIRECTION</h3>
         <div className="flex flex-wrap gap-2">
           {['outward', 'inward', 'clockwise', 'counter', 'breathing', 'still'].map((dir) => (
             <button
               key={dir}
               onClick={() => onChange('motionDirection', dir as any)}
-              className={`px-3 py-1 text-xs rounded border transition-colors ${
+              className={`px-3 py-1.5 text-xs rounded-lg border transition-all duration-200 ${
                 state.motionDirection === dir
-                  ? 'bg-cyan-900/50 border-cyan-500 text-white'
-                  : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                  ? 'bg-neon-cyan/20 border-neon-cyan/50 text-neon-cyan shadow-glow-cyan'
+                  : 'glass-button text-neon-cyan/50 hover:text-neon-cyan'
               }`}
             >
               {dir}
@@ -110,17 +120,17 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
         </div>
       </div>
 
-      <div className="border-t border-zinc-800 pt-4">
-        <h3 className="text-xs text-zinc-500 mb-3">COLOR PALETTE</h3>
+      <div className="border-t border-neon-purple/10 pt-4">
+        <h3 className="text-xs text-neon-purple/50 mb-3 tracking-widest">COLOR PALETTE</h3>
         <div className="flex flex-wrap gap-2">
           {['cosmos', 'void', 'fire', 'ice', 'earth', 'neon', 'sacred'].map((palette) => (
             <button
               key={palette}
               onClick={() => onChange('colorPalette', palette as any)}
-              className={`px-3 py-1 text-xs rounded border transition-colors ${
+              className={`px-3 py-1.5 text-xs rounded-lg border transition-all duration-200 ${
                 state.colorPalette === palette
-                  ? 'bg-pink-900/50 border-pink-500 text-white'
-                  : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                  ? 'bg-neon-magenta/20 border-neon-magenta/50 text-neon-magenta shadow-glow-magenta'
+                  : 'glass-button text-neon-magenta/50 hover:text-neon-magenta'
               }`}
             >
               {palette}

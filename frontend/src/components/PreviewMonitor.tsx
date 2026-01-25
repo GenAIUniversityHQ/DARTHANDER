@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Preview Monitor Component - Visual representation of current state
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface VisualState {
   geometryMode: string;
@@ -229,22 +229,28 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
   }, [state]);
 
   return (
-    <div className="relative w-full h-full rounded-lg overflow-hidden border border-zinc-800">
+    <div className="relative w-full h-full rounded-xl overflow-hidden border border-neon-purple/20 shadow-glass glow-border">
       <canvas
         ref={canvasRef}
         className="w-full h-full"
-        style={{ background: '#000' }}
+        style={{ background: '#0D0D0D' }}
       />
-      
-      {/* Overlay info */}
-      <div className="absolute bottom-2 left-2 text-[10px] text-zinc-500 font-mono space-y-1">
-        <div>MODE: {state?.geometryMode || 'stars'}</div>
-        <div>DEPTH: {state?.depthMode || 'deep'}</div>
+
+      {/* Glass overlay info */}
+      <div className="absolute bottom-3 left-3 glass px-3 py-2 rounded-lg text-[10px] font-mono space-y-1">
+        <div className="text-neon-purple/70">MODE: <span className="text-neon-cyan">{state?.geometryMode || 'stars'}</span></div>
+        <div className="text-neon-purple/70">DEPTH: <span className="text-neon-cyan">{state?.depthMode || 'deep'}</span></div>
       </div>
-      
-      <div className="absolute bottom-2 right-2 text-[10px] text-zinc-500 font-mono">
+
+      <div className="absolute bottom-3 right-3 glass px-3 py-1.5 rounded-lg text-[10px] text-neon-magenta/70 font-mono tracking-widest">
         PREVIEW
       </div>
+
+      {/* Corner accents */}
+      <div className="absolute top-0 left-0 w-8 h-8 border-l-2 border-t-2 border-neon-purple/30 rounded-tl-xl" />
+      <div className="absolute top-0 right-0 w-8 h-8 border-r-2 border-t-2 border-neon-purple/30 rounded-tr-xl" />
+      <div className="absolute bottom-0 left-0 w-8 h-8 border-l-2 border-b-2 border-neon-purple/30 rounded-bl-xl" />
+      <div className="absolute bottom-0 right-0 w-8 h-8 border-r-2 border-b-2 border-neon-purple/30 rounded-br-xl" />
     </div>
   );
 }
