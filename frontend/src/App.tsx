@@ -393,6 +393,35 @@ function App() {
             </button>
           </div>
 
+          {/* QUICK COLOR PALETTE - One-tap color switching */}
+          <div className="flex gap-2">
+            {[
+              { id: 'cosmos', colors: ['#8B5CF6', '#EC4899'], label: '🌌' },
+              { id: 'fire', colors: ['#f97316', '#ef4444'], label: '🔥' },
+              { id: 'ice', colors: ['#06b6d4', '#3b82f6'], label: '❄️' },
+              { id: 'neon', colors: ['#ff00ff', '#00ffff'], label: '⚡' },
+              { id: 'earth', colors: ['#22c55e', '#eab308'], label: '🌿' },
+              { id: 'sacred', colors: ['#ffd700', '#8B5CF6'], label: '✨' },
+              { id: 'void', colors: ['#1e293b', '#334155'], label: '🌑' },
+            ].map((palette) => (
+              <button
+                key={palette.id}
+                onClick={() => updateVisualParameter('colorPalette', palette.id)}
+                className={`flex-1 py-3 rounded-xl text-2xl font-black transition-all hover:scale-105 active:scale-95 ${
+                  visualState.colorPalette === palette.id
+                    ? 'ring-2 ring-white ring-offset-2 ring-offset-black scale-105'
+                    : 'opacity-80 hover:opacity-100'
+                }`}
+                style={{
+                  background: `linear-gradient(135deg, ${palette.colors[0]}, ${palette.colors[1]})`
+                }}
+                title={palette.id.toUpperCase()}
+              >
+                {palette.label}
+              </button>
+            ))}
+          </div>
+
           {/* PRESETS - Colorful Grid */}
           <div className="bg-zinc-900/80 backdrop-blur rounded-2xl p-4 border border-white/10">
             <h2 className="text-sm font-black text-white/60 tracking-widest mb-3">PRESETS</h2>
