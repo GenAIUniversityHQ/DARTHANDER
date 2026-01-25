@@ -57,6 +57,10 @@ interface Store {
   audioSource: 'upload' | 'live' | 'stream';
   setAudioSource: (source: 'upload' | 'live' | 'stream') => void;
 
+  // Audio Stream for recording
+  audioStream: MediaStream | null;
+  setAudioStream: (stream: MediaStream | null) => void;
+
   // API Key
   apiKey: string | null;
   setApiKey: (key: string | null) => void;
@@ -132,6 +136,10 @@ export const useStore = create<Store>((set, get) => ({
   // Audio Source
   audioSource: 'live',
   setAudioSource: (source) => set({ audioSource: source }),
+
+  // Audio Stream for recording
+  audioStream: null,
+  setAudioStream: (stream) => set({ audioStream: stream }),
 
   // API Key - load from localStorage/env
   apiKey: loadApiKey(),

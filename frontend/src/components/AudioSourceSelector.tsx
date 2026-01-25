@@ -6,7 +6,7 @@ import { Radio, Upload, Play, Pause, Square } from 'lucide-react';
 import { useStore } from '../store';
 
 export function AudioSourceSelector() {
-  const { audioSource, setAudioSource, setAudioState } = useStore();
+  const { audioSource, setAudioSource, setAudioState, setAudioStream } = useStore();
   const [isPlaying, setIsPlaying] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -15,6 +15,7 @@ export function AudioSourceSelector() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const destinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
   const sourceCreatedRef = useRef(false);
   const animationRef = useRef<number | null>(null);
 
@@ -61,6 +62,13 @@ export function AudioSourceSelector() {
     };
   }, [isPlaying]);
 
+  // Clear audio stream when not playing
+  useEffect(() => {
+    if (!isPlaying) {
+      setAudioStream(null);
+    }
+  }, [isPlaying, setAudioStream]);
+
   const handleFileClick = () => {
     fileInputRef.current?.click();
   };
@@ -97,14 +105,25 @@ export function AudioSourceSelector() {
     }
     const ctx = audioContextRef.current;
 
-    // Create source and analyser
+    // Create source, analyser, and destination for recording
     const source = ctx.createMediaElementSource(audio);
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 256;
     analyserRef.current = analyser;
 
+    // Create a destination node for capturing audio stream
+    const destination = ctx.createMediaStreamDestination();
+    destinationRef.current = destination;
+
+    // Connect: source -> analyser -> destination (for recording)
+    //          analyser -> speakers (for playback)
     source.connect(analyser);
-    analyser.connect(ctx.destination);
+    analyser.connect(ctx.destination); // Play through speakers
+    analyser.connect(destination); // Capture for recording
+
+    // Store the audio stream for recording
+    setAudioStream(destination.stream);
+
     sourceCreatedRef.current = true;
   };
 
@@ -120,6 +139,11 @@ export function AudioSourceSelector() {
 
       // Setup audio nodes on first play
       setupAudioContext();
+
+      // Update stream in store (in case it was cleared)
+      if (destinationRef.current) {
+        setAudioStream(destinationRef.current.stream);
+      }
 
       await audio.play();
       setIsPlaying(true);
@@ -139,6 +163,7 @@ export function AudioSourceSelector() {
       audioRef.current.currentTime = 0;
     }
     setIsPlaying(false);
+    setAudioStream(null);
   };
 
   const handleLive = async () => {
@@ -160,7 +185,16 @@ export function AudioSourceSelector() {
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 256;
       analyserRef.current = analyser;
+
+      // Create destination for recording
+      const destination = ctx.createMediaStreamDestination();
+      destinationRef.current = destination;
+
       source.connect(analyser);
+      analyser.connect(destination); // Capture for recording (no speakers for mic to avoid feedback)
+
+      // Store the audio stream for recording
+      setAudioStream(destination.stream);
 
       setIsPlaying(true);
     } catch (err) {

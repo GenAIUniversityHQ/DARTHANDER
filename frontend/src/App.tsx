@@ -38,6 +38,7 @@ function App() {
     loadPreset,
     apiKey,
     setApiKey,
+    audioStream,
   } = useStore();
 
   // Initialize API key input from stored value
@@ -136,8 +137,22 @@ function App() {
     const canvas = document.querySelector('#preview-canvas') as HTMLCanvasElement;
     if (!canvas) return;
 
-    const stream = canvas.captureStream(30);
-    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+    // Get video stream from canvas
+    const videoStream = canvas.captureStream(30);
+
+    // Combine video and audio streams if audio is available
+    let combinedStream: MediaStream;
+    if (audioStream && audioStream.getAudioTracks().length > 0) {
+      // Create combined stream with video and audio tracks
+      combinedStream = new MediaStream([
+        ...videoStream.getVideoTracks(),
+        ...audioStream.getAudioTracks(),
+      ]);
+    } else {
+      combinedStream = videoStream;
+    }
+
+    const recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm; codecs=vp9' });
 
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) setRecordedChunks((prev) => [...prev, e.data]);
