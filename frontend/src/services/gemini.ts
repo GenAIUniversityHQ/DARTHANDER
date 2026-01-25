@@ -1069,7 +1069,6 @@ function handleFallbackPrompt(prompt: string): PromptResult | null {
       parameterChanges: {
         geometryMode: 'void',
         geometryLayer5: 'biolum',
-        geometryLayer5: 'jellyfish',
         geometryLayer4: 'nebula',
         colorPalette: 'ocean',
         colorBrightness: 0.7,
@@ -1191,9 +1190,8 @@ function handleFallbackPrompt(prompt: string): PromptResult | null {
       interpretation: 'Minds merge',
       parameterChanges: {
         geometryMode: 'hexagon',
-        geometryLayer3: 'neural-net',
-        geometryLayer8: 'third-eye',
         geometryLayer3: 'entanglement',
+        geometryLayer8: 'third-eye',
         colorPalette: 'cosmos',
         motionDirection: 'breathing',
         motionSpeed: 0.2,
