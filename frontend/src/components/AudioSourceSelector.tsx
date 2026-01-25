@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Audio Source Selector Component (Client-side)
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { Radio, Upload, Play, Pause, Volume2 } from 'lucide-react';
 import { useStore } from '../store';
 
@@ -9,55 +9,22 @@ export function AudioSourceSelector() {
   const { audioSource, setAudioSource, setAudioState } = useStore();
   const [isPlaying, setIsPlaying] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
   const animationRef = useRef<number | null>(null);
+  const isPlayingRef = useRef(false);
 
-  const handleFileSelect = () => {
-    fileInputRef.current?.click();
-  };
+  // Keep ref in sync with state
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setFileName(file.name);
-    setAudioSource('upload');
-
-    // Create audio element
-    if (audioRef.current) {
-      audioRef.current.pause();
-      URL.revokeObjectURL(audioRef.current.src);
-    }
-
-    const audio = new Audio(URL.createObjectURL(file));
-    audioRef.current = audio;
-
-    // Set up Web Audio API for analysis
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext();
-    }
-
-    const ctx = audioContextRef.current;
-    const source = ctx.createMediaElementSource(audio);
-    const analyser = ctx.createAnalyser();
-    analyser.fftSize = 256;
-    analyserRef.current = analyser;
-
-    source.connect(analyser);
-    analyser.connect(ctx.destination);
-
-    audio.onended = () => {
-      setIsPlaying(false);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  };
-
-  const analyzeAudio = () => {
+  const analyzeAudio = useCallback(() => {
     if (!analyserRef.current) return;
 
     const analyser = analyserRef.current;
@@ -92,42 +59,126 @@ export function AudioSourceSelector() {
       spectralFlux: Math.abs(overall - peak),
     });
 
-    if (isPlaying) {
+    // Use ref to check if still playing (avoids stale closure)
+    if (isPlayingRef.current) {
       animationRef.current = requestAnimationFrame(analyzeAudio);
+    }
+  }, [setAudioState]);
+
+  const stopAnalysis = () => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
     }
   };
 
-  const togglePlayback = async () => {
-    if (!audioRef.current) return;
+  const handleFileSelect = () => {
+    fileInputRef.current?.click();
+  };
 
-    if (audioContextRef.current?.state === 'suspended') {
-      await audioContextRef.current.resume();
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Stop any current playback
+    stopAnalysis();
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+
+    setFileName(file.name);
+    setAudioSource('upload');
+    setIsPlaying(false);
+    setIsReady(false);
+
+    // Create new audio element
+    const audio = new Audio();
+    audio.crossOrigin = 'anonymous';
+    audio.src = URL.createObjectURL(file);
+    audioRef.current = audio;
+
+    // Initialize AudioContext on user interaction
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContext();
+    }
+
+    const ctx = audioContextRef.current;
+
+    // Resume if suspended
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+
+    // Create new source node (only once per audio element)
+    const source = ctx.createMediaElementSource(audio);
+    sourceNodeRef.current = source;
+
+    // Create analyser
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 256;
+    analyserRef.current = analyser;
+
+    // Connect: source -> analyser -> destination
+    source.connect(analyser);
+    analyser.connect(ctx.destination);
+
+    audio.oncanplaythrough = () => {
+      setIsReady(true);
+    };
+
+    audio.onended = () => {
+      setIsPlaying(false);
+      isPlayingRef.current = false;
+      stopAnalysis();
+    };
+
+    audio.onerror = (err) => {
+      console.error('Audio error:', err);
+      setIsReady(false);
+    };
+
+    // Load the audio
+    audio.load();
+  };
+
+  const togglePlayback = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const ctx = audioContextRef.current;
+    if (ctx?.state === 'suspended') {
+      await ctx.resume();
     }
 
     if (isPlaying) {
-      audioRef.current.pause();
+      audio.pause();
       setIsPlaying(false);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      isPlayingRef.current = false;
+      stopAnalysis();
     } else {
-      audioRef.current.play();
-      setIsPlaying(true);
-      analyzeAudio();
+      try {
+        await audio.play();
+        setIsPlaying(true);
+        isPlayingRef.current = true;
+        analyzeAudio();
+      } catch (err) {
+        console.error('Playback failed:', err);
+      }
     }
   };
 
   const handleLiveMode = async () => {
+    // Stop file playback
+    stopAnalysis();
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    setIsPlaying(false);
+    isPlayingRef.current = false;
+
     setAudioSource('live');
     setFileName(null);
 
-    // Stop any playing audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    }
-
-    // Request microphone access for live audio
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -136,6 +187,10 @@ export function AudioSourceSelector() {
       }
 
       const ctx = audioContextRef.current;
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+
       const source = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 256;
@@ -145,6 +200,7 @@ export function AudioSourceSelector() {
       // Don't connect to destination (would cause feedback)
 
       setIsPlaying(true);
+      isPlayingRef.current = true;
       analyzeAudio();
     } catch (error) {
       console.error('Microphone access denied:', error);
@@ -152,7 +208,7 @@ export function AudioSourceSelector() {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
       <input
         ref={fileInputRef}
         type="file"
@@ -194,17 +250,19 @@ export function AudioSourceSelector() {
         <>
           <button
             onClick={togglePlayback}
+            disabled={!isReady}
             className={`
               px-2.5 py-1.5 text-[10px] rounded-lg flex items-center gap-1.5 transition-all duration-200
+              ${!isReady ? 'opacity-50 cursor-not-allowed' : ''}
               ${isPlaying
-                ? 'bg-neon-magenta/20 text-neon-magenta border border-neon-magenta/40'
+                ? 'bg-neon-magenta/20 text-neon-magenta border border-neon-magenta/40 shadow-glow-magenta'
                 : 'glass-button text-neon-purple/50 hover:text-neon-magenta'}
             `}
           >
             {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-            {isPlaying ? 'PAUSE' : 'PLAY'}
+            {!isReady ? 'LOADING...' : isPlaying ? 'PAUSE' : 'PLAY'}
           </button>
-          <span className="text-[9px] text-neon-purple/40 truncate max-w-[80px]" title={fileName}>
+          <span className="text-[9px] text-neon-purple/40 truncate max-w-[100px]" title={fileName}>
             <Volume2 className="w-3 h-3 inline mr-1" />
             {fileName}
           </span>
