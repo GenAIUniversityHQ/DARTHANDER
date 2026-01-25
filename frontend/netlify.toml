@@ -8,6 +8,13 @@
 [build.environment]
   NODE_VERSION = "18"
 
+# Required headers for FFmpeg.wasm (MP4 video export)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"
+
 # SPA routing - all routes go to index.html
 [[redirects]]
   from = "/*"
