@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Parameter Sliders Component - STAGE READY
 
-import { Flame, Diamond, Zap, Rocket, Music, Waves } from 'lucide-react';
+import { Flame, Diamond, Zap, Rocket, Music, Waves, Sun } from 'lucide-react';
 
 interface VisualState {
   overallIntensity: number;
@@ -41,6 +41,7 @@ const sliders: SliderConfig[] = [
   { key: 'motionSpeed', label: 'SPEED', color: 'from-green-400 via-cyan-500 to-blue-500', icon: Rocket },
   { key: 'audioReactGeometry', label: 'AUDIO REACT', color: 'from-pink-500 via-purple-500 to-indigo-500', icon: Music },
   { key: 'bassImpact', label: 'BASS IMPACT', color: 'from-red-600 via-red-500 to-orange-500', icon: Waves },
+  { key: 'coronaIntensity', label: 'CORONA/BEAMS', color: 'from-yellow-400 via-orange-500 to-red-500', icon: Sun },
 ];
 
 // ============================================
