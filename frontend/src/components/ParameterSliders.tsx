@@ -281,6 +281,171 @@ const consciousnessGeometry = [
   { id: 'transcendence', label: 'TRANSCEND', color: 'bg-gradient-to-r from-amber-300 to-white' },
 ];
 
+// ============================================
+// ELEMENTAL - Classical & modern elements
+// ============================================
+const elementalLayers = [
+  { id: 'fire', label: 'FIRE', color: 'bg-orange-500' },
+  { id: 'water', label: 'WATER', color: 'bg-blue-500' },
+  { id: 'earth', label: 'EARTH', color: 'bg-amber-700' },
+  { id: 'air', label: 'AIR', color: 'bg-sky-300' },
+  { id: 'aether', label: 'AETHER', color: 'bg-violet-400' },
+  { id: 'plasma', label: 'PLASMA', color: 'bg-pink-400' },
+  { id: 'lightning', label: 'LIGHTNING', color: 'bg-yellow-300' },
+  { id: 'ice', label: 'ICE', color: 'bg-cyan-200' },
+  { id: 'smoke', label: 'SMOKE', color: 'bg-gray-500' },
+  { id: 'crystal', label: 'CRYSTAL', color: 'bg-gradient-to-r from-cyan-300 to-pink-300' },
+];
+
+// ============================================
+// ENERGY - Subtle energy systems
+// ============================================
+const energyLayers = [
+  { id: 'chi', label: 'CHI', color: 'bg-emerald-500' },
+  { id: 'prana', label: 'PRANA', color: 'bg-orange-400' },
+  { id: 'reiki', label: 'REIKI', color: 'bg-violet-500' },
+  { id: 'orgone', label: 'ORGONE', color: 'bg-blue-500' },
+  { id: 'tesla', label: 'TESLA', color: 'bg-cyan-400' },
+  { id: 'scalar', label: 'SCALAR', color: 'bg-indigo-500' },
+  { id: 'tachyon', label: 'TACHYON', color: 'bg-pink-500' },
+  { id: 'vortex', label: 'VORTEX', color: 'bg-purple-500' },
+  { id: 'toroidal', label: 'TOROIDAL', color: 'bg-cyan-500' },
+];
+
+// ============================================
+// TEXTURE - Visual textures & materials
+// ============================================
+const textureLayers = [
+  { id: 'liquid', label: 'LIQUID', color: 'bg-blue-400' },
+  { id: 'metallic', label: 'METAL', color: 'bg-gray-400' },
+  { id: 'glass', label: 'GLASS', color: 'bg-cyan-200' },
+  { id: 'silk', label: 'SILK', color: 'bg-pink-300' },
+  { id: 'particle', label: 'PARTICLE', color: 'bg-amber-400' },
+  { id: 'grain', label: 'GRAIN', color: 'bg-stone-500' },
+  { id: 'iridescent', label: 'IRIDESCENT', color: 'bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400' },
+  { id: 'holographic', label: 'HOLO', color: 'bg-gradient-to-r from-cyan-400 to-pink-400' },
+  { id: 'neon-glow', label: 'NEONGLOW', color: 'bg-pink-500' },
+];
+
+// ============================================
+// ALTERED - Altered states of consciousness
+// ============================================
+const alteredLayers = [
+  { id: 'hypnotic', label: 'HYPNOTIC', color: 'bg-purple-600' },
+  { id: 'trance', label: 'TRANCE', color: 'bg-indigo-500' },
+  { id: 'lucid', label: 'LUCID', color: 'bg-cyan-400' },
+  { id: 'astral', label: 'ASTRAL', color: 'bg-violet-400' },
+  { id: 'obe', label: 'OBE', color: 'bg-blue-300' },
+  { id: 'nde', label: 'NDE', color: 'bg-gradient-to-r from-black via-white to-amber-300' },
+  { id: 'ego-death', label: 'EGODEATH', color: 'bg-slate-700' },
+  { id: 'peak', label: 'PEAK', color: 'bg-gradient-to-r from-amber-400 to-white' },
+  { id: 'flow-state', label: 'FLOWSTATE', color: 'bg-emerald-400' },
+];
+
+// ============================================
+// CELESTIAL - Planets & cosmic bodies
+// ============================================
+const celestialLayers = [
+  { id: 'sun', label: 'SUN', color: 'bg-yellow-500' },
+  { id: 'moon', label: 'MOON', color: 'bg-gray-300' },
+  { id: 'mercury', label: 'MERCURY', color: 'bg-gray-500' },
+  { id: 'venus', label: 'VENUS', color: 'bg-amber-300' },
+  { id: 'mars', label: 'MARS', color: 'bg-red-600' },
+  { id: 'jupiter', label: 'JUPITER', color: 'bg-orange-400' },
+  { id: 'saturn', label: 'SATURN', color: 'bg-amber-600' },
+  { id: 'neptune', label: 'NEPTUNE', color: 'bg-blue-500' },
+  { id: 'pluto', label: 'PLUTO', color: 'bg-slate-600' },
+  { id: 'eclipse-total', label: 'ECLIPSE', color: 'bg-gradient-to-r from-black via-orange-500 to-black' },
+];
+
+// ============================================
+// EMOTION - Emotional states & moods
+// ============================================
+const emotionLayers = [
+  { id: 'joy', label: 'JOY', color: 'bg-yellow-400' },
+  { id: 'peace', label: 'PEACE', color: 'bg-sky-300' },
+  { id: 'ecstasy', label: 'ECSTASY', color: 'bg-pink-500' },
+  { id: 'awe', label: 'AWE', color: 'bg-violet-500' },
+  { id: 'melancholy', label: 'MELANCHOLY', color: 'bg-blue-700' },
+  { id: 'rage', label: 'RAGE', color: 'bg-red-600' },
+  { id: 'grief', label: 'GRIEF', color: 'bg-slate-600' },
+  { id: 'love', label: 'LOVE', color: 'bg-pink-400' },
+  { id: 'serenity', label: 'SERENITY', color: 'bg-teal-400' },
+  { id: 'wonder', label: 'WONDER', color: 'bg-gradient-to-r from-purple-400 to-pink-400' },
+];
+
+// ============================================
+// NATURE - Natural phenomena
+// ============================================
+const natureLayers = [
+  { id: 'forest', label: 'FOREST', color: 'bg-green-600' },
+  { id: 'ocean', label: 'OCEAN', color: 'bg-blue-600' },
+  { id: 'mountain', label: 'MOUNTAIN', color: 'bg-stone-500' },
+  { id: 'desert', label: 'DESERT', color: 'bg-amber-500' },
+  { id: 'storm', label: 'STORM', color: 'bg-slate-500' },
+  { id: 'volcano', label: 'VOLCANO', color: 'bg-red-700' },
+  { id: 'cave', label: 'CAVE', color: 'bg-stone-700' },
+  { id: 'waterfall', label: 'WATERFALL', color: 'bg-cyan-500' },
+  { id: 'northern-lights', label: 'AURORA', color: 'bg-gradient-to-r from-green-400 via-cyan-400 to-purple-500' },
+];
+
+// ============================================
+// MYTHIC - Mythological archetypes
+// ============================================
+const mythicLayers = [
+  { id: 'dragon', label: 'DRAGON', color: 'bg-red-500' },
+  { id: 'phoenix', label: 'PHOENIX', color: 'bg-orange-500' },
+  { id: 'serpent', label: 'SERPENT', color: 'bg-green-600' },
+  { id: 'angel', label: 'ANGEL', color: 'bg-white' },
+  { id: 'demon', label: 'DEMON', color: 'bg-red-900' },
+  { id: 'spirit', label: 'SPIRIT', color: 'bg-cyan-300' },
+  { id: 'shadow', label: 'SHADOW', color: 'bg-slate-800' },
+  { id: 'light-being', label: 'LIGHTBEING', color: 'bg-gradient-to-r from-white to-amber-200' },
+  { id: 'shapeshifter', label: 'SHIFTER', color: 'bg-gradient-to-r from-purple-500 to-green-500' },
+];
+
+// ============================================
+// ALCHEMICAL - Stages of transformation
+// ============================================
+const alchemicalLayers = [
+  { id: 'nigredo', label: 'NIGREDO', color: 'bg-black' },
+  { id: 'albedo', label: 'ALBEDO', color: 'bg-white' },
+  { id: 'citrinitas', label: 'CITRINITAS', color: 'bg-yellow-400' },
+  { id: 'rubedo', label: 'RUBEDO', color: 'bg-red-500' },
+  { id: 'solve', label: 'SOLVE', color: 'bg-blue-400' },
+  { id: 'coagula', label: 'COAGULA', color: 'bg-amber-600' },
+  { id: 'transmute', label: 'TRANSMUTE', color: 'bg-gradient-to-r from-gray-400 to-amber-400' },
+  { id: 'philosophers-stone', label: 'PHILSTONE', color: 'bg-gradient-to-r from-red-500 via-amber-400 to-white' },
+];
+
+// ============================================
+// WAVEFORM - Audio visualization shapes
+// ============================================
+const waveformLayers = [
+  { id: 'sine', label: 'SINE', color: 'bg-blue-400' },
+  { id: 'square', label: 'SQUARE', color: 'bg-green-500' },
+  { id: 'sawtooth', label: 'SAW', color: 'bg-orange-500' },
+  { id: 'triangle', label: 'TRI', color: 'bg-cyan-500' },
+  { id: 'pulse', label: 'PULSE', color: 'bg-pink-500' },
+  { id: 'noise', label: 'NOISE', color: 'bg-gray-500' },
+  { id: 'harmonic', label: 'HARMONIC', color: 'bg-violet-500' },
+  { id: 'resonance', label: 'RESONANCE', color: 'bg-amber-500' },
+];
+
+// ============================================
+// TEMPORAL - Time-based effects
+// ============================================
+const temporalLayers = [
+  { id: 'past', label: 'PAST', color: 'bg-sepia' },
+  { id: 'future', label: 'FUTURE', color: 'bg-cyan-400' },
+  { id: 'eternal', label: 'ETERNAL', color: 'bg-gradient-to-r from-amber-300 to-violet-400' },
+  { id: 'loop', label: 'LOOP', color: 'bg-green-500' },
+  { id: 'rewind', label: 'REWIND', color: 'bg-blue-500' },
+  { id: 'freeze', label: 'FREEZE', color: 'bg-cyan-200' },
+  { id: 'decay', label: 'DECAY', color: 'bg-stone-600' },
+  { id: 'bloom', label: 'BLOOM', color: 'bg-pink-400' },
+];
+
 // Motion directions
 const motionDirs = [
   { id: 'flow', label: 'FLOW', color: 'bg-gradient-to-r from-pink-500 to-purple-500' },
@@ -784,6 +949,297 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
                 onClick={() => onChange('geometryLayer14', layer.id as any)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer14 === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ====== NEW VIBE LAYERS ====== */}
+        <div className="pt-2 mt-2 border-t border-white/20">
+          <h2 className="text-[11px] font-bold text-white/70 mb-2">VIBE LAYERS</h2>
+        </div>
+
+        {/* ELEMENTAL */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">ELEMENT</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('elementalLayer', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).elementalLayer || (state as any).elementalLayer === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {elementalLayers.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('elementalLayer', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).elementalLayer === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ENERGY */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">ENERGY</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('energyLayer', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).energyLayer || (state as any).energyLayer === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {energyLayers.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('energyLayer', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).energyLayer === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* TEXTURE */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">TEXTURE</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('textureLayer', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).textureLayer || (state as any).textureLayer === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {textureLayers.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('textureLayer', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).textureLayer === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ALTERED */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">ALTERED</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('alteredLayer', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).alteredLayer || (state as any).alteredLayer === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {alteredLayers.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('alteredLayer', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).alteredLayer === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* CELESTIAL */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">CELESTIAL</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('celestialLayer', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).celestialLayer || (state as any).celestialLayer === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {celestialLayers.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('celestialLayer', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).celestialLayer === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* EMOTION */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">EMOTION</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('emotionLayer', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).emotionLayer || (state as any).emotionLayer === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {emotionLayers.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('emotionLayer', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).emotionLayer === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* NATURE */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">NATURE</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('natureLayer', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).natureLayer || (state as any).natureLayer === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {natureLayers.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('natureLayer', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).natureLayer === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* MYTHIC */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">MYTHIC</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('mythicLayer', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).mythicLayer || (state as any).mythicLayer === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {mythicLayers.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('mythicLayer', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).mythicLayer === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ALCHEMICAL */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">ALCHEMY</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('alchemicalLayer', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).alchemicalLayer || (state as any).alchemicalLayer === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {alchemicalLayers.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('alchemicalLayer', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).alchemicalLayer === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* WAVEFORM */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">WAVE</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('waveformLayer', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).waveformLayer || (state as any).waveformLayer === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {waveformLayers.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('waveformLayer', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).waveformLayer === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* TEMPORAL */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">TEMPORAL</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('temporalLayer', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).temporalLayer || (state as any).temporalLayer === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {temporalLayers.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('temporalLayer', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).temporalLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
               >
                 {layer.label}
