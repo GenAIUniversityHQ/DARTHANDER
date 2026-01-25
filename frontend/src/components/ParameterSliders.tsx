@@ -20,6 +20,7 @@ interface VisualState {
 interface ParameterSlidersProps {
   state: VisualState | null;
   onChange: (parameter: string, value: number) => void;
+  compact?: boolean;
 }
 
 interface SliderConfig {
@@ -38,28 +39,26 @@ const sliders: SliderConfig[] = [
   { key: 'eclipsePhase', label: 'ECLIPSE', color: 'bg-gradient-to-r from-white/80 to-neon-purple/50' },
 ];
 
-export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
+export function ParameterSliders({ state, onChange, compact = false }: ParameterSlidersProps) {
   if (!state) return null;
 
   return (
-    <div className="space-y-5">
+    <div className={compact ? 'space-y-2 mt-2' : 'space-y-5'}>
       {sliders.map((slider) => {
         const value = (state as any)[slider.key] ?? 0;
         const percentage = Math.round(value * 100);
 
         return (
-          <div key={slider.key} className="space-y-2">
-            <div className="flex justify-between text-xs">
+          <div key={slider.key} className={compact ? 'space-y-0.5' : 'space-y-2'}>
+            <div className={`flex justify-between ${compact ? 'text-[9px]' : 'text-xs'}`}>
               <span className="text-neon-purple/60 tracking-wider">{slider.label}</span>
               <span className="text-neon-cyan font-mono">{percentage}%</span>
             </div>
-            <div className="relative h-2.5 glass rounded-full overflow-hidden">
-              {/* Fill */}
+            <div className={`relative glass rounded-full overflow-hidden ${compact ? 'h-1.5' : 'h-2.5'}`}>
               <div
                 className={`absolute inset-y-0 left-0 ${slider.color} rounded-full transition-all duration-200`}
                 style={{ width: `${percentage}%` }}
               />
-              {/* Glow effect */}
               <div
                 className="absolute inset-y-0 left-0 rounded-full blur-sm opacity-50 transition-all duration-200"
                 style={{
@@ -67,7 +66,6 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
                   background: 'linear-gradient(to right, #8B5CF6, #EC4899)'
                 }}
               />
-              {/* Slider Input */}
               <input
                 type="range"
                 min="0"
@@ -81,15 +79,15 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
         );
       })}
 
-      {/* Additional quick toggles */}
-      <div className="border-t border-neon-purple/10 pt-4 mt-4">
-        <h3 className="text-xs text-neon-purple/50 mb-3 tracking-widest">GEOMETRY MODE</h3>
-        <div className="flex flex-wrap gap-2">
+      {/* Geometry Mode */}
+      <div className={`border-t border-neon-purple/10 ${compact ? 'pt-2 mt-2' : 'pt-4 mt-4'}`}>
+        <h3 className={`text-neon-purple/50 tracking-widest ${compact ? 'text-[8px] mb-1.5' : 'text-xs mb-3'}`}>GEOMETRY</h3>
+        <div className={`flex flex-wrap ${compact ? 'gap-1' : 'gap-2'}`}>
           {['stars', 'mandala', 'hexagon', 'fractal', 'spiral', 'tunnel', 'void'].map((mode) => (
             <button
               key={mode}
               onClick={() => onChange('geometryMode', mode as any)}
-              className={`px-3 py-1.5 text-xs rounded-lg border transition-all duration-200 ${
+              className={`rounded-lg border transition-all duration-200 ${compact ? 'px-1.5 py-0.5 text-[8px]' : 'px-3 py-1.5 text-xs'} ${
                 state.geometryMode === mode
                   ? 'bg-neon-purple/20 border-neon-purple/50 text-neon-purple shadow-glow-purple'
                   : 'glass-button text-neon-purple/50 hover:text-neon-purple'
@@ -101,14 +99,15 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
         </div>
       </div>
 
-      <div className="border-t border-neon-purple/10 pt-4">
-        <h3 className="text-xs text-neon-purple/50 mb-3 tracking-widest">MOTION DIRECTION</h3>
-        <div className="flex flex-wrap gap-2">
+      {/* Motion Direction */}
+      <div className={`border-t border-neon-purple/10 ${compact ? 'pt-2' : 'pt-4'}`}>
+        <h3 className={`text-neon-purple/50 tracking-widest ${compact ? 'text-[8px] mb-1.5' : 'text-xs mb-3'}`}>MOTION</h3>
+        <div className={`flex flex-wrap ${compact ? 'gap-1' : 'gap-2'}`}>
           {['outward', 'inward', 'clockwise', 'counter', 'breathing', 'still'].map((dir) => (
             <button
               key={dir}
               onClick={() => onChange('motionDirection', dir as any)}
-              className={`px-3 py-1.5 text-xs rounded-lg border transition-all duration-200 ${
+              className={`rounded-lg border transition-all duration-200 ${compact ? 'px-1.5 py-0.5 text-[8px]' : 'px-3 py-1.5 text-xs'} ${
                 state.motionDirection === dir
                   ? 'bg-neon-cyan/20 border-neon-cyan/50 text-neon-cyan shadow-glow-cyan'
                   : 'glass-button text-neon-cyan/50 hover:text-neon-cyan'
@@ -120,14 +119,15 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
         </div>
       </div>
 
-      <div className="border-t border-neon-purple/10 pt-4">
-        <h3 className="text-xs text-neon-purple/50 mb-3 tracking-widest">COLOR PALETTE</h3>
-        <div className="flex flex-wrap gap-2">
+      {/* Color Palette */}
+      <div className={`border-t border-neon-purple/10 ${compact ? 'pt-2' : 'pt-4'}`}>
+        <h3 className={`text-neon-purple/50 tracking-widest ${compact ? 'text-[8px] mb-1.5' : 'text-xs mb-3'}`}>COLORS</h3>
+        <div className={`flex flex-wrap ${compact ? 'gap-1' : 'gap-2'}`}>
           {['cosmos', 'void', 'fire', 'ice', 'earth', 'neon', 'sacred'].map((palette) => (
             <button
               key={palette}
               onClick={() => onChange('colorPalette', palette as any)}
-              className={`px-3 py-1.5 text-xs rounded-lg border transition-all duration-200 ${
+              className={`rounded-lg border transition-all duration-200 ${compact ? 'px-1.5 py-0.5 text-[8px]' : 'px-3 py-1.5 text-xs'} ${
                 state.colorPalette === palette
                   ? 'bg-neon-magenta/20 border-neon-magenta/50 text-neon-magenta shadow-glow-magenta'
                   : 'glass-button text-neon-magenta/50 hover:text-neon-magenta'

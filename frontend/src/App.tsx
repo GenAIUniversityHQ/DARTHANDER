@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Main Control Surface Application (Client-side Only - Netlify MVP)
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useStore } from './store';
 import { interpretPrompt, DEFAULT_VISUAL_STATE } from './services/gemini';
 import { PreviewMonitor } from './components/PreviewMonitor';
@@ -9,47 +9,46 @@ import { PromptInput } from './components/PromptInput';
 import { VoiceInput } from './components/VoiceInput';
 import { PresetGrid } from './components/PresetGrid';
 import { ParameterSliders } from './components/ParameterSliders';
-import { AudioVisualizer } from './components/AudioVisualizer';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
-import { SessionStatus } from './components/SessionStatus';
-import { Pause, Square, RotateCcw, Settings, Key } from 'lucide-react';
+import { Square, Settings, Key, Video, Download, ExternalLink, X } from 'lucide-react';
 
 function App() {
-  const [lastPrompt, setLastPrompt] = useState('');
   const [lastInterpretation, setLastInterpretation] = useState('');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
 
+  // Recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingIntervalRef = useRef<number | null>(null);
+
+  // Popout window
+  const [popoutWindow, setPopoutWindow] = useState<Window | null>(null);
+
   const {
     visualState,
-    audioState,
     setVisualState,
     applyParameterChanges,
     updateVisualParameter,
     presets,
     loadPreset,
-    sessionId,
-    setSessionId,
     apiKey,
     setApiKey,
   } = useStore();
 
   // Initialize API key input from stored value
   useEffect(() => {
-    if (apiKey) {
-      setApiKeyInput(apiKey);
-    }
+    if (apiKey) setApiKeyInput(apiKey);
   }, [apiKey]);
 
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if typing in input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
       switch (e.key) {
         case ' ':
@@ -65,46 +64,42 @@ function App() {
         case 'm':
           setIsVoiceActive(!isVoiceActive);
           break;
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-          const index = parseInt(e.key) - 1;
-          if (presets[index]) {
-            handleLoadPreset(presets[index]);
-          }
+        case 'f':
+          handlePopout();
           break;
+        default:
+          const num = parseInt(e.key);
+          if (num >= 1 && num <= 9 && presets[num - 1]) {
+            handleLoadPreset(presets[num - 1]);
+          }
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [presets, isVoiceActive]);
 
-  // Handle prompt submission - uses client-side Gemini
+  // Clean up popout window on unmount
+  useEffect(() => {
+    return () => {
+      if (popoutWindow && !popoutWindow.closed) popoutWindow.close();
+    };
+  }, [popoutWindow]);
+
+  // Handle prompt submission
   const handlePromptSubmit = async (prompt: string) => {
     if (!prompt.trim() || isProcessing) return;
-
     setIsProcessing(true);
-    setLastPrompt(prompt);
     setLastInterpretation('Processing...');
 
     try {
       const result = await interpretPrompt(prompt, visualState, apiKey || undefined);
-
       if (result.success && result.parameterChanges) {
         applyParameterChanges(result.parameterChanges);
         setLastInterpretation(result.interpretation || 'Applied');
       } else {
         setLastInterpretation(result.error || 'Could not interpret');
       }
-    } catch (error) {
-      console.error('Prompt error:', error);
+    } catch {
       setLastInterpretation('Error processing prompt');
     } finally {
       setIsProcessing(false);
@@ -113,212 +108,234 @@ function App() {
 
   const handleLoadPreset = (preset: typeof presets[0]) => {
     loadPreset(preset);
-    setLastInterpretation(`Loaded preset: ${preset.name}`);
+    setLastInterpretation(`Loaded: ${preset.name}`);
   };
 
   const handleHold = () => {
     updateVisualParameter('motionSpeed', 0);
-    setLastInterpretation('HOLD - Motion frozen');
+    setLastInterpretation('HOLD');
   };
 
   const handleKill = () => {
-    setVisualState({
-      ...visualState,
-      overallIntensity: 0,
-      starBrightness: 0,
-      colorBrightness: 0,
-    });
-    setLastInterpretation('KILL - Fade to black');
+    setVisualState({ ...visualState, overallIntensity: 0, starBrightness: 0, colorBrightness: 0 });
+    setLastInterpretation('KILL');
   };
 
   const handleReset = () => {
     setVisualState(DEFAULT_VISUAL_STATE);
-    setLastInterpretation('RESET - Returning to COSMOS');
-  };
-
-  const handleParameterChange = (parameter: string, value: number) => {
-    updateVisualParameter(parameter, value);
+    setLastInterpretation('RESET');
   };
 
   const handleSaveApiKey = () => {
     setApiKey(apiKeyInput);
     setShowSettings(false);
-    setLastInterpretation('API key saved!');
   };
 
+  // Recording functions
+  const startRecording = () => {
+    const canvas = document.querySelector('#preview-canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const stream = canvas.captureStream(30);
+    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) setRecordedChunks((prev) => [...prev, e.data]);
+    };
+
+    recorder.start(100);
+    mediaRecorderRef.current = recorder;
+    setIsRecording(true);
+    setRecordingTime(0);
+    setRecordedChunks([]);
+
+    recordingIntervalRef.current = window.setInterval(() => {
+      setRecordingTime((t) => t + 1);
+    }, 1000);
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+    }
+  };
+
+  const downloadRecording = () => {
+    if (recordedChunks.length === 0) return;
+    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `darthander-${Date.now()}.webm`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Popout window for fullscreen display
+  const handlePopout = () => {
+    if (popoutWindow && !popoutWindow.closed) {
+      popoutWindow.focus();
+      return;
+    }
+
+    const win = window.open('', 'DARTHANDER Display', 'width=1920,height=1080');
+    if (!win) return;
+
+    setPopoutWindow(win);
+
+    win.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>DARTHANDER Display</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { background: #000; overflow: hidden; cursor: none; }
+            canvas { width: 100vw; height: 100vh; display: block; }
+          </style>
+        </head>
+        <body>
+          <canvas id="display-canvas"></canvas>
+        </body>
+      </html>
+    `);
+    win.document.close();
+
+    // Sync the display canvas with our preview
+    const syncDisplay = () => {
+      if (win.closed) return;
+      const sourceCanvas = document.querySelector('#preview-canvas') as HTMLCanvasElement;
+      const destCanvas = win.document.querySelector('#display-canvas') as HTMLCanvasElement;
+      if (sourceCanvas && destCanvas) {
+        destCanvas.width = win.innerWidth;
+        destCanvas.height = win.innerHeight;
+        const ctx = destCanvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(sourceCanvas, 0, 0, destCanvas.width, destCanvas.height);
+        }
+      }
+      requestAnimationFrame(syncDisplay);
+    };
+    setTimeout(syncDisplay, 100);
+  };
+
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+
   return (
-    <div className="min-h-screen cosmic-bg text-white font-mono">
+    <div className="h-screen overflow-hidden cosmic-bg text-white font-mono flex flex-col">
       {/* Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="glass-panel rounded-xl p-6 max-w-md w-full">
-            <h2 className="text-lg font-bold text-neon-purple mb-4 flex items-center gap-2">
-              <Key className="w-5 h-5" />
-              Gemini API Key
-            </h2>
-            <p className="text-sm text-white/60 mb-4">
-              Enter your Gemini API key for AI-powered prompt interpretation.
-              Without a key, basic keyword commands still work.
-            </p>
+          <div className="glass-panel rounded-xl p-5 max-w-sm w-full">
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-sm font-bold text-neon-purple flex items-center gap-2">
+                <Key className="w-4 h-4" /> API Key
+              </h2>
+              <button onClick={() => setShowSettings(false)} className="text-white/50 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
             <input
               type="password"
               value={apiKeyInput}
               onChange={(e) => setApiKeyInput(e.target.value)}
               placeholder="AIzaSy..."
-              className="w-full glass-input rounded-lg px-4 py-3 mb-4"
+              className="w-full glass-input rounded-lg px-3 py-2 text-sm mb-3"
             />
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowSettings(false)}
-                className="flex-1 py-2 glass-button rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveApiKey}
-                className="flex-1 py-2 bg-neon-purple/30 border border-neon-purple/50 rounded-lg hover:bg-neon-purple/40 transition-all"
-              >
-                Save
-              </button>
-            </div>
-            <p className="text-xs text-white/40 mt-4">
-              Get a free API key at{' '}
-              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-neon-cyan hover:underline">
-                aistudio.google.com
-              </a>
-            </p>
+            <button onClick={handleSaveApiKey} className="w-full py-2 bg-neon-purple/30 border border-neon-purple/50 rounded-lg text-sm">
+              Save
+            </button>
           </div>
         </div>
       )}
 
-      {/* Header */}
-      <header className="glass-panel border-b border-neon-purple/20 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold tracking-wider glow-text bg-gradient-to-r from-neon-purple to-neon-magenta bg-clip-text text-transparent">
+      {/* Compact Header */}
+      <header className="glass-panel border-b border-neon-purple/20 px-4 py-2 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-bold bg-gradient-to-r from-neon-purple to-neon-magenta bg-clip-text text-transparent">
             DARTHANDER
           </h1>
-          <span className="text-neon-purple/60 font-display">ECLIPSE</span>
-          <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-            apiKey
-              ? 'bg-neon-cyan shadow-glow-cyan'
-              : 'bg-yellow-500 animate-pulse'
-          }`} title={apiKey ? 'AI Enabled' : 'Keyword Mode (set API key for AI)'} />
+          <div className={`w-2 h-2 rounded-full ${apiKey ? 'bg-neon-cyan' : 'bg-yellow-500 animate-pulse'}`} />
         </div>
 
-        <div className="flex items-center gap-6">
-          <span className="text-neon-purple/60 text-sm">
-            Phase: <span className="text-neon-magenta font-medium">{visualState?.currentPhase || 'arrival'}</span>
-          </span>
-          <button
-            onClick={() => setShowSettings(true)}
-            className="p-2 glass-button rounded-lg hover:shadow-glow-purple transition-all"
-            title="Settings"
-          >
-            <Settings className="w-4 h-4" />
+        <div className="flex items-center gap-2">
+          {/* Recording Controls */}
+          {!isRecording ? (
+            <button onClick={startRecording} className="px-2 py-1 glass-button rounded text-[10px] flex items-center gap-1 text-neon-red hover:shadow-glow-red">
+              <Video className="w-3 h-3" /> REC
+            </button>
+          ) : (
+            <button onClick={stopRecording} className="px-2 py-1 bg-neon-red/30 border border-neon-red rounded text-[10px] flex items-center gap-1 text-neon-red animate-pulse">
+              <Square className="w-3 h-3" /> {formatTime(recordingTime)}
+            </button>
+          )}
+
+          {recordedChunks.length > 0 && !isRecording && (
+            <button onClick={downloadRecording} className="px-2 py-1 glass-button rounded text-[10px] flex items-center gap-1 text-neon-cyan hover:shadow-glow-cyan">
+              <Download className="w-3 h-3" /> SAVE
+            </button>
+          )}
+
+          {/* Popout Display */}
+          <button onClick={handlePopout} className="px-2 py-1 glass-button rounded text-[10px] flex items-center gap-1 text-neon-magenta hover:shadow-glow-magenta" title="Open display window (F)">
+            <ExternalLink className="w-3 h-3" /> DISPLAY
           </button>
-          <SessionStatus sessionId={sessionId} onSessionChange={setSessionId} />
+
+          <button onClick={() => setShowSettings(true)} className="p-1.5 glass-button rounded" title="Settings">
+            <Settings className="w-3.5 h-3.5" />
+          </button>
         </div>
       </header>
 
-      <div className="flex h-[calc(100vh-57px)]">
-        {/* Left Panel - Preview & Prompt */}
-        <div className="w-1/2 border-r border-neon-purple/10 flex flex-col">
-          {/* Preview Monitor */}
-          <div className="flex-1 p-4">
-            <PreviewMonitor state={visualState} />
+      {/* Main Content - Horizontal Layout */}
+      <div className="flex-1 flex min-h-0">
+        {/* Left: Preview */}
+        <div className="w-[45%] p-2 flex flex-col min-h-0">
+          <div className="flex-1 min-h-0">
+            <PreviewMonitor state={visualState} canvasId="preview-canvas" />
           </div>
 
-          {/* Prompt Section */}
-          <div className="glass-panel border-t border-neon-purple/20 p-4 space-y-4 m-4 rounded-xl">
-            <PromptInput onSubmit={handlePromptSubmit} />
-
-            <div className="flex items-center gap-4">
-              <VoiceInput
-                isActive={isVoiceActive}
-                onToggle={() => setIsVoiceActive(!isVoiceActive)}
-                onTranscription={handlePromptSubmit}
-              />
-
-              <div className="text-sm text-neon-purple/50 flex-1">
-                {lastPrompt && (
-                  <div className="truncate">
-                    <span className="text-neon-purple/70">Last:</span> {lastPrompt}
-                  </div>
-                )}
-                {lastInterpretation && (
-                  <div className={`truncate ${isProcessing ? 'text-neon-cyan animate-pulse' : 'text-neon-magenta'}`}>
-                    → {lastInterpretation}
-                  </div>
-                )}
-              </div>
+          {/* Prompt Bar */}
+          <div className="mt-2 glass-panel rounded-lg p-2 flex items-center gap-2">
+            <VoiceInput isActive={isVoiceActive} onToggle={() => setIsVoiceActive(!isVoiceActive)} onTranscription={handlePromptSubmit} />
+            <div className="flex-1">
+              <PromptInput onSubmit={handlePromptSubmit} compact />
             </div>
-
-            {!apiKey && (
-              <div className="text-xs text-yellow-400/70 bg-yellow-500/10 rounded-lg px-3 py-2">
-                Keywords work: portal, void, deeper, home, mandala, fire, ice, spiral, chaos, calm.
-                <button onClick={() => setShowSettings(true)} className="text-neon-cyan ml-1 hover:underline">
-                  Add API key
-                </button> for full AI prompts.
-              </div>
-            )}
+            <span className={`text-[9px] truncate max-w-[150px] ${isProcessing ? 'text-neon-cyan animate-pulse' : 'text-neon-magenta'}`}>
+              {lastInterpretation || 'Ready'}
+            </span>
           </div>
         </div>
 
-        {/* Right Panel - Controls */}
-        <div className="w-1/2 flex flex-col overflow-hidden p-4 gap-4">
-          {/* Presets */}
-          <div className="glass-panel rounded-xl p-4">
-            <h2 className="text-xs text-neon-purple/60 mb-3 tracking-widest">PRESETS</h2>
-            <PresetGrid
-              presets={presets}
-              onSelect={handleLoadPreset}
-              currentPreset={null}
-            />
-
-            {/* Quick Actions */}
-            <div className="flex gap-3 mt-4">
-              <button
-                onClick={handleHold}
-                className="flex-1 py-2.5 px-4 glass-button rounded-lg text-sm flex items-center justify-center gap-2 text-neon-cyan hover:shadow-glow-cyan"
-              >
-                <Pause className="w-4 h-4" />
-                HOLD
-              </button>
-              <button
-                onClick={handleKill}
-                className="flex-1 py-2.5 px-4 rounded-lg text-sm flex items-center justify-center gap-2
-                           bg-neon-red/10 border border-neon-red/30 text-neon-red
-                           hover:bg-neon-red/20 hover:border-neon-red/50 hover:shadow-glow-red transition-all"
-              >
-                <Square className="w-4 h-4" />
-                KILL
-              </button>
-              <button
-                onClick={handleReset}
-                className="flex-1 py-2.5 px-4 glass-button rounded-lg text-sm flex items-center justify-center gap-2 text-neon-purple hover:shadow-glow-purple"
-              >
-                <RotateCcw className="w-4 h-4" />
-                RESET
-              </button>
+        {/* Right: Controls */}
+        <div className="w-[55%] p-2 flex flex-col gap-2 min-h-0 overflow-y-auto">
+          {/* Presets + Actions Row */}
+          <div className="glass-panel rounded-lg p-2">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[9px] text-neon-purple/60 tracking-widest">PRESETS</span>
+              <div className="flex gap-1">
+                <button onClick={handleHold} className="px-2 py-1 glass-button rounded text-[9px] text-neon-cyan">HOLD</button>
+                <button onClick={handleKill} className="px-2 py-1 bg-neon-red/10 border border-neon-red/30 rounded text-[9px] text-neon-red">KILL</button>
+                <button onClick={handleReset} className="px-2 py-1 glass-button rounded text-[9px] text-neon-purple">RESET</button>
+              </div>
             </div>
+            <PresetGrid presets={presets} onSelect={handleLoadPreset} currentPreset={null} />
           </div>
 
-          {/* Parameter Sliders */}
-          <div className="glass-panel rounded-xl p-4 flex-1 overflow-y-auto">
-            <h2 className="text-xs text-neon-purple/60 mb-3 tracking-widest">QUICK CONTROLS</h2>
-            <ParameterSliders
-              state={visualState}
-              onChange={handleParameterChange}
-            />
+          {/* Parameters */}
+          <div className="glass-panel rounded-lg p-2 flex-1 min-h-0 overflow-y-auto">
+            <span className="text-[9px] text-neon-purple/60 tracking-widest">CONTROLS</span>
+            <ParameterSliders state={visualState} onChange={(p, v) => updateVisualParameter(p, v)} compact />
           </div>
 
-          {/* Audio Section */}
-          <div className="glass-panel rounded-xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs text-neon-purple/60 tracking-widest">AUDIO</h2>
+          {/* Audio */}
+          <div className="glass-panel rounded-lg p-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] text-neon-purple/60 tracking-widest">AUDIO</span>
               <AudioSourceSelector />
             </div>
-            <AudioVisualizer state={audioState} />
           </div>
         </div>
       </div>

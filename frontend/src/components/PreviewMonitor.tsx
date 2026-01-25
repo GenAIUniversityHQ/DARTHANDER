@@ -26,6 +26,7 @@ interface VisualState {
 
 interface PreviewMonitorProps {
   state: VisualState | null;
+  canvasId?: string;
 }
 
 // Color palettes
@@ -39,7 +40,7 @@ const palettes: Record<string, { bg: string; colors: string[] }> = {
   sacred: { bg: '#0f0a14', colors: ['#ffd700', '#8B5CF6', '#ff69b4', '#00ced1'] },
 };
 
-export function PreviewMonitor({ state }: PreviewMonitorProps) {
+export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const timeRef = useRef(0);
@@ -345,6 +346,7 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
     <div className="relative w-full h-full rounded-xl overflow-hidden border border-neon-purple/20 shadow-glass">
       <canvas
         ref={canvasRef}
+        id={canvasId}
         className="w-full h-full"
         style={{ background: '#050510' }}
       />

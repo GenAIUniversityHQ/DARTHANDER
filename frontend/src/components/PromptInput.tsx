@@ -7,9 +7,10 @@ import { Send } from 'lucide-react';
 interface PromptInputProps {
   onSubmit: (prompt: string) => void;
   placeholder?: string;
+  compact?: boolean;
 }
 
-export function PromptInput({ onSubmit, placeholder = "Enter prompt... (e.g., 'go deeper', 'open the portal')" }: PromptInputProps) {
+export function PromptInput({ onSubmit, placeholder = "Enter prompt...", compact = false }: PromptInputProps) {
   const [value, setValue] = useState('');
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -61,19 +62,18 @@ export function PromptInput({ onSubmit, placeholder = "Enter prompt... (e.g., 'g
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="w-full glass-input rounded-xl px-5 py-3.5 pr-14
-                   text-white placeholder-neon-purple/40
-                   font-mono text-sm tracking-wide"
+        className={`w-full glass-input rounded-lg pr-10 text-white placeholder-neon-purple/40 font-mono tracking-wide ${
+          compact ? 'px-3 py-1.5 text-[11px]' : 'px-5 py-3.5 text-sm rounded-xl pr-14'
+        }`}
       />
       <button
         type="submit"
         disabled={!value.trim()}
-        className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5
-                   text-neon-purple/50 hover:text-neon-magenta disabled:opacity-20
-                   transition-all duration-200 hover:scale-110
-                   disabled:hover:scale-100"
+        className={`absolute right-1 top-1/2 -translate-y-1/2 text-neon-purple/50 hover:text-neon-magenta disabled:opacity-20 transition-all duration-200 hover:scale-110 disabled:hover:scale-100 ${
+          compact ? 'p-1.5' : 'p-2.5'
+        }`}
       >
-        <Send className="w-5 h-5" />
+        <Send className={compact ? 'w-3.5 h-3.5' : 'w-5 h-5'} />
       </button>
       {/* Glow effect on focus */}
       <div className="absolute inset-0 rounded-xl opacity-0 group-focus-within:opacity-100
