@@ -20,10 +20,8 @@ function App() {
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [activePreset, setActivePreset] = useState<string | null>(null);
 
-  // Collapsible sections (like Ableton)
+  // Collapsible sections
   const [showPresets, setShowPresets] = useState(true);
-  const [showControls, setShowControls] = useState(true);
-  const [showAudio, setShowAudio] = useState(true);
 
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -332,6 +330,11 @@ function App() {
 
           <div className="w-px h-6 bg-white/20 mx-1" />
 
+          {/* Audio Source - Inline in nav */}
+          <AudioSourceSelector />
+
+          <div className="w-px h-6 bg-white/20 mx-1" />
+
           {/* Recording Controls */}
           {!isRecording ? (
             <button
@@ -452,36 +455,14 @@ function App() {
             )}
           </div>
 
-          {/* CONTROLS - Collapsible */}
-          <div className={`bg-zinc-900/80 backdrop-blur rounded-2xl border border-white/10 overflow-hidden ${showControls ? 'flex-1 min-h-0 flex flex-col' : ''}`}>
-            <button
-              onClick={() => setShowControls(!showControls)}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors shrink-0"
-            >
-              <h2 className="text-sm font-black text-white/60 tracking-widest">CONTROLS</h2>
-              {showControls ? <ChevronDown className="w-4 h-4 text-white/40" /> : <ChevronRight className="w-4 h-4 text-white/40" />}
-            </button>
-            {showControls && (
-              <div className="px-4 pb-4 overflow-y-auto flex-1">
-                <ParameterSliders state={visualState} onChange={(p, v) => updateVisualParameter(p, v)} />
-              </div>
-            )}
-          </div>
-
-          {/* AUDIO - Collapsible */}
-          <div className="bg-zinc-900/80 backdrop-blur rounded-2xl border border-white/10 overflow-hidden">
-            <button
-              onClick={() => setShowAudio(!showAudio)}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
-            >
-              <h2 className="text-sm font-black text-white/60 tracking-widest">AUDIO</h2>
-              {showAudio ? <ChevronDown className="w-4 h-4 text-white/40" /> : <ChevronRight className="w-4 h-4 text-white/40" />}
-            </button>
-            {showAudio && (
-              <div className="px-4 pb-4">
-                <AudioSourceSelector />
-              </div>
-            )}
+          {/* CONTROLS - Always visible, takes remaining space */}
+          <div className="bg-zinc-900/80 backdrop-blur rounded-2xl border border-white/10 overflow-hidden flex-1 min-h-0 flex flex-col">
+            <div className="px-4 py-2 border-b border-white/10 shrink-0">
+              <h2 className="text-xs font-black text-white/60 tracking-widest">CONTROLS</h2>
+            </div>
+            <div className="px-3 py-2 overflow-y-auto flex-1">
+              <ParameterSliders state={visualState} onChange={(p, v) => updateVisualParameter(p, v)} />
+            </div>
           </div>
         </div>
       </div>
