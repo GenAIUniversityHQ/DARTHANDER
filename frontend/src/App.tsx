@@ -10,7 +10,9 @@ import { VoiceInput } from './components/VoiceInput';
 import { PresetGrid } from './components/PresetGrid';
 import { ParameterSliders } from './components/ParameterSliders';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
-import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Play } from 'lucide-react';
+import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Play, Loader2 } from 'lucide-react';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
 function App() {
   const [lastInterpretation, setLastInterpretation] = useState('');
@@ -32,6 +34,12 @@ function App() {
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingIntervalRef = useRef<number | null>(null);
+
+  // MP4 conversion state
+  const [isConverting, setIsConverting] = useState(false);
+  const [conversionProgress, setConversionProgress] = useState(0);
+  const ffmpegRef = useRef<FFmpeg | null>(null);
+  const ffmpegLoadedRef = useRef(false);
 
   // Popout window
   const [popoutWindow, setPopoutWindow] = useState<Window | null>(null);
@@ -1320,7 +1328,7 @@ function App() {
       console.log('Recording without audio - no audio stream available');
     }
 
-    // Try to use the best codec available
+    // Try to use the best codec available with high quality settings
     let mimeType = 'video/webm; codecs=vp9,opus';
     if (!MediaRecorder.isTypeSupported(mimeType)) {
       mimeType = 'video/webm; codecs=vp8,opus';
@@ -1328,7 +1336,12 @@ function App() {
         mimeType = 'video/webm';
       }
     }
-    const options: MediaRecorderOptions = { mimeType };
+    // High quality settings for YouTube (8 Mbps video bitrate)
+    const options: MediaRecorderOptions = {
+      mimeType,
+      videoBitsPerSecond: 8000000,  // 8 Mbps for high quality
+      audioBitsPerSecond: 192000,   // 192 kbps audio
+    };
 
     const recorder = new MediaRecorder(combinedStream, options);
 
@@ -1355,15 +1368,98 @@ function App() {
     }
   };
 
-  const downloadRecording = () => {
+  // Load FFmpeg library (lazy loaded on first use)
+  const loadFFmpeg = async () => {
+    if (ffmpegLoadedRef.current && ffmpegRef.current) return ffmpegRef.current;
+
+    const ffmpeg = new FFmpeg();
+    ffmpegRef.current = ffmpeg;
+
+    ffmpeg.on('progress', ({ progress }) => {
+      setConversionProgress(Math.round(progress * 100));
+    });
+
+    // Load FFmpeg core from CDN
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    });
+
+    ffmpegLoadedRef.current = true;
+    return ffmpeg;
+  };
+
+  // Download as high-quality MP4 (converts from WebM)
+  const downloadRecording = async () => {
     if (recordedChunks.length === 0) return;
-    const blob = new Blob(recordedChunks, { type: 'video/webm' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `darthander-${Date.now()}.webm`;
-    a.click();
-    URL.revokeObjectURL(url);
+
+    setIsConverting(true);
+    setConversionProgress(0);
+
+    try {
+      // Create WebM blob from recorded chunks
+      const webmBlob = new Blob(recordedChunks, { type: 'video/webm' });
+
+      // Load FFmpeg
+      const ffmpeg = await loadFFmpeg();
+
+      // Write WebM to FFmpeg virtual filesystem
+      const webmData = await fetchFile(webmBlob);
+      await ffmpeg.writeFile('input.webm', webmData);
+
+      // Convert to MP4 with high quality settings for YouTube
+      // -c:v libx264: H.264 video codec (YouTube recommended)
+      // -preset medium: Balance between speed and compression
+      // -crf 18: High quality (lower = better, 18 is visually lossless)
+      // -c:a aac: AAC audio codec
+      // -b:a 192k: 192kbps audio bitrate
+      // -movflags +faststart: Optimize for web streaming
+      await ffmpeg.exec([
+        '-i', 'input.webm',
+        '-c:v', 'libx264',
+        '-preset', 'medium',
+        '-crf', '18',
+        '-c:a', 'aac',
+        '-b:a', '192k',
+        '-movflags', '+faststart',
+        '-y',
+        'output.mp4'
+      ]);
+
+      // Read the output MP4
+      const mp4Data = await ffmpeg.readFile('output.mp4') as Uint8Array;
+      // Create a new ArrayBuffer copy to satisfy TypeScript
+      const mp4Buffer = new Uint8Array(mp4Data).buffer;
+      const mp4Blob = new Blob([mp4Buffer], { type: 'video/mp4' });
+
+      // Clean up virtual filesystem
+      await ffmpeg.deleteFile('input.webm');
+      await ffmpeg.deleteFile('output.mp4');
+
+      // Download the MP4
+      const url = URL.createObjectURL(mp4Blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `darthander-${Date.now()}.mp4`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error('MP4 conversion failed:', error);
+      // Fallback to WebM download if conversion fails
+      const webmBlob = new Blob(recordedChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(webmBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `darthander-${Date.now()}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      alert('MP4 conversion failed - downloaded as WebM instead. YouTube accepts WebM format too!');
+    } finally {
+      setIsConverting(false);
+      setConversionProgress(0);
+    }
   };
 
   // Popout window for fullscreen display
@@ -1537,9 +1633,23 @@ function App() {
           {recordedChunks.length > 0 && !isRecording && (
             <button
               onClick={downloadRecording}
-              className="px-3 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105"
+              disabled={isConverting}
+              className={`px-3 py-2 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all ${
+                isConverting
+                  ? 'bg-cyan-800 cursor-wait'
+                  : 'bg-cyan-600 hover:bg-cyan-500 hover:scale-105'
+              }`}
+              title="Download as high-quality MP4 for YouTube"
             >
-              <Download className="w-4 h-4" /> SAVE
+              {isConverting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> {conversionProgress}%
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" /> MP4
+                </>
+              )}
             </button>
           )}
 
