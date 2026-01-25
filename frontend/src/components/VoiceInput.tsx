@@ -39,6 +39,7 @@ interface SpeechRecognition extends EventTarget {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
+  maxAlternatives: number;
   start(): void;
   stop(): void;
   abort(): void;
@@ -48,6 +49,10 @@ interface SpeechRecognition extends EventTarget {
   onstart: (() => void) | null;
   onspeechstart?: (() => void) | null;
   onspeechend?: (() => void) | null;
+  onaudiostart?: (() => void) | null;
+  onaudioend?: (() => void) | null;
+  onsoundstart?: (() => void) | null;
+  onsoundend?: (() => void) | null;
 }
 
 declare global {
@@ -108,6 +113,9 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
+
+    console.log('[VOICE] Settings: continuous=true, interimResults=true, lang=en-US');
 
     recognition.onstart = () => {
       console.log('[VOICE] >>> RECOGNITION STARTED <<<');
@@ -121,29 +129,35 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
+      console.log('[VOICE] onresult fired! resultIndex:', event.resultIndex, 'results length:', event.results.length);
+
       let interimTranscript = '';
       let finalTranscript = '';
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         const transcript = result[0].transcript;
+        const confidence = result[0].confidence;
+
+        console.log(`[VOICE] Result ${i}: "${transcript}" (final: ${result.isFinal}, confidence: ${confidence})`);
 
         if (result.isFinal) {
           finalTranscript += transcript;
-          console.log('[VOICE] Final transcript:', transcript);
         } else {
           interimTranscript += transcript;
         }
       }
 
-      // Update interim display
+      // Update interim display - show what user is saying in real-time
       if (interimTranscript) {
+        console.log('[VOICE] Interim text:', interimTranscript);
         setInterimText(interimTranscript);
       }
 
       // Send final transcript to handler
       if (finalTranscript.trim()) {
-        console.log('[VOICE] >>> SENDING TO HANDLER:', finalTranscript.trim());
+        console.log('[VOICE] >>> FINAL TRANSCRIPT:', finalTranscript.trim());
+        console.log('[VOICE] >>> SENDING TO HANDLER NOW');
         setStatus('processing');
         onTranscriptionRef.current(finalTranscript.trim());
         setInterimText('');
@@ -155,6 +169,22 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
           }
         }, 300);
       }
+    };
+
+    recognition.onaudiostart = () => {
+      console.log('[VOICE] Audio capture started');
+    };
+
+    recognition.onaudioend = () => {
+      console.log('[VOICE] Audio capture ended');
+    };
+
+    recognition.onsoundstart = () => {
+      console.log('[VOICE] Sound detected');
+    };
+
+    recognition.onsoundend = () => {
+      console.log('[VOICE] Sound ended');
     };
 
     recognition.onerror = (event: any) => {
@@ -314,10 +344,10 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
         return <span className="text-[10px] text-yellow-400 animate-pulse font-bold">STARTING...</span>;
       case 'listening':
         return interimText
-          ? <span className="text-[10px] text-cyan-400 font-bold max-w-[200px] truncate">"{interimText}"</span>
-          : <span className="text-[10px] text-green-400 animate-pulse font-bold">LISTENING...</span>;
+          ? <span className="text-[11px] text-cyan-400 font-bold max-w-[250px] truncate bg-cyan-500/20 px-2 py-0.5 rounded">"{interimText}"</span>
+          : <span className="text-[10px] text-green-400 animate-pulse font-bold">SPEAK NOW...</span>;
       case 'processing':
-        return <span className="text-[10px] text-purple-400 font-bold">PROCESSING...</span>;
+        return <span className="text-[10px] text-purple-400 font-bold animate-pulse">EXECUTING...</span>;
       case 'error':
         return <span className="text-[10px] text-red-400 font-bold">{errorMsg || 'ERROR'}</span>;
       default:
