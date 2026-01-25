@@ -113,9 +113,9 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
-    recognition.maxAlternatives = 1;
+    recognition.maxAlternatives = 3; // Get multiple alternatives for better matching
 
-    console.log('[VOICE] Settings: continuous=true, interimResults=true, lang=en-US');
+    console.log('[VOICE] Settings: continuous=true, interimResults=true, lang=en-US, maxAlternatives=3');
 
     recognition.onstart = () => {
       console.log('[VOICE] >>> RECOGNITION STARTED <<<');
@@ -133,16 +133,33 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
 
       let interimTranscript = '';
       let finalTranscript = '';
+      let bestConfidence = 0;
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
-        const transcript = result[0].transcript;
-        const confidence = result[0].confidence;
 
-        console.log(`[VOICE] Result ${i}: "${transcript}" (final: ${result.isFinal}, confidence: ${confidence})`);
+        // Log all alternatives for debugging
+        for (let j = 0; j < result.length && j < 3; j++) {
+          const alt = result[j];
+          console.log(`[VOICE] Result ${i} alt ${j}: "${alt.transcript}" (confidence: ${(alt.confidence * 100).toFixed(1)}%)`);
+        }
+
+        // Use highest confidence alternative
+        let bestAlt = result[0];
+        for (let j = 1; j < result.length; j++) {
+          if (result[j].confidence > bestAlt.confidence) {
+            bestAlt = result[j];
+          }
+        }
+
+        const transcript = bestAlt.transcript;
+        const confidence = bestAlt.confidence;
+
+        console.log(`[VOICE] Result ${i}: "${transcript}" (final: ${result.isFinal}, confidence: ${(confidence * 100).toFixed(1)}%)`);
 
         if (result.isFinal) {
           finalTranscript += transcript;
+          bestConfidence = Math.max(bestConfidence, confidence);
         } else {
           interimTranscript += transcript;
         }
@@ -156,7 +173,7 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
 
       // Send final transcript to handler
       if (finalTranscript.trim()) {
-        console.log('[VOICE] >>> FINAL TRANSCRIPT:', finalTranscript.trim());
+        console.log('[VOICE] >>> FINAL TRANSCRIPT:', finalTranscript.trim(), `(${(bestConfidence * 100).toFixed(1)}% confidence)`);
         console.log('[VOICE] >>> SENDING TO HANDLER NOW');
         setStatus('processing');
         onTranscriptionRef.current(finalTranscript.trim());

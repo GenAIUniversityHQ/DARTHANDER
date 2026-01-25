@@ -96,24 +96,153 @@ function App() {
   // REAL-TIME VOICE COMMAND PROCESSOR
   // Direct keyword mapping for instant response
   // ============================================
+
+  // Text normalization for Mac speech recognition
+  const normalizeText = (text: string): string => {
+    let normalized = text.toLowerCase().trim();
+
+    // Common Mac speech-to-text mishearings and variations
+    const replacements: [RegExp, string][] = [
+      // Numbers written as words
+      [/\bone\s*hundred\b/g, '100'],
+      [/\bfifty\b/g, '50'],
+      [/\btwenty\b/g, '20'],
+      [/\bthirty\b/g, '30'],
+      [/\bforty\b/g, '40'],
+      [/\bsixty\b/g, '60'],
+      [/\bseventy\b/g, '70'],
+      [/\beighty\b/g, '80'],
+      [/\bninety\b/g, '90'],
+      [/\bten\b/g, '10'],
+      [/\bzero\b/g, '0'],
+      // Common mishearings
+      [/\bcollar\b/g, 'color'],
+      [/\bcolour\b/g, 'color'],
+      [/\bpallet\b/g, 'palette'],
+      [/\bpurpel\b/g, 'purple'],
+      [/\bviolent\b/g, 'violet'],
+      [/\bintensity\s*to\b/g, 'intensity'],
+      [/\bspeed\s*to\b/g, 'speed'],
+      [/\bset\s*it\s*to\b/g, 'set'],
+      [/\bmake\s*it\b/g, ''],
+      [/\bthe\b/g, ''],
+      [/\ba\s+bit\b/g, 'slightly'],
+      [/\ba\s+lot\b/g, 'much'],
+      [/\bway\s+more\b/g, 'much more'],
+      [/\bsuper\b/g, 'very'],
+      [/\breally\b/g, 'very'],
+      [/\blike\b/g, ''],
+      [/\bum+\b/g, ''],
+      [/\buh+\b/g, ''],
+      // Geometry mishearings
+      [/\bmental\b/g, 'mandala'],
+      [/\bmandalas?\b/g, 'mandala'],
+      [/\bhexagons?\b/g, 'hexagon'],
+      [/\bspirals?\b/g, 'spiral'],
+      [/\btunnels?\b/g, 'tunnel'],
+      [/\bstars?\b/g, 'stars'],
+      // Sacred geometry
+      [/\bflower\s*of\s*life\b/g, 'flower'],
+      [/\bseed\s*of\s*life\b/g, 'seed'],
+      [/\bsri\s*yantra\b/g, 'yantra'],
+      [/\bmetatron'?s?\s*cube\b/g, 'metatron'],
+      [/\bgolden\s*ratio\b/g, 'phi'],
+      // Motion
+      [/\bcounter\s*clockwise\b/g, 'counter'],
+      [/\banti\s*clockwise\b/g, 'counter'],
+    ];
+
+    for (const [pattern, replacement] of replacements) {
+      normalized = normalized.replace(pattern, replacement);
+    }
+
+    // Clean up extra spaces
+    normalized = normalized.replace(/\s+/g, ' ').trim();
+    return normalized;
+  };
+
+  // Extract numeric value from text (returns 0-1 scale or null)
+  const extractValue = (text: string): number | null => {
+    // Look for percentage
+    const percentMatch = text.match(/(\d+)\s*%/);
+    if (percentMatch) {
+      return Math.min(100, Math.max(0, parseInt(percentMatch[1]))) / 100;
+    }
+
+    // Look for decimal
+    const decimalMatch = text.match(/(\d+\.?\d*)/);
+    if (decimalMatch) {
+      const val = parseFloat(decimalMatch[1]);
+      // If > 1, assume it's a percentage
+      if (val > 1) {
+        return Math.min(100, Math.max(0, val)) / 100;
+      }
+      return Math.min(1, Math.max(0, val));
+    }
+
+    // Look for words
+    if (text.includes('max') || text.includes('full') || text.includes('maximum')) return 1;
+    if (text.includes('half') || text.includes('medium') || text.includes('middle')) return 0.5;
+    if (text.includes('quarter') || text.includes('low')) return 0.25;
+    if (text.includes('min') || text.includes('none') || text.includes('zero') || text.includes('off')) return 0;
+    if (text.includes('high')) return 0.75;
+    if (text.includes('very high') || text.includes('very much')) return 0.9;
+    if (text.includes('slightly') || text.includes('little')) return 0.15;
+    if (text.includes('much') || text.includes('lot')) return 0.3;
+
+    return null;
+  };
+
+  // Determine adjustment direction and amount
+  const getAdjustment = (text: string, current: number): number => {
+    const explicitValue = extractValue(text);
+    if (explicitValue !== null && !text.includes('more') && !text.includes('less')) {
+      return explicitValue; // Absolute value
+    }
+
+    // Relative adjustments
+    let delta = 0.15; // Default step
+    if (text.includes('slightly') || text.includes('little') || text.includes('bit')) delta = 0.08;
+    if (text.includes('much') || text.includes('lot') || text.includes('very')) delta = 0.25;
+    if (text.includes('way') || text.includes('super') || text.includes('extremely')) delta = 0.35;
+
+    // Direction
+    const isIncrease = text.includes('more') || text.includes('up') || text.includes('increase') ||
+                       text.includes('higher') || text.includes('brighter') || text.includes('faster') ||
+                       text.includes('louder') || text.includes('stronger') || text.includes('bigger');
+    const isDecrease = text.includes('less') || text.includes('down') || text.includes('decrease') ||
+                       text.includes('lower') || text.includes('darker') || text.includes('slower') ||
+                       text.includes('quieter') || text.includes('weaker') || text.includes('smaller');
+
+    if (isDecrease) return Math.max(0, current - delta);
+    if (isIncrease) return Math.min(1, current + delta);
+
+    // Default to increase if no direction specified
+    return Math.min(1, current + delta);
+  };
+
   const processVoiceCommand = (text: string): boolean => {
-    const cmd = text.toLowerCase().trim();
+    const cmd = normalizeText(text);
     const words = cmd.split(/\s+/);
 
+    console.log('[VOICE CMD] Original:', text);
+    console.log('[VOICE CMD] Normalized:', cmd);
+
     // --- CONTROL COMMANDS ---
-    if (cmd.includes('hold') || cmd.includes('freeze') || cmd.includes('pause')) {
+    if (cmd.includes('hold') || cmd.includes('freeze') || cmd.includes('pause visualization')) {
       handleHold();
       return true;
     }
-    if (cmd.includes('kill') || cmd.includes('black') || cmd.includes('off')) {
+    if ((cmd.includes('kill') || cmd.includes('blackout') || cmd.includes('lights out')) && !cmd.includes('background')) {
       handleKill();
       return true;
     }
-    if (cmd.includes('go') || cmd.includes('resume') || cmd.includes('play') || cmd.includes('start')) {
+    if ((cmd.includes('go') || cmd.includes('resume') || cmd.includes('play') || cmd.includes('start')) &&
+        !cmd.includes('slower') && !cmd.includes('faster')) {
       handleGo();
       return true;
     }
-    if (cmd.includes('reset') || cmd.includes('default')) {
+    if (cmd.includes('reset') || cmd.includes('default') || cmd.includes('start over')) {
       handleReset();
       return true;
     }
@@ -471,30 +600,34 @@ function App() {
     }
 
     // --- INTENSITY CONTROLS ---
-    if (cmd.includes('more') || cmd.includes('increase') || cmd.includes('up') || cmd.includes('higher') || cmd.includes('intense')) {
-      const currentIntensity = visualState.overallIntensity || 0.5;
-      updateVisualParameter('overallIntensity', Math.min(1, currentIntensity + 0.15));
-      setLastInterpretation('⬆️ INTENSITY UP');
-      return true;
-    }
-    if (cmd.includes('less') || cmd.includes('decrease') || cmd.includes('down') || cmd.includes('lower') || cmd.includes('subtle')) {
-      const currentIntensity = visualState.overallIntensity || 0.5;
-      updateVisualParameter('overallIntensity', Math.max(0, currentIntensity - 0.15));
-      setLastInterpretation('⬇️ INTENSITY DOWN');
+    // "intensity 50%", "set intensity to 80", "more intense", "less intense", "intensity up", "way more intensity"
+    if (cmd.includes('intensity') || cmd.includes('intense') ||
+        (words.length <= 3 && (cmd.includes('more') || cmd.includes('less') || cmd.includes('stronger') || cmd.includes('weaker')))) {
+      const current = visualState.overallIntensity || 0.5;
+      const newVal = getAdjustment(cmd, current);
+      updateVisualParameter('overallIntensity', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`INTENSITY ${pct}%`);
       return true;
     }
 
     // --- SPEED CONTROLS ---
-    if (cmd.includes('faster') || cmd.includes('speed up') || cmd.includes('quick')) {
-      const currentSpeed = visualState.motionSpeed || 0.3;
-      updateVisualParameter('motionSpeed', Math.min(1, currentSpeed + 0.15));
-      setLastInterpretation('⚡ FASTER');
-      return true;
-    }
-    if (cmd.includes('slower') || cmd.includes('slow down') || cmd.includes('slow')) {
-      const currentSpeed = visualState.motionSpeed || 0.3;
-      updateVisualParameter('motionSpeed', Math.max(0, currentSpeed - 0.15));
-      setLastInterpretation('🐢 SLOWER');
+    // "speed 50%", "faster", "slower", "way faster", "half speed", "full speed"
+    if (cmd.includes('speed') || cmd.includes('faster') || cmd.includes('slower') || cmd.includes('quick')) {
+      const current = visualState.motionSpeed || 0.3;
+      let newVal: number;
+      if (cmd.includes('stop') || cmd.includes('still') || cmd.includes('freeze motion')) {
+        newVal = 0;
+      } else if (cmd.includes('faster') || cmd.includes('quick')) {
+        newVal = getAdjustment(cmd.replace('faster', 'more').replace('quick', 'more'), current);
+      } else if (cmd.includes('slower') || cmd.includes('slow')) {
+        newVal = getAdjustment(cmd.replace('slower', 'less').replace('slow', 'less'), current);
+      } else {
+        newVal = getAdjustment(cmd, current);
+      }
+      updateVisualParameter('motionSpeed', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`SPEED ${pct}%`);
       return true;
     }
 
@@ -607,77 +740,99 @@ function App() {
       setLastInterpretation('ECLIPSE ON');
       return true;
     }
-    // Increase corona/beams
+    // --- CORONA/BEAMS ---
+    // "corona 50%", "more beams", "less glow", "rays up"
     if (cmd.includes('corona') || cmd.includes('glow') || cmd.includes('beams') || cmd.includes('rays')) {
       const current = visualState.coronaIntensity || 0;
-      updateVisualParameter('coronaIntensity', Math.min(1, current + 0.2));
-      setLastInterpretation('CORONA UP');
+      const newVal = getAdjustment(cmd, current);
+      updateVisualParameter('coronaIntensity', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`CORONA ${pct}%`);
       return true;
     }
 
     // --- CHAOS ---
-    if (cmd.includes('chaos') || cmd.includes('chaotic') || cmd.includes('wild')) {
+    // "chaos 80%", "more chaotic", "wild", "less chaos", "calm down"
+    if (cmd.includes('chaos') || cmd.includes('chaotic') || cmd.includes('wild') || cmd.includes('crazy')) {
       const current = visualState.chaosFactor || 0;
-      updateVisualParameter('chaosFactor', Math.min(1, current + 0.2));
-      setLastInterpretation('🌪️ CHAOS UP');
+      let newVal: number;
+      if (cmd.includes('calm') || cmd.includes('order') || cmd.includes('stable')) {
+        newVal = getAdjustment('less ' + cmd, current);
+      } else {
+        newVal = getAdjustment(cmd, current);
+      }
+      updateVisualParameter('chaosFactor', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`CHAOS ${pct}%`);
       return true;
     }
 
     // --- BASS IMPACT ---
-    if (cmd.includes('bass') || cmd.includes('punch') || cmd.includes('impact')) {
+    // "bass 70%", "more punch", "less impact", "bass reactivity up"
+    if (cmd.includes('bass') || cmd.includes('punch') || cmd.includes('impact') || cmd.includes('reactive') || cmd.includes('reactivity')) {
       const current = visualState.bassImpact || 0.5;
-      updateVisualParameter('bassImpact', Math.min(1, current + 0.2));
-      setLastInterpretation('🔊 BASS IMPACT UP');
+      const newVal = getAdjustment(cmd, current);
+      updateVisualParameter('bassImpact', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`BASS ${pct}%`);
       return true;
     }
 
     // --- HUE SHIFT ---
-    if (cmd.includes('hue') || cmd.includes('shift hue') || cmd.includes('rotate color') || cmd.includes('color rotate')) {
+    // "shift hue", "rotate colors", "hue 180", "reset hue"
+    if (cmd.includes('hue') || cmd.includes('shift color') || cmd.includes('rotate color') || cmd.includes('color rotate')) {
       if (cmd.includes('reset') || cmd.includes('normal') || cmd.includes('zero')) {
         updateVisualParameter('colorHueShift', 0);
         setLastInterpretation('HUE RESET');
       } else {
         const current = (visualState as any).colorHueShift || 0;
-        const newHue = (current + 0.15) % 1;
+        // Check for explicit degree value
+        const degMatch = cmd.match(/(\d+)\s*(?:deg|degrees?|°)?/);
+        let newHue: number;
+        if (degMatch) {
+          newHue = (parseInt(degMatch[1]) % 360) / 360;
+        } else {
+          newHue = (current + 0.15) % 1;
+        }
         updateVisualParameter('colorHueShift', newHue);
-        setLastInterpretation(`HUE SHIFT: ${Math.round(newHue * 360)}°`);
+        setLastInterpretation(`HUE: ${Math.round(newHue * 360)}°`);
       }
       return true;
     }
 
     // --- SATURATION ---
-    if (cmd.includes('saturation') || cmd.includes('saturate') || cmd.includes('vivid') || cmd.includes('vibrant')) {
-      if (cmd.includes('more') || cmd.includes('up') || cmd.includes('increase')) {
-        const current = (visualState as any).colorSaturation || 0.5;
-        updateVisualParameter('colorSaturation', Math.min(1, current + 0.15));
-        setLastInterpretation('SATURATION UP');
-      } else if (cmd.includes('less') || cmd.includes('down') || cmd.includes('decrease') || cmd.includes('muted')) {
-        const current = (visualState as any).colorSaturation || 0.5;
-        updateVisualParameter('colorSaturation', Math.max(0, current - 0.15));
-        setLastInterpretation('SATURATION DOWN');
+    // "saturation 70%", "more vivid", "less saturated", "muted colors", "vibrant"
+    if (cmd.includes('saturation') || cmd.includes('saturate') || cmd.includes('vivid') || cmd.includes('vibrant') || cmd.includes('muted')) {
+      const current = (visualState as any).colorSaturation || 0.5;
+      let newVal: number;
+      if (cmd.includes('muted') || cmd.includes('desaturate') || cmd.includes('gray')) {
+        newVal = getAdjustment(cmd.replace('muted', 'less'), current);
+      } else if (cmd.includes('vivid') || cmd.includes('vibrant')) {
+        newVal = getAdjustment(cmd.replace('vivid', 'more').replace('vibrant', 'more'), current);
       } else {
-        const current = (visualState as any).colorSaturation || 0.5;
-        updateVisualParameter('colorSaturation', Math.min(1, current + 0.15));
-        setLastInterpretation('SATURATION UP');
+        newVal = getAdjustment(cmd, current);
       }
+      updateVisualParameter('colorSaturation', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`SATURATION ${pct}%`);
       return true;
     }
 
     // --- BRIGHTNESS ---
-    if (cmd.includes('brightness') || cmd.includes('bright') || cmd.includes('luminance')) {
-      if (cmd.includes('more') || cmd.includes('up') || cmd.includes('increase') || cmd.includes('lighter')) {
-        const current = (visualState as any).colorBrightness || 0.5;
-        updateVisualParameter('colorBrightness', Math.min(1, current + 0.15));
-        setLastInterpretation('BRIGHTNESS UP');
-      } else if (cmd.includes('less') || cmd.includes('down') || cmd.includes('decrease') || cmd.includes('darker')) {
-        const current = (visualState as any).colorBrightness || 0.5;
-        updateVisualParameter('colorBrightness', Math.max(0, current - 0.15));
-        setLastInterpretation('BRIGHTNESS DOWN');
+    // "brightness 80%", "brighter", "darker", "dim", "way brighter"
+    if (cmd.includes('brightness') || cmd.includes('bright') || cmd.includes('luminance') || cmd.includes('dim') || cmd.includes('dark')) {
+      const current = (visualState as any).colorBrightness || 0.5;
+      let newVal: number;
+      if (cmd.includes('dim') || cmd.includes('darker') || cmd.includes('dark')) {
+        newVal = getAdjustment(cmd.replace('dim', 'less').replace('darker', 'less').replace('dark', 'less'), current);
+      } else if (cmd.includes('brighter') || cmd.includes('lighter')) {
+        newVal = getAdjustment(cmd.replace('brighter', 'more').replace('lighter', 'more'), current);
       } else {
-        const current = (visualState as any).colorBrightness || 0.5;
-        updateVisualParameter('colorBrightness', Math.min(1, current + 0.15));
-        setLastInterpretation('BRIGHTNESS UP');
+        newVal = getAdjustment(cmd, current);
       }
+      updateVisualParameter('colorBrightness', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`BRIGHTNESS ${pct}%`);
       return true;
     }
 
@@ -733,6 +888,121 @@ function App() {
           return true;
         }
       }
+    }
+
+    // --- COMPLEXITY ---
+    // "complexity 60%", "more complex", "simpler", "detailed"
+    if (cmd.includes('complex') || cmd.includes('detail') || cmd.includes('simple') || cmd.includes('intricate')) {
+      const current = visualState.geometryComplexity || 0.3;
+      let newVal: number;
+      if (cmd.includes('simple') || cmd.includes('simpler') || cmd.includes('basic')) {
+        newVal = getAdjustment(cmd.replace('simple', 'less').replace('simpler', 'less').replace('basic', 'less'), current);
+      } else {
+        newVal = getAdjustment(cmd, current);
+      }
+      updateVisualParameter('geometryComplexity', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`COMPLEXITY ${pct}%`);
+      return true;
+    }
+
+    // --- STARS ---
+    // "more stars", "star density 80%", "less stars", "starfield"
+    if ((cmd.includes('star') && (cmd.includes('more') || cmd.includes('less') || cmd.includes('density'))) ||
+        cmd.includes('starfield density')) {
+      const current = visualState.starDensity || 0.5;
+      const newVal = getAdjustment(cmd, current);
+      updateVisualParameter('starDensity', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`STARS ${pct}%`);
+      return true;
+    }
+
+    // --- AUDIO REACTIVITY ---
+    // "audio react 70%", "more reactive", "less audio response"
+    if (cmd.includes('audio react') || cmd.includes('reactiv') || cmd.includes('respond to music') || cmd.includes('music react')) {
+      const current = visualState.audioReactGeometry || 0.5;
+      const newVal = getAdjustment(cmd, current);
+      updateVisualParameter('audioReactGeometry', newVal);
+      updateVisualParameter('audioReactColor', newVal);
+      updateVisualParameter('audioReactMotion', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`AUDIO REACT ${pct}%`);
+      return true;
+    }
+
+    // --- DEPTH/PARALLAX ---
+    // "more depth", "depth 60%", "less parallax", "3d effect"
+    if (cmd.includes('depth') || cmd.includes('parallax') || cmd.includes('3d')) {
+      const current = (visualState as any).depthParallax || 0.3;
+      const newVal = getAdjustment(cmd, current);
+      updateVisualParameter('depthParallax', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`DEPTH ${pct}%`);
+      return true;
+    }
+
+    // --- NEBULA ---
+    // "more nebula", "nebula 50%", "cosmic clouds"
+    if (cmd.includes('nebula') || cmd.includes('cloud') || cmd.includes('cosmic dust')) {
+      const current = visualState.nebulaPresence || 0.2;
+      const newVal = getAdjustment(cmd, current);
+      updateVisualParameter('nebulaPresence', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`NEBULA ${pct}%`);
+      return true;
+    }
+
+    // --- GEOMETRY SCALE ---
+    // "bigger", "smaller", "scale up", "scale 150%", "zoom in"
+    if (cmd.includes('scale') || cmd.includes('bigger') || cmd.includes('smaller') || cmd.includes('zoom') || cmd.includes('size')) {
+      const current = (visualState as any).geometryScale || 1;
+      let newVal: number;
+      if (cmd.includes('smaller') || cmd.includes('zoom out') || cmd.includes('shrink')) {
+        newVal = Math.max(0.2, current - 0.2);
+      } else if (cmd.includes('bigger') || cmd.includes('zoom in') || cmd.includes('larger') || cmd.includes('enlarge')) {
+        newVal = Math.min(3, current + 0.3);
+      } else {
+        // Check for percentage
+        const pctMatch = cmd.match(/(\d+)\s*%/);
+        if (pctMatch) {
+          newVal = parseInt(pctMatch[1]) / 100;
+        } else {
+          newVal = Math.min(3, current + 0.2);
+        }
+      }
+      updateVisualParameter('geometryScale', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`SCALE ${pct}%`);
+      return true;
+    }
+
+    // --- SYMMETRY ---
+    // "symmetry 8", "6 fold symmetry", "more symmetric"
+    if (cmd.includes('symmetr') || cmd.includes('fold')) {
+      const numMatch = cmd.match(/(\d+)\s*(?:fold|sided|point|way)?/);
+      if (numMatch) {
+        const sym = Math.max(2, Math.min(16, parseInt(numMatch[1])));
+        updateVisualParameter('geometrySymmetry', sym);
+        setLastInterpretation(`SYMMETRY ${sym}-FOLD`);
+        return true;
+      }
+    }
+
+    // --- TURBULENCE ---
+    // "more turbulence", "turbulent", "smooth motion"
+    if (cmd.includes('turbul') || (cmd.includes('smooth') && cmd.includes('motion'))) {
+      const current = (visualState as any).motionTurbulence || 0;
+      let newVal: number;
+      if (cmd.includes('smooth') || cmd.includes('calm')) {
+        newVal = Math.max(0, current - 0.2);
+      } else {
+        newVal = getAdjustment(cmd, current);
+      }
+      updateVisualParameter('motionTurbulence', newVal);
+      const pct = Math.round(newVal * 100);
+      setLastInterpretation(`TURBULENCE ${pct}%`);
+      return true;
     }
 
     return false; // Not a recognized command - will fall through to AI
