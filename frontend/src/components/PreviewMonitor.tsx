@@ -26,6 +26,7 @@ interface VisualState {
   audioReactGeometry: number;
   audioReactColor: number;
   audioReactMotion: number;
+  backgroundHue?: number;  // 0-360, shifts background color hue
 }
 
 interface PreviewMonitorProps {
@@ -71,6 +72,41 @@ const palettes: Record<string, { bg: string; colors: string[] }> = {
   mystic: { bg: '#0a050f', colors: ['#9370db', '#8a2be2', '#9400d3', '#8b008b', '#4b0082'] },
   alchemical: { bg: '#050500', colors: ['#ffd700', '#c0c0c0', '#cd7f32', '#b87333', '#8b4513'] },
 };
+
+// Helper function to convert HSL to RGB string
+function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
+  h = h / 360;
+  let r, g, b;
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const hue2rgb = (p: number, q: number, t: number) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+}
+
+// Get background colors based on hue (0-360)
+function getBackgroundColors(hue: number) {
+  // Dark base color
+  const baseDark = hslToRgb(hue, 0.5, 0.04);
+  // Primary glow color (more saturated)
+  const glowPrimary = hslToRgb(hue, 0.7, 0.66);
+  // Secondary glow (shifted hue for depth)
+  const glowSecondary = hslToRgb((hue + 60) % 360, 0.75, 0.6);
+  return { baseDark, glowPrimary, glowSecondary };
+}
 
 // Flow state for dancer-like movement
 interface FlowState {
@@ -210,17 +246,21 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
       const geometryMode = state?.geometryMode ?? 'stars';
       const chaos = state?.chaosFactor ?? 0;
       const audioReact = state?.audioReactGeometry ?? 0.5;
+      const bgHue = state?.backgroundHue ?? 270; // Default purple
 
       timeRef.current += 16 * motionSpeed;
 
-      // Clear
-      ctx.fillStyle = `rgba(5, 5, 16, ${0.15 + bass * 0.1})`;
+      // Get hue-shifted background colors
+      const bgColors = getBackgroundColors(bgHue);
+
+      // Clear with hue-shifted dark color
+      ctx.fillStyle = `rgba(${bgColors.baseDark.r}, ${bgColors.baseDark.g}, ${bgColors.baseDark.b}, ${0.15 + bass * 0.1})`;
       ctx.fillRect(0, 0, width, height);
 
-      // Background glow
+      // Background glow with hue-shifted colors
       const bgGlow = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, height * 0.8);
-      bgGlow.addColorStop(0, `rgba(139, 92, 246, ${0.1 + bass * 0.4 * intensity})`);
-      bgGlow.addColorStop(0.5, `rgba(236, 72, 153, ${0.05 + mid * 0.2 * intensity})`);
+      bgGlow.addColorStop(0, `rgba(${bgColors.glowPrimary.r}, ${bgColors.glowPrimary.g}, ${bgColors.glowPrimary.b}, ${0.1 + bass * 0.4 * intensity})`);
+      bgGlow.addColorStop(0.5, `rgba(${bgColors.glowSecondary.r}, ${bgColors.glowSecondary.g}, ${bgColors.glowSecondary.b}, ${0.05 + mid * 0.2 * intensity})`);
       bgGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = bgGlow;
       ctx.fillRect(0, 0, width, height);

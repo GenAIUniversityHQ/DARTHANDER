@@ -681,6 +681,60 @@ function App() {
       return true;
     }
 
+    // --- BACKGROUND COLOR ---
+    // Map color names to hue values (0-360)
+    const bgColorMap: Record<string, number> = {
+      'red': 0, 'crimson': 350, 'scarlet': 5,
+      'orange': 30, 'amber': 45,
+      'yellow': 60, 'gold': 50,
+      'lime': 90, 'chartreuse': 75,
+      'green': 120, 'emerald': 140, 'forest': 135,
+      'teal': 170, 'cyan': 180, 'turquoise': 175,
+      'sky': 200, 'azure': 210,
+      'blue': 240, 'indigo': 260, 'navy': 230,
+      'purple': 270, 'violet': 280, 'magenta': 300,
+      'pink': 330, 'rose': 345, 'fuchsia': 315,
+      'white': -1, 'black': -2, // Special cases
+    };
+
+    if (cmd.includes('background')) {
+      // Check for specific colors
+      for (const [colorName, hue] of Object.entries(bgColorMap)) {
+        if (cmd.includes(colorName)) {
+          if (hue === -1) { // white - high lightness, low saturation look
+            updateVisualParameter('backgroundHue', 0);
+            setLastInterpretation('BACKGROUND WHITE');
+          } else if (hue === -2) { // black - keep purple-ish but very dark
+            updateVisualParameter('backgroundHue', 270);
+            setLastInterpretation('BACKGROUND BLACK');
+          } else {
+            updateVisualParameter('backgroundHue', hue);
+            setLastInterpretation(`BACKGROUND ${colorName.toUpperCase()}`);
+          }
+          return true;
+        }
+      }
+      // Shift hue if no specific color
+      if (cmd.includes('shift') || cmd.includes('rotate') || cmd.includes('change')) {
+        const current = (visualState as any).backgroundHue || 270;
+        const newHue = (current + 30) % 360;
+        updateVisualParameter('backgroundHue', newHue);
+        setLastInterpretation(`BACKGROUND HUE: ${newHue}°`);
+        return true;
+      }
+    }
+
+    // Also check for "[color] background" patterns
+    for (const [colorName, hue] of Object.entries(bgColorMap)) {
+      if (cmd.includes(`${colorName} background`) || cmd.includes(`${colorName} bg`)) {
+        if (hue >= 0) {
+          updateVisualParameter('backgroundHue', hue);
+          setLastInterpretation(`BACKGROUND ${colorName.toUpperCase()}`);
+          return true;
+        }
+      }
+    }
+
     return false; // Not a recognized command - will fall through to AI
   };
 

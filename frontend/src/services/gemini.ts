@@ -169,6 +169,7 @@ export interface VisualState {
   audioReactColor: number;
   audioReactMotion: number;
   audioReactScale: number;
+  backgroundHue: number;  // 0-360, shifts background color hue
   currentPhase: string;
   transitionDuration: number;
   [key: string]: string | number;
@@ -242,6 +243,7 @@ export const DEFAULT_VISUAL_STATE: VisualState = {
   audioReactColor: 0.2,
   audioReactMotion: 0.3,
   audioReactScale: 0.2,
+  backgroundHue: 270,  // Default purple, 0-360 for other colors
   currentPhase: 'arrival',
   transitionDuration: 3000,
 };
