@@ -172,26 +172,47 @@ export function AudioSourceSelector() {
       const ctx = audioContextRef.current;
       console.log('[AUDIO] AudioContext state:', ctx.state);
 
-      // Create source, analyser, and destination for recording
-      console.log('[AUDIO] Creating MediaElementSource...');
-      const source = ctx.createMediaElementSource(audio);
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 256;
-      analyserRef.current = analyser;
+      // Use captureStream() instead of createMediaElementSource()
+      // This allows audio to play directly through speakers/Bluetooth
+      // while still capturing it for analysis
+      console.log('[AUDIO] Using captureStream for Bluetooth compatibility...');
+      const stream = (audio as any).captureStream ? (audio as any).captureStream() : (audio as any).mozCaptureStream?.();
 
-      // Create a destination node for capturing audio stream
-      const destination = ctx.createMediaStreamDestination();
-      destinationRef.current = destination;
+      if (stream) {
+        const source = ctx.createMediaStreamSource(stream);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        analyserRef.current = analyser;
 
-      // Connect: source -> analyser -> destination (for recording)
-      //          analyser -> speakers (for playback)
-      source.connect(analyser);
-      analyser.connect(ctx.destination); // Play through speakers
-      analyser.connect(destination); // Capture for recording
-      console.log('[AUDIO] Audio nodes connected successfully');
+        // Create a destination node for capturing audio stream (for recording)
+        const destination = ctx.createMediaStreamDestination();
+        destinationRef.current = destination;
 
-      // Store the audio stream for recording
-      setAudioStream(destination.stream);
+        // Connect for analysis only - audio plays directly from element
+        source.connect(analyser);
+        analyser.connect(destination); // Capture for recording
+        // Note: We don't connect to ctx.destination - audio element handles playback directly
+
+        console.log('[AUDIO] Audio nodes connected with captureStream (Bluetooth compatible)');
+        setAudioStream(destination.stream);
+      } else {
+        // Fallback to MediaElementSource if captureStream not available
+        console.log('[AUDIO] captureStream not available, using MediaElementSource fallback');
+        const source = ctx.createMediaElementSource(audio);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        analyserRef.current = analyser;
+
+        const destination = ctx.createMediaStreamDestination();
+        destinationRef.current = destination;
+
+        source.connect(analyser);
+        analyser.connect(ctx.destination); // Play through speakers
+        analyser.connect(destination); // Capture for recording
+
+        console.log('[AUDIO] Audio nodes connected with MediaElementSource fallback');
+        setAudioStream(destination.stream);
+      }
 
       sourceCreatedRef.current = true;
     } catch (err) {
