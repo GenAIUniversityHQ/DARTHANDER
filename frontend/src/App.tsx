@@ -10,7 +10,7 @@ import { VoiceInput } from './components/VoiceInput';
 import { PresetGrid } from './components/PresetGrid';
 import { ParameterSliders } from './components/ParameterSliders';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
-import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
+import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw } from 'lucide-react';
 
 function App() {
   const [lastInterpretation, setLastInterpretation] = useState('');
@@ -19,9 +19,6 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [activePreset, setActivePreset] = useState<string | null>(null);
-
-  // Collapsible sections
-  const [showPresets, setShowPresets] = useState(true);
 
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -402,29 +399,15 @@ function App() {
           </div>
         </div>
 
-        {/* Right: CONTROLS - Big and Bold */}
+        {/* Right: CONTROLS */}
         <div className="w-1/2 p-3 flex flex-col gap-2 min-h-0">
-          {/* PRESETS - Collapsible */}
-          <div className="bg-zinc-900/80 backdrop-blur rounded-2xl border border-white/10 overflow-hidden">
-            <button
-              onClick={() => setShowPresets(!showPresets)}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
-            >
-              <h2 className="text-sm font-black text-white/60 tracking-widest">PRESETS</h2>
-              {showPresets ? <ChevronDown className="w-4 h-4 text-white/40" /> : <ChevronRight className="w-4 h-4 text-white/40" />}
-            </button>
-            {showPresets && (
-              <div className="px-4 pb-4">
-                <PresetGrid presets={presets} onSelect={handleLoadPreset} currentPreset={presets.find(p => p.id === activePreset) || null} />
-              </div>
-            )}
+          {/* PRESETS - Compact row */}
+          <div className="bg-zinc-900/80 backdrop-blur rounded-xl border border-white/10 px-3 py-2">
+            <PresetGrid presets={presets} onSelect={handleLoadPreset} currentPreset={presets.find(p => p.id === activePreset) || null} />
           </div>
 
-          {/* CONTROLS - Always visible, takes remaining space */}
-          <div className="bg-zinc-900/80 backdrop-blur rounded-2xl border border-white/10 overflow-hidden flex-1 min-h-0 flex flex-col">
-            <div className="px-4 py-2 border-b border-white/10 shrink-0">
-              <h2 className="text-xs font-black text-white/60 tracking-widest">CONTROLS</h2>
-            </div>
+          {/* CONTROLS - Takes remaining space */}
+          <div className="bg-zinc-900/80 backdrop-blur rounded-xl border border-white/10 overflow-hidden flex-1 min-h-0 flex flex-col">
             <div className="px-3 py-2 overflow-y-auto flex-1">
               <ParameterSliders state={visualState} onChange={(p, v) => updateVisualParameter(p, v)} />
             </div>
