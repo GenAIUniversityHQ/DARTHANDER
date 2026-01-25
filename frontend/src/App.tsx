@@ -10,7 +10,7 @@ import { VoiceInput } from './components/VoiceInput';
 import { PresetGrid } from './components/PresetGrid';
 import { ParameterSliders } from './components/ParameterSliders';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
-import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Sparkles, Flame, Snowflake, Zap, Leaf, Star, Moon, Waves, Sunset, ChevronDown, ChevronRight } from 'lucide-react';
+import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
 
 function App() {
   const [lastInterpretation, setLastInterpretation] = useState('');
@@ -403,42 +403,7 @@ function App() {
         </div>
 
         {/* Right: CONTROLS - Big and Bold */}
-        <div className="w-1/2 p-3 flex flex-col gap-3 min-h-0 overflow-y-auto">
-          {/* QUICK COLOR PALETTE - One-tap color switching */}
-          <div className="flex gap-1.5 flex-wrap">
-            {[
-              { id: 'cosmos', colors: ['#8B5CF6', '#EC4899'], icon: Sparkles },
-              { id: 'fire', colors: ['#f97316', '#ef4444'], icon: Flame },
-              { id: 'ice', colors: ['#06b6d4', '#3b82f6'], icon: Snowflake },
-              { id: 'neon', colors: ['#ff00ff', '#00ffff'], icon: Zap },
-              { id: 'earth', colors: ['#22c55e', '#eab308'], icon: Leaf },
-              { id: 'sacred', colors: ['#ffd700', '#8B5CF6'], icon: Star },
-              { id: 'void', colors: ['#1e293b', '#334155'], icon: Moon },
-              { id: 'ocean', colors: ['#00b4d8', '#023e8a'], icon: Waves },
-              { id: 'sunset', colors: ['#ff6b6b', '#f368e0'], icon: Sunset },
-            ].map((palette) => {
-              const Icon = palette.icon;
-              return (
-                <button
-                  key={palette.id}
-                  onClick={() => updateVisualParameter('colorPalette', palette.id)}
-                  className={`flex-1 py-2 rounded-xl font-black transition-all hover:scale-105 active:scale-95 flex flex-col items-center justify-center gap-0.5 ${
-                    visualState.colorPalette === palette.id
-                      ? 'ring-2 ring-white ring-offset-2 ring-offset-black scale-105'
-                      : 'opacity-80 hover:opacity-100'
-                  }`}
-                  style={{
-                    background: `linear-gradient(135deg, ${palette.colors[0]}, ${palette.colors[1]})`
-                  }}
-                  title={palette.id.toUpperCase()}
-                >
-                  <Icon className="w-5 h-5 drop-shadow-lg" />
-                  <span className="text-[8px] uppercase tracking-wider opacity-70 drop-shadow">{palette.id}</span>
-                </button>
-              );
-            })}
-          </div>
-
+        <div className="w-1/2 p-3 flex flex-col gap-2 min-h-0">
           {/* PRESETS - Collapsible */}
           <div className="bg-zinc-900/80 backdrop-blur rounded-2xl border border-white/10 overflow-hidden">
             <button
