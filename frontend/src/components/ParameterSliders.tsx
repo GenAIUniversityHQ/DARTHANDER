@@ -43,6 +43,48 @@ const sliders: SliderConfig[] = [
   { key: 'bassImpact', label: 'BASS IMPACT', color: 'from-red-600 via-red-500 to-orange-500', icon: Waves },
 ];
 
+// ============================================
+// COLOR PALETTES - Easy access
+// ============================================
+const colorPalettes = [
+  // Core
+  { id: 'cosmos', label: 'COSMOS', bg: 'bg-purple-600' },
+  { id: 'fire', label: 'FIRE', bg: 'bg-orange-500' },
+  { id: 'ice', label: 'ICE', bg: 'bg-cyan-400' },
+  { id: 'neon', label: 'NEON', bg: 'bg-pink-500' },
+  { id: 'earth', label: 'EARTH', bg: 'bg-emerald-500' },
+  // Spectrum
+  { id: 'spectrum', label: 'SPECTRUM', bg: 'bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500' },
+  { id: 'rainbow', label: 'RAINBOW', bg: 'bg-gradient-to-r from-red-500 via-green-500 to-violet-500' },
+  // Light
+  { id: 'light', label: 'LIGHT', bg: 'bg-white' },
+  { id: 'ethereal', label: 'ETHEREAL', bg: 'bg-violet-200' },
+  { id: 'pastel', label: 'PASTEL', bg: 'bg-pink-200' },
+  // Ice
+  { id: 'glacier', label: 'GLACIER', bg: 'bg-blue-300' },
+  { id: 'arctic', label: 'ARCTIC', bg: 'bg-cyan-200' },
+  { id: 'frost', label: 'FROST', bg: 'bg-teal-200' },
+  // Dark
+  { id: 'void', label: 'VOID', bg: 'bg-slate-800' },
+  { id: 'bloodmoon', label: 'BLOOD', bg: 'bg-red-900' },
+  { id: 'darkprism', label: 'DARKPRISM', bg: 'bg-purple-900' },
+  { id: 'crimson', label: 'CRIMSON', bg: 'bg-red-700' },
+  { id: 'amethyst', label: 'AMETHYST', bg: 'bg-violet-700' },
+  { id: 'obsidian', label: 'OBSIDIAN', bg: 'bg-zinc-900' },
+  // Mono
+  { id: 'monochrome', label: 'MONO', bg: 'bg-gradient-to-r from-white to-black' },
+  { id: 'noir', label: 'NOIR', bg: 'bg-zinc-700' },
+  { id: 'silver', label: 'SILVER', bg: 'bg-gray-400' },
+  // Sacred
+  { id: 'sacred', label: 'SACRED', bg: 'bg-amber-400' },
+  { id: 'ancient', label: 'ANCIENT', bg: 'bg-amber-600' },
+  { id: 'mystic', label: 'MYSTIC', bg: 'bg-violet-600' },
+  { id: 'alchemical', label: 'ALCHEMY', bg: 'bg-gradient-to-r from-amber-400 via-gray-400 to-amber-700' },
+  // Other
+  { id: 'ocean', label: 'OCEAN', bg: 'bg-blue-500' },
+  { id: 'sunset', label: 'SUNSET', bg: 'bg-gradient-to-r from-orange-500 to-pink-500' },
+];
+
 // Primary geometry modes - expanded
 const geometryModes = [
   { id: 'stars', label: 'STARS', color: 'bg-purple-500' },
@@ -89,17 +131,91 @@ const ancientGeometry = [
 ];
 
 // ============================================
-// DIMENSIONAL - Higher dimensions & impossible geometry
+// 4D GEOMETRY - Fourth dimensional objects
 // ============================================
-const dimensionalGeometry = [
+const geometry4D = [
   { id: 'tesseract', label: 'TESSERACT', color: 'bg-cyan-500' },
-  { id: 'hypersphere', label: 'HYPERSPHERE', color: 'bg-blue-500' },
-  { id: 'klein-bottle', label: 'KLEIN', color: 'bg-purple-500' },
-  { id: 'mobius', label: 'MÖBIUS', color: 'bg-pink-500' },
+  { id: 'hypersphere', label: '4SPHERE', color: 'bg-blue-500' },
+  { id: '24-cell', label: '24CELL', color: 'bg-violet-500' },
+  { id: '120-cell', label: '120CELL', color: 'bg-purple-500' },
+  { id: '600-cell', label: '600CELL', color: 'bg-pink-500' },
+  { id: 'duocylinder', label: 'DUOCYL', color: 'bg-indigo-400' },
+  { id: 'clifford-torus', label: 'CLIFFORD', color: 'bg-cyan-400' },
+  { id: 'klein-bottle', label: 'KLEIN', color: 'bg-purple-400' },
+];
+
+// ============================================
+// 5D GEOMETRY - Fifth dimensional objects
+// ============================================
+const geometry5D = [
+  { id: 'penteract', label: 'PENTERACT', color: 'bg-indigo-500' },
+  { id: '5-simplex', label: '5SIMPLEX', color: 'bg-violet-500' },
+  { id: '5-orthoplex', label: '5ORTHO', color: 'bg-purple-500' },
+  { id: '5-demicube', label: '5DEMI', color: 'bg-blue-500' },
+  { id: 'pentasphere', label: '5SPHERE', color: 'bg-cyan-500' },
+];
+
+// ============================================
+// 6D+ GEOMETRY - Sixth and higher dimensions
+// ============================================
+const geometry6D = [
+  { id: 'hexeract', label: 'HEXERACT', color: 'bg-indigo-600' },
+  { id: 'e8-lattice', label: 'E8', color: 'bg-gradient-to-r from-violet-500 to-pink-500' },
+  { id: '6-simplex', label: '6SIMPLEX', color: 'bg-purple-600' },
+  { id: 'gosset', label: 'GOSSET', color: 'bg-cyan-600' },
+  { id: 'leech-lattice', label: 'LEECH', color: 'bg-blue-600' },
+];
+
+// ============================================
+// IMPOSSIBLE / PARADOX - Mind-bending geometry
+// ============================================
+const impossibleGeometry = [
   { id: 'penrose', label: 'PENROSE', color: 'bg-amber-400' },
-  { id: 'calabi-yau', label: 'CALABI', color: 'bg-indigo-500' },
+  { id: 'impossible', label: 'ESCHER', color: 'bg-red-500' },
+  { id: 'mobius', label: 'MÖBIUS', color: 'bg-pink-500' },
   { id: 'hyperbolic', label: 'HYPERBOLIC', color: 'bg-violet-500' },
-  { id: 'impossible', label: 'IMPOSSIBLE', color: 'bg-red-500' },
+  { id: 'non-euclidean', label: 'NONEUC', color: 'bg-emerald-500' },
+  { id: 'recursive', label: 'RECURSIVE', color: 'bg-cyan-500' },
+];
+
+// ============================================
+// FRACTAL - Infinite self-similar patterns
+// ============================================
+const fractalGeometry = [
+  { id: 'mandelbrot', label: 'MANDELBROT', color: 'bg-blue-600' },
+  { id: 'julia', label: 'JULIA', color: 'bg-purple-500' },
+  { id: 'sierpinski', label: 'SIERPINSKI', color: 'bg-red-500' },
+  { id: 'koch', label: 'KOCH', color: 'bg-cyan-500' },
+  { id: 'dragon', label: 'DRAGON', color: 'bg-green-500' },
+  { id: 'tree-fractal', label: 'TREE', color: 'bg-emerald-500' },
+  { id: 'menger', label: 'MENGER', color: 'bg-amber-500' },
+  { id: 'apollonian', label: 'APOLLONIAN', color: 'bg-pink-400' },
+];
+
+// ============================================
+// CHAOS / ATTRACTORS - Strange attractors & chaos theory
+// ============================================
+const chaosGeometry = [
+  { id: 'lorenz', label: 'LORENZ', color: 'bg-blue-500' },
+  { id: 'rossler', label: 'RÖSSLER', color: 'bg-purple-500' },
+  { id: 'chua', label: 'CHUA', color: 'bg-red-500' },
+  { id: 'halvorsen', label: 'HALVORSEN', color: 'bg-cyan-500' },
+  { id: 'thomas', label: 'THOMAS', color: 'bg-pink-500' },
+  { id: 'aizawa', label: 'AIZAWA', color: 'bg-indigo-500' },
+];
+
+// ============================================
+// REALITY - Simulation / Meta-reality concepts
+// ============================================
+const realityGeometry = [
+  { id: 'matrix', label: 'MATRIX', color: 'bg-green-500' },
+  { id: 'glitch', label: 'GLITCH', color: 'bg-red-500' },
+  { id: 'simulation', label: 'SIMULATION', color: 'bg-cyan-400' },
+  { id: 'observer', label: 'OBSERVER', color: 'bg-violet-500' },
+  { id: 'collapse', label: 'COLLAPSE', color: 'bg-blue-500' },
+  { id: 'indras-net', label: 'INDRA', color: 'bg-amber-400' },
+  { id: 'holofractal', label: 'HOLOFRACTAL', color: 'bg-gradient-to-r from-cyan-500 to-purple-500' },
+  { id: 'time-crystal', label: 'TIMECRYSTAL', color: 'bg-gradient-to-r from-blue-400 to-pink-400' },
 ];
 
 // ============================================
@@ -114,6 +230,8 @@ const quantumGeometry = [
   { id: 'quantum-foam', label: 'FOAM', color: 'bg-slate-400' },
   { id: 'holographic', label: 'HOLO', color: 'bg-cyan-300' },
   { id: 'string-theory', label: 'STRING', color: 'bg-amber-400' },
+  { id: 'zero-point', label: 'ZEROPOINT', color: 'bg-white' },
+  { id: 'vacuum-flux', label: 'VACUUM', color: 'bg-slate-600' },
 ];
 
 // ============================================
@@ -215,6 +333,60 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
             </div>
           );
         })}
+      </div>
+
+      {/* COLOR PALETTE - Direct access */}
+      <div className="pt-2 border-t border-white/10">
+        <h3 className="text-[10px] font-bold text-white/50 mb-1">COLOR PALETTE</h3>
+        <div className="flex flex-wrap gap-1">
+          {colorPalettes.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => onChange('colorPalette', p.id as any)}
+              title={p.label}
+              className={`w-6 h-6 rounded ${p.bg} border-2 transition-transform hover:scale-110
+                         ${(state as any).colorPalette === p.id
+                           ? 'border-white scale-110'
+                           : 'border-transparent'}`}
+            />
+          ))}
+        </div>
+        {/* Color control sliders */}
+        <div className="grid grid-cols-3 gap-2 mt-2">
+          <div>
+            <span className="text-[9px] font-bold text-white/50">HUE SHIFT</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={Math.round(((state as any).colorHueShift || 0) * 100)}
+              onChange={(e) => onChange('colorHueShift', parseInt(e.target.value) / 100)}
+              className="w-full h-1.5 bg-gradient-to-r from-red-500 via-green-500 to-blue-500 rounded-full appearance-none cursor-pointer"
+            />
+          </div>
+          <div>
+            <span className="text-[9px] font-bold text-white/50">SATURATION</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={Math.round(((state as any).colorSaturation || 0.5) * 100)}
+              onChange={(e) => onChange('colorSaturation', parseInt(e.target.value) / 100)}
+              className="w-full h-1.5 bg-gradient-to-r from-gray-400 to-purple-500 rounded-full appearance-none cursor-pointer"
+            />
+          </div>
+          <div>
+            <span className="text-[9px] font-bold text-white/50">BRIGHTNESS</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={Math.round(((state as any).colorBrightness || 0.5) * 100)}
+              onChange={(e) => onChange('colorBrightness', parseInt(e.target.value) / 100)}
+              className="w-full h-1.5 bg-gradient-to-r from-black to-white rounded-full appearance-none cursor-pointer"
+            />
+          </div>
+        </div>
       </div>
 
       {/* GEOMETRY + MOTION in one row */}
@@ -392,9 +564,9 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
           </div>
         </div>
 
-        {/* DIMENSIONAL - 4D+ geometry */}
+        {/* 4D - Fourth dimension */}
         <div className="flex items-center gap-2">
-          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">4D+</h3>
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">4D</h3>
           <div className="flex flex-wrap gap-1">
             <button
               onClick={() => onChange('geometryLayer7', 'none' as any)}
@@ -404,12 +576,64 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
             >
               OFF
             </button>
-            {dimensionalGeometry.map((layer) => (
+            {geometry4D.map((layer) => (
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer7', layer.id as any)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer7 === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 5D - Fifth dimension */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">5D</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('geometryLayer9', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).geometryLayer9 || (state as any).geometryLayer9 === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {geometry5D.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('geometryLayer9', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).geometryLayer9 === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 6D+ - Sixth dimension and beyond */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">6D+</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('geometryLayer10', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).geometryLayer10 || (state as any).geometryLayer10 === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {geometry6D.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('geometryLayer10', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).geometryLayer10 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
               >
                 {layer.label}
@@ -436,6 +660,110 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
                 onClick={() => onChange('geometryLayer8', layer.id as any)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer8 === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* FRACTAL - Infinite patterns */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">FRACTAL</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('geometryLayer11', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).geometryLayer11 || (state as any).geometryLayer11 === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {fractalGeometry.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('geometryLayer11', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).geometryLayer11 === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* CHAOS - Strange attractors */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">CHAOS</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('geometryLayer12', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).geometryLayer12 || (state as any).geometryLayer12 === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {chaosGeometry.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('geometryLayer12', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).geometryLayer12 === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* REALITY - Simulation / Meta */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">REALITY</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('geometryLayer13', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).geometryLayer13 || (state as any).geometryLayer13 === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {realityGeometry.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('geometryLayer13', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).geometryLayer13 === layer.id
+                             ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
+              >
+                {layer.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* IMPOSSIBLE - Mind-bending geometry */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-[10px] font-bold text-white/50 w-16 shrink-0">PARADOX</h3>
+          <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => onChange('geometryLayer14', 'none' as any)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                         ${!(state as any).geometryLayer14 || (state as any).geometryLayer14 === 'none'
+                           ? 'bg-slate-600 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              OFF
+            </button>
+            {impossibleGeometry.map((layer) => (
+              <button
+                key={layer.id}
+                onClick={() => onChange('geometryLayer14', layer.id as any)}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
+                           ${(state as any).geometryLayer14 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
               >
                 {layer.label}

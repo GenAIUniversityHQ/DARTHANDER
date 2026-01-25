@@ -302,6 +302,110 @@ function App() {
       }
     }
 
+    // --- 5D GEOMETRY LAYER ---
+    const geometry5DMap: Record<string, string> = {
+      'penteract': 'penteract', '5d cube': 'penteract', '5-cube': 'penteract',
+      '5 simplex': '5-simplex', '5simplex': '5-simplex', 'hexateron': '5-simplex',
+      '5 orthoplex': '5-orthoplex', '5orthoplex': '5-orthoplex', 'pentacross': '5-orthoplex',
+      '5 demicube': '5-demicube', '5demicube': '5-demicube', 'demipenteract': '5-demicube',
+      'pentasphere': 'pentasphere', '5d sphere': 'pentasphere', '5sphere': 'pentasphere',
+    };
+    for (const [keyword, layer] of Object.entries(geometry5DMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryLayer9', layer);
+        setLastInterpretation(`5D: ${layer.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- 6D+ GEOMETRY LAYER ---
+    const geometry6DMap: Record<string, string> = {
+      'hexeract': 'hexeract', '6d cube': 'hexeract', '6-cube': 'hexeract',
+      'e8': 'e8-lattice', 'e8 lattice': 'e8-lattice', 'exceptional': 'e8-lattice',
+      '6 simplex': '6-simplex', '6simplex': '6-simplex', 'heptapeton': '6-simplex',
+      'gosset': 'gosset', '421 polytope': 'gosset',
+      'leech': 'leech-lattice', 'leech lattice': 'leech-lattice',
+    };
+    for (const [keyword, layer] of Object.entries(geometry6DMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryLayer10', layer);
+        setLastInterpretation(`6D+: ${layer.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- FRACTAL LAYER ---
+    const fractalMap: Record<string, string> = {
+      'mandelbrot': 'mandelbrot', 'mandel': 'mandelbrot',
+      'julia': 'julia', 'julia set': 'julia',
+      'sierpinski': 'sierpinski', 'sierpinski triangle': 'sierpinski',
+      'koch': 'koch', 'koch snowflake': 'koch', 'snowflake': 'koch',
+      'dragon': 'dragon', 'dragon curve': 'dragon',
+      'tree fractal': 'tree-fractal', 'fractal tree': 'tree-fractal',
+      'menger': 'menger', 'menger sponge': 'menger', 'sponge': 'menger',
+      'apollonian': 'apollonian', 'apollonian gasket': 'apollonian', 'gasket': 'apollonian',
+    };
+    for (const [keyword, layer] of Object.entries(fractalMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryLayer11', layer);
+        setLastInterpretation(`FRACTAL: ${layer.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- CHAOS ATTRACTOR LAYER ---
+    const chaosMap: Record<string, string> = {
+      'lorenz': 'lorenz', 'lorenz attractor': 'lorenz', 'butterfly': 'lorenz',
+      'rossler': 'rossler', 'rössler': 'rossler', 'rossler attractor': 'rossler',
+      'chua': 'chua', 'chua circuit': 'chua',
+      'halvorsen': 'halvorsen',
+      'thomas': 'thomas', 'thomas attractor': 'thomas',
+      'aizawa': 'aizawa', 'aizawa attractor': 'aizawa',
+    };
+    for (const [keyword, layer] of Object.entries(chaosMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryLayer12', layer);
+        setLastInterpretation(`CHAOS: ${layer.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- REALITY LAYER ---
+    const realityMap: Record<string, string> = {
+      'matrix': 'matrix', 'matrix rain': 'matrix',
+      'glitch': 'glitch', 'glitchy': 'glitch',
+      'simulation': 'simulation', 'sim': 'simulation',
+      'observer': 'observer', 'observer effect': 'observer',
+      'collapse': 'collapse', 'wave collapse': 'collapse',
+      'indra': 'indras-net', 'indras net': 'indras-net', 'indra\'s net': 'indras-net',
+      'holofractal': 'holofractal', 'holographic': 'holofractal',
+      'time crystal': 'time-crystal', 'timecrystal': 'time-crystal',
+    };
+    for (const [keyword, layer] of Object.entries(realityMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryLayer13', layer);
+        setLastInterpretation(`REALITY: ${layer.toUpperCase()}`);
+        return true;
+      }
+    }
+
+    // --- PARADOX/IMPOSSIBLE LAYER ---
+    const paradoxMap: Record<string, string> = {
+      'penrose triangle': 'penrose', 'impossible triangle': 'penrose',
+      'impossible cube': 'impossible', 'impossible geometry': 'impossible',
+      'mobius strip': 'mobius', 'möbius': 'mobius',
+      'hyperbolic plane': 'hyperbolic', 'poincare disk': 'hyperbolic',
+      'non euclidean': 'non-euclidean', 'noneuclidean': 'non-euclidean', 'lovecraftian': 'non-euclidean',
+      'recursive': 'recursive', 'infinite recursion': 'recursive', 'droste': 'recursive',
+    };
+    for (const [keyword, layer] of Object.entries(paradoxMap)) {
+      if (cmd.includes(keyword)) {
+        updateVisualParameter('geometryLayer14', layer);
+        setLastInterpretation(`PARADOX: ${layer.toUpperCase()}`);
+        return true;
+      }
+    }
+
     // --- MOTION DIRECTIONS ---
     const motionMap: Record<string, string> = {
       'flow': 'flow', 'dance': 'flow', 'dancer': 'flow',
@@ -361,7 +465,7 @@ function App() {
     for (const [keyword, palette] of Object.entries(colorMap)) {
       if (cmd.includes(keyword) && (cmd.includes('color') || cmd.includes('palette') || words.length <= 2)) {
         updateVisualParameter('colorPalette', palette);
-        setLastInterpretation(`🎨 COLOR: ${palette.toUpperCase()}`);
+        setLastInterpretation(`COLOR: ${palette.toUpperCase()}`);
         return true;
       }
     }
@@ -430,6 +534,36 @@ function App() {
       setLastInterpretation('❌ CONSC OFF');
       return true;
     }
+    if (cmd.includes('5d off') || cmd.includes('no 5d') || cmd.includes('remove 5d')) {
+      updateVisualParameter('geometryLayer9', 'none');
+      setLastInterpretation('❌ 5D OFF');
+      return true;
+    }
+    if (cmd.includes('6d off') || cmd.includes('no 6d') || cmd.includes('remove 6d')) {
+      updateVisualParameter('geometryLayer10', 'none');
+      setLastInterpretation('❌ 6D OFF');
+      return true;
+    }
+    if (cmd.includes('fractal off') || cmd.includes('no fractal') || cmd.includes('remove fractal')) {
+      updateVisualParameter('geometryLayer11', 'none');
+      setLastInterpretation('❌ FRACTAL OFF');
+      return true;
+    }
+    if (cmd.includes('chaos off') || cmd.includes('no chaos') || cmd.includes('remove chaos') || cmd.includes('attractor off')) {
+      updateVisualParameter('geometryLayer12', 'none');
+      setLastInterpretation('❌ CHAOS OFF');
+      return true;
+    }
+    if (cmd.includes('reality off') || cmd.includes('no reality') || cmd.includes('remove reality')) {
+      updateVisualParameter('geometryLayer13', 'none');
+      setLastInterpretation('❌ REALITY OFF');
+      return true;
+    }
+    if (cmd.includes('paradox off') || cmd.includes('no paradox') || cmd.includes('remove paradox') || cmd.includes('impossible off')) {
+      updateVisualParameter('geometryLayer14', 'none');
+      setLastInterpretation('❌ PARADOX OFF');
+      return true;
+    }
     if (cmd.includes('clear') || cmd.includes('all off') || cmd.includes('clean')) {
       updateVisualParameter('geometryLayer2', 'none');
       updateVisualParameter('geometryLayer3', 'none');
@@ -438,6 +572,12 @@ function App() {
       updateVisualParameter('geometryLayer6', 'none');
       updateVisualParameter('geometryLayer7', 'none');
       updateVisualParameter('geometryLayer8', 'none');
+      updateVisualParameter('geometryLayer9', 'none');
+      updateVisualParameter('geometryLayer10', 'none');
+      updateVisualParameter('geometryLayer11', 'none');
+      updateVisualParameter('geometryLayer12', 'none');
+      updateVisualParameter('geometryLayer13', 'none');
+      updateVisualParameter('geometryLayer14', 'none');
       setLastInterpretation('🧹 ALL LAYERS CLEARED');
       return true;
     }
@@ -469,6 +609,56 @@ function App() {
       const current = visualState.bassImpact || 0.5;
       updateVisualParameter('bassImpact', Math.min(1, current + 0.2));
       setLastInterpretation('🔊 BASS IMPACT UP');
+      return true;
+    }
+
+    // --- HUE SHIFT ---
+    if (cmd.includes('hue') || cmd.includes('shift hue') || cmd.includes('rotate color') || cmd.includes('color rotate')) {
+      if (cmd.includes('reset') || cmd.includes('normal') || cmd.includes('zero')) {
+        updateVisualParameter('colorHueShift', 0);
+        setLastInterpretation('HUE RESET');
+      } else {
+        const current = (visualState as any).colorHueShift || 0;
+        const newHue = (current + 0.15) % 1;
+        updateVisualParameter('colorHueShift', newHue);
+        setLastInterpretation(`HUE SHIFT: ${Math.round(newHue * 360)}°`);
+      }
+      return true;
+    }
+
+    // --- SATURATION ---
+    if (cmd.includes('saturation') || cmd.includes('saturate') || cmd.includes('vivid') || cmd.includes('vibrant')) {
+      if (cmd.includes('more') || cmd.includes('up') || cmd.includes('increase')) {
+        const current = (visualState as any).colorSaturation || 0.5;
+        updateVisualParameter('colorSaturation', Math.min(1, current + 0.15));
+        setLastInterpretation('SATURATION UP');
+      } else if (cmd.includes('less') || cmd.includes('down') || cmd.includes('decrease') || cmd.includes('muted')) {
+        const current = (visualState as any).colorSaturation || 0.5;
+        updateVisualParameter('colorSaturation', Math.max(0, current - 0.15));
+        setLastInterpretation('SATURATION DOWN');
+      } else {
+        const current = (visualState as any).colorSaturation || 0.5;
+        updateVisualParameter('colorSaturation', Math.min(1, current + 0.15));
+        setLastInterpretation('SATURATION UP');
+      }
+      return true;
+    }
+
+    // --- BRIGHTNESS ---
+    if (cmd.includes('brightness') || cmd.includes('bright') || cmd.includes('luminance')) {
+      if (cmd.includes('more') || cmd.includes('up') || cmd.includes('increase') || cmd.includes('lighter')) {
+        const current = (visualState as any).colorBrightness || 0.5;
+        updateVisualParameter('colorBrightness', Math.min(1, current + 0.15));
+        setLastInterpretation('BRIGHTNESS UP');
+      } else if (cmd.includes('less') || cmd.includes('down') || cmd.includes('decrease') || cmd.includes('darker')) {
+        const current = (visualState as any).colorBrightness || 0.5;
+        updateVisualParameter('colorBrightness', Math.max(0, current - 0.15));
+        setLastInterpretation('BRIGHTNESS DOWN');
+      } else {
+        const current = (visualState as any).colorBrightness || 0.5;
+        updateVisualParameter('colorBrightness', Math.min(1, current + 0.15));
+        setLastInterpretation('BRIGHTNESS UP');
+      }
       return true;
     }
 
@@ -507,7 +697,7 @@ function App() {
   const handleLoadPreset = (preset: typeof presets[0]) => {
     loadPreset(preset);
     setActivePreset(preset.id);
-    setLastInterpretation(`🎨 ${preset.name}`);
+    setLastInterpretation(`PRESET: ${preset.name}`);
   };
 
   const handleHold = () => {

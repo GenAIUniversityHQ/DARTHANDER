@@ -152,7 +152,58 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
       const overall = audioState?.overallAmplitude || 0;
       const beat = (audioState?.beatIntensity || 0) * (1 + bassImpact);
 
-      const palette = palettes[state?.colorPalette || 'cosmos'] || palettes.cosmos;
+      // Get base palette and apply color modifications
+      const basePalette = palettes[state?.colorPalette || 'cosmos'] || palettes.cosmos;
+      const hueShift = (state as any)?.colorHueShift ?? 0;
+      const satMod = (state as any)?.colorSaturation ?? 0.5;
+      const brightMod = (state as any)?.colorBrightness ?? 0.5;
+
+      // Apply hue shift and saturation/brightness to palette colors
+      const palette = {
+        bg: basePalette.bg,
+        colors: basePalette.colors.map(color => {
+          // Convert hex to HSL, shift, convert back
+          const hex = color.replace('#', '');
+          const r = parseInt(hex.substr(0, 2), 16) / 255;
+          const g = parseInt(hex.substr(2, 2), 16) / 255;
+          const b = parseInt(hex.substr(4, 2), 16) / 255;
+
+          const max = Math.max(r, g, b), min = Math.min(r, g, b);
+          let h = 0, s = 0, l = (max + min) / 2;
+
+          if (max !== min) {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+            else if (max === g) h = ((b - r) / d + 2) / 6;
+            else h = ((r - g) / d + 4) / 6;
+          }
+
+          // Apply modifications
+          h = (h + hueShift) % 1;
+          s = Math.min(1, s * (satMod * 2)); // satMod 0.5 = normal
+          l = Math.min(1, Math.max(0, l * (brightMod * 2))); // brightMod 0.5 = normal
+
+          // HSL to RGB
+          const hue2rgb = (p: number, q: number, t: number) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+          };
+
+          const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+          const p = 2 * l - q;
+          const newR = Math.round(hue2rgb(p, q, h + 1/3) * 255);
+          const newG = Math.round(hue2rgb(p, q, h) * 255);
+          const newB = Math.round(hue2rgb(p, q, h - 1/3) * 255);
+
+          return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+        })
+      };
+
       const intensity = state?.overallIntensity ?? 0.5;
       const complexity = state?.geometryComplexity ?? 0.3;
       const motionSpeed = state?.motionSpeed ?? 0.2;
@@ -320,6 +371,54 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
       if (layer8 && layer8 !== 'none') {
         ctx.globalAlpha = 0.6;
         drawConsciousnessLayer(ctx, layer8, width, height, bass, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === 5D LAYER ===
+      const layer9 = (state as any)?.geometryLayer9;
+      if (layer9 && layer9 !== 'none') {
+        ctx.globalAlpha = 0.5;
+        draw5DLayer(ctx, layer9, width, height, bass, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === 6D+ LAYER ===
+      const layer10 = (state as any)?.geometryLayer10;
+      if (layer10 && layer10 !== 'none') {
+        ctx.globalAlpha = 0.5;
+        draw6DLayer(ctx, layer10, width, height, bass, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === FRACTAL LAYER ===
+      const layer11 = (state as any)?.geometryLayer11;
+      if (layer11 && layer11 !== 'none') {
+        ctx.globalAlpha = 0.6;
+        drawFractalLayer(ctx, layer11, width, height, bass, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === CHAOS/ATTRACTOR LAYER ===
+      const layer12 = (state as any)?.geometryLayer12;
+      if (layer12 && layer12 !== 'none') {
+        ctx.globalAlpha = 0.5;
+        drawChaosLayer(ctx, layer12, width, height, bass, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === REALITY LAYER ===
+      const layer13 = (state as any)?.geometryLayer13;
+      if (layer13 && layer13 !== 'none') {
+        ctx.globalAlpha = 0.6;
+        drawRealityLayer(ctx, layer13, width, height, bass, beat, timeRef.current, palette);
+        ctx.globalAlpha = 1;
+      }
+
+      // === PARADOX/IMPOSSIBLE LAYER ===
+      const layer14 = (state as any)?.geometryLayer14;
+      if (layer14 && layer14 !== 'none') {
+        ctx.globalAlpha = 0.6;
+        drawParadoxLayer(ctx, layer14, width, height, bass, beat, timeRef.current, palette);
         ctx.globalAlpha = 1;
       }
 
@@ -2373,5 +2472,1285 @@ function drawConsciousnessLayer(ctx: CanvasRenderingContext2D, type: string, w: 
       ctx.fillStyle = rayGrad;
       ctx.fill();
     }
+  }
+}
+
+// ============================================
+// 5D LAYER - Fifth dimensional objects
+// ============================================
+function draw5DLayer(ctx: CanvasRenderingContext2D, type: string, _w: number, _h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
+
+  // Penteract - 5D hypercube
+  if (type === 'penteract') {
+    const size = 50 + bass * 20;
+    const rotation1 = time * 0.0008;
+    const rotation2 = time * 0.0006;
+
+    // 5D has 32 vertices, project down to 2D through multiple rotations
+    for (let layer = 0; layer < 3; layer++) {
+      const layerOffset = layer * 0.3;
+      const layerSize = size * (1 - layer * 0.25);
+
+      ctx.save();
+      ctx.rotate(rotation1 + layerOffset);
+
+      // Draw nested hypercube projections
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + rotation2;
+        const r = layerSize * (0.8 + Math.sin(time * 0.002 + i) * 0.2);
+
+        ctx.beginPath();
+        ctx.arc(Math.cos(angle) * r, Math.sin(angle) * r, 3 + beat * 2, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[layer % palette.colors.length] + 'cc';
+        ctx.fill();
+
+        // Connect to adjacent vertices
+        const nextAngle = ((i + 1) / 8) * Math.PI * 2 + rotation2;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
+        ctx.lineTo(Math.cos(nextAngle) * r, Math.sin(nextAngle) * r);
+        ctx.strokeStyle = palette.colors[layer % palette.colors.length] + '60';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    // Cross-dimensional connections
+    for (let i = 0; i < 16; i++) {
+      const angle = (i / 16) * Math.PI * 2;
+      const innerR = size * 0.5;
+      const outerR = size;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle + rotation1) * innerR, Math.sin(angle + rotation1) * innerR);
+      ctx.lineTo(Math.cos(angle + rotation2) * outerR, Math.sin(angle + rotation2) * outerR);
+      ctx.strokeStyle = palette.colors[0] + '30';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  // 5-simplex - 5D tetrahedron
+  if (type === '5-simplex') {
+    const size = 70 + bass * 25;
+    const rotation = time * 0.001;
+
+    // 6 vertices in 5D, project to 2D
+    const vertices: [number, number][] = [];
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2 + rotation;
+      const r = size * (0.7 + Math.sin(time * 0.002 + i * 1.5) * 0.3);
+      vertices.push([Math.cos(angle) * r, Math.sin(angle) * r]);
+    }
+
+    // Connect all vertices (complete graph K6)
+    for (let i = 0; i < 6; i++) {
+      for (let j = i + 1; j < 6; j++) {
+        ctx.beginPath();
+        ctx.moveTo(vertices[i][0], vertices[i][1]);
+        ctx.lineTo(vertices[j][0], vertices[j][1]);
+        ctx.strokeStyle = palette.colors[(i + j) % palette.colors.length] + '50';
+        ctx.lineWidth = 1 + beat;
+        ctx.stroke();
+      }
+
+      // Vertex glow
+      ctx.beginPath();
+      ctx.arc(vertices[i][0], vertices[i][1], 5 + bass * 3, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[i % palette.colors.length] + 'cc';
+      ctx.fill();
+    }
+  }
+
+  // 5-orthoplex - 5D cross-polytope
+  if (type === '5-orthoplex') {
+    const size = 60 + bass * 20;
+    const rotation = time * 0.0008;
+
+    // 10 vertices (±1, 0, 0, 0, 0) etc
+    for (let dim = 0; dim < 5; dim++) {
+      const angle1 = rotation + dim * 0.4;
+      const angle2 = rotation + dim * 0.4 + Math.PI;
+
+      const r = size * (0.8 + Math.sin(time * 0.003 + dim) * 0.2);
+      const x1 = Math.cos(angle1) * r;
+      const y1 = Math.sin(angle1) * r;
+      const x2 = Math.cos(angle2) * r;
+      const y2 = Math.sin(angle2) * r;
+
+      // Axis line
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = palette.colors[dim % palette.colors.length] + '80';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Vertices
+      ctx.beginPath();
+      ctx.arc(x1, y1, 4 + beat * 2, 0, Math.PI * 2);
+      ctx.arc(x2, y2, 4 + beat * 2, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[dim % palette.colors.length] + 'ee';
+      ctx.fill();
+    }
+  }
+
+  // 5-demicube
+  if (type === '5-demicube') {
+    const size = 55 + bass * 20;
+    const rotation = time * 0.0007;
+
+    // 16 vertices, half of 5-cube
+    for (let i = 0; i < 16; i++) {
+      const angle = (i / 16) * Math.PI * 2 + rotation;
+      const r = size * (0.6 + (i % 2) * 0.4);
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 3 + beat, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[i % palette.colors.length] + 'cc';
+      ctx.fill();
+
+      // Connect to next vertex
+      const nextAngle = ((i + 1) / 16) * Math.PI * 2 + rotation;
+      const nextR = size * (0.6 + ((i + 1) % 2) * 0.4);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(Math.cos(nextAngle) * nextR, Math.sin(nextAngle) * nextR);
+      ctx.strokeStyle = palette.colors[0] + '40';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  // Pentasphere - 5D sphere
+  if (type === 'pentasphere') {
+    const baseRadius = 70 + bass * 25;
+
+    for (let layer = 0; layer < 5; layer++) {
+      const phase = time * 0.001 + layer * 0.4;
+      const w = Math.sin(phase);
+      const v = Math.cos(phase * 1.3);
+      const radius = baseRadius * Math.sqrt(Math.max(0.1, 1 - w * w - v * v * 0.5));
+
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = palette.colors[layer % palette.colors.length] + '80';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Points on the sphere slice
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + phase;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        ctx.beginPath();
+        ctx.arc(x, y, 2 + beat, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[layer % palette.colors.length] + 'cc';
+        ctx.fill();
+      }
+    }
+  }
+}
+
+// ============================================
+// 6D+ LAYER - Sixth dimension and beyond
+// ============================================
+function draw6DLayer(ctx: CanvasRenderingContext2D, type: string, _w: number, _h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
+
+  // Hexeract - 6D hypercube
+  if (type === 'hexeract') {
+    const size = 45 + bass * 15;
+
+    for (let layer = 0; layer < 4; layer++) {
+      const rotation = time * 0.0005 * (layer + 1);
+      const layerSize = size * (1 - layer * 0.2);
+
+      ctx.save();
+      ctx.rotate(rotation);
+
+      // Each layer represents a 2D slice of the 6D cube
+      const vertices = 12;
+      for (let i = 0; i < vertices; i++) {
+        const angle = (i / vertices) * Math.PI * 2;
+        const r = layerSize * (0.8 + Math.sin(time * 0.002 + i + layer) * 0.2);
+        const x = Math.cos(angle) * r;
+        const y = Math.sin(angle) * r;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 2 + beat, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[layer % palette.colors.length] + 'cc';
+        ctx.fill();
+
+        // Edges
+        const nextAngle = ((i + 1) % vertices / vertices) * Math.PI * 2;
+        const nextR = layerSize * (0.8 + Math.sin(time * 0.002 + i + 1 + layer) * 0.2);
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(Math.cos(nextAngle) * nextR, Math.sin(nextAngle) * nextR);
+        ctx.strokeStyle = palette.colors[layer % palette.colors.length] + '40';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // E8 Lattice - 8-dimensional exceptional Lie group
+  if (type === 'e8-lattice') {
+    const size = 80 + bass * 30;
+    const rotation = time * 0.0003;
+
+    // E8 has 240 root vectors - we show a projection
+    for (let ring = 0; ring < 8; ring++) {
+      const ringR = size * (0.3 + ring * 0.1);
+      const points = 30;
+
+      for (let i = 0; i < points; i++) {
+        const angle = (i / points) * Math.PI * 2 + rotation * (ring + 1);
+        const wobble = Math.sin(time * 0.002 + i * 0.5 + ring) * 5;
+        const x = Math.cos(angle) * (ringR + wobble);
+        const y = Math.sin(angle) * (ringR + wobble);
+
+        ctx.beginPath();
+        ctx.arc(x, y, 1.5 + beat, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[ring % palette.colors.length] + 'aa';
+        ctx.fill();
+      }
+    }
+
+    // Central structure
+    const centralGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.3);
+    centralGlow.addColorStop(0, palette.colors[0] + '40');
+    centralGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = centralGlow;
+    ctx.fillRect(-size, -size, size * 2, size * 2);
+  }
+
+  // 6-simplex
+  if (type === '6-simplex') {
+    const size = 65 + bass * 20;
+    const rotation = time * 0.0008;
+
+    // 7 vertices, all connected
+    const vertices: [number, number][] = [];
+    for (let i = 0; i < 7; i++) {
+      const angle = (i / 7) * Math.PI * 2 + rotation;
+      const r = size * (0.6 + Math.sin(time * 0.002 + i * 1.2) * 0.4);
+      vertices.push([Math.cos(angle) * r, Math.sin(angle) * r]);
+    }
+
+    // All edges
+    for (let i = 0; i < 7; i++) {
+      for (let j = i + 1; j < 7; j++) {
+        ctx.beginPath();
+        ctx.moveTo(vertices[i][0], vertices[i][1]);
+        ctx.lineTo(vertices[j][0], vertices[j][1]);
+        ctx.strokeStyle = palette.colors[(i + j) % palette.colors.length] + '30';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      ctx.beginPath();
+      ctx.arc(vertices[i][0], vertices[i][1], 4 + beat * 2, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[i % palette.colors.length] + 'dd';
+      ctx.fill();
+    }
+  }
+
+  // Gosset polytope (4_21)
+  if (type === 'gosset') {
+    const size = 70 + bass * 25;
+    const rotation = time * 0.0006;
+
+    // 240 vertices - show representative sample
+    for (let layer = 0; layer < 6; layer++) {
+      ctx.save();
+      ctx.rotate(rotation + layer * Math.PI / 6);
+
+      const layerR = size * (0.4 + layer * 0.1);
+      const points = 24;
+
+      for (let i = 0; i < points; i++) {
+        const angle = (i / points) * Math.PI * 2;
+        const x = Math.cos(angle) * layerR;
+        const y = Math.sin(angle) * layerR;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 2 + beat, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[layer % palette.colors.length] + 'bb';
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // Leech Lattice - 24 dimensions
+  if (type === 'leech-lattice') {
+    const size = 90 + bass * 30;
+    const rotation = time * 0.0004;
+
+    // 196560 minimal vectors - show artistic representation
+    for (let shell = 0; shell < 5; shell++) {
+      const shellR = size * (0.3 + shell * 0.15);
+      const density = 48 - shell * 6;
+
+      for (let i = 0; i < density; i++) {
+        const angle = (i / density) * Math.PI * 2 + rotation * (shell + 1);
+        const jitter = Math.sin(time * 0.003 + i + shell * 10) * 3;
+        const x = Math.cos(angle) * (shellR + jitter);
+        const y = Math.sin(angle) * (shellR + jitter);
+
+        ctx.beginPath();
+        ctx.arc(x, y, 1 + bass, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[shell % palette.colors.length] + 'aa';
+        ctx.fill();
+      }
+    }
+
+    // Ethereal connections
+    for (let i = 0; i < 24; i++) {
+      const angle = (i / 24) * Math.PI * 2 + rotation;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(angle) * size, Math.sin(angle) * size);
+      ctx.strokeStyle = palette.colors[i % palette.colors.length] + '15';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+}
+
+// ============================================
+// FRACTAL LAYER - Infinite self-similar patterns
+// ============================================
+function drawFractalLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
+
+  // Mandelbrot Set
+  if (type === 'mandelbrot') {
+    const zoom = 2 + Math.sin(time * 0.0005) * 0.5;
+    const offsetX = -0.5 + Math.sin(time * 0.0003) * 0.2;
+    const offsetY = Math.cos(time * 0.0004) * 0.2;
+    const maxIter = 20 + Math.floor(bass * 10);
+    const step = 8;
+
+    for (let px = -w * 0.4; px < w * 0.4; px += step) {
+      for (let py = -h * 0.4; py < h * 0.4; py += step) {
+        const x0 = (px / (w * 0.4)) * zoom + offsetX;
+        const y0 = (py / (h * 0.4)) * zoom + offsetY;
+
+        let x = 0, y = 0;
+        let iter = 0;
+
+        while (x * x + y * y <= 4 && iter < maxIter) {
+          const xtemp = x * x - y * y + x0;
+          y = 2 * x * y + y0;
+          x = xtemp;
+          iter++;
+        }
+
+        if (iter < maxIter) {
+          const colorIdx = Math.floor((iter / maxIter) * palette.colors.length);
+          ctx.fillStyle = palette.colors[colorIdx % palette.colors.length] + Math.floor((iter / maxIter) * 200 + 55).toString(16);
+          ctx.fillRect(px, py, step, step);
+        }
+      }
+    }
+  }
+
+  // Julia Set
+  if (type === 'julia') {
+    const cRe = -0.7 + Math.sin(time * 0.0003) * 0.2;
+    const cIm = 0.27 + Math.cos(time * 0.0004) * 0.1;
+    const maxIter = 25 + Math.floor(bass * 10);
+    const step = 8;
+
+    for (let px = -w * 0.4; px < w * 0.4; px += step) {
+      for (let py = -h * 0.4; py < h * 0.4; py += step) {
+        let x = (px / (w * 0.4)) * 2;
+        let y = (py / (h * 0.4)) * 2;
+        let iter = 0;
+
+        while (x * x + y * y <= 4 && iter < maxIter) {
+          const xtemp = x * x - y * y + cRe;
+          y = 2 * x * y + cIm;
+          x = xtemp;
+          iter++;
+        }
+
+        if (iter < maxIter) {
+          const colorIdx = Math.floor((iter / maxIter) * palette.colors.length);
+          ctx.fillStyle = palette.colors[colorIdx % palette.colors.length] + 'aa';
+          ctx.fillRect(px, py, step, step);
+        }
+      }
+    }
+  }
+
+  // Sierpinski Triangle
+  if (type === 'sierpinski') {
+    const size = 150 + bass * 50;
+    const rotation = time * 0.0003;
+
+    const drawSierpinski = (x: number, y: number, s: number, depth: number) => {
+      if (depth === 0 || s < 5) {
+        ctx.beginPath();
+        ctx.moveTo(x, y - s * 0.866);
+        ctx.lineTo(x - s / 2, y + s * 0.433);
+        ctx.lineTo(x + s / 2, y + s * 0.433);
+        ctx.closePath();
+        ctx.fillStyle = palette.colors[depth % palette.colors.length] + 'aa';
+        ctx.fill();
+        return;
+      }
+
+      const newS = s / 2;
+      drawSierpinski(x, y - newS * 0.433, newS, depth - 1);
+      drawSierpinski(x - newS / 2, y + newS * 0.433, newS, depth - 1);
+      drawSierpinski(x + newS / 2, y + newS * 0.433, newS, depth - 1);
+    };
+
+    ctx.save();
+    ctx.rotate(rotation);
+    drawSierpinski(0, 0, size, 5 + Math.floor(beat * 2));
+    ctx.restore();
+  }
+
+  // Koch Snowflake
+  if (type === 'koch') {
+    const size = 100 + bass * 40;
+    const rotation = time * 0.0004;
+
+    ctx.save();
+    ctx.rotate(rotation);
+
+    const depth = 4;
+    const drawKochLine = (x1: number, y1: number, x2: number, y2: number, d: number) => {
+      if (d === 0) {
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = palette.colors[0] + 'cc';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        return;
+      }
+
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+
+      const x3 = x1 + dx / 3;
+      const y3 = y1 + dy / 3;
+      const x5 = x1 + dx * 2 / 3;
+      const y5 = y1 + dy * 2 / 3;
+
+      const x4 = (x1 + x2) / 2 + (y1 - y2) * Math.sqrt(3) / 6;
+      const y4 = (y1 + y2) / 2 + (x2 - x1) * Math.sqrt(3) / 6;
+
+      drawKochLine(x1, y1, x3, y3, d - 1);
+      drawKochLine(x3, y3, x4, y4, d - 1);
+      drawKochLine(x4, y4, x5, y5, d - 1);
+      drawKochLine(x5, y5, x2, y2, d - 1);
+    };
+
+    // Three sides
+    const h = size * Math.sqrt(3) / 2;
+    drawKochLine(-size / 2, h / 3, size / 2, h / 3, depth);
+    drawKochLine(size / 2, h / 3, 0, -h * 2 / 3, depth);
+    drawKochLine(0, -h * 2 / 3, -size / 2, h / 3, depth);
+
+    ctx.restore();
+  }
+
+  // Dragon Curve
+  if (type === 'dragon') {
+    const size = 3 + bass;
+    const iterations = 12;
+    let sequence = 'R';
+
+    for (let i = 0; i < iterations; i++) {
+      sequence = sequence + 'R' + sequence.split('').reverse().map(c => c === 'R' ? 'L' : 'R').join('');
+    }
+
+    let x = 0, y = 0;
+    let angle = time * 0.0005;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+
+    for (let i = 0; i < Math.min(sequence.length, 2000); i++) {
+      x += Math.cos(angle) * size;
+      y += Math.sin(angle) * size;
+      ctx.lineTo(x, y);
+      angle += (sequence[i] === 'R' ? 1 : -1) * Math.PI / 2;
+    }
+
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Tree Fractal
+  if (type === 'tree-fractal') {
+    const drawBranch = (x: number, y: number, len: number, angle: number, depth: number) => {
+      if (depth === 0 || len < 3) return;
+
+      const endX = x + Math.cos(angle) * len;
+      const endY = y + Math.sin(angle) * len;
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(endX, endY);
+      ctx.strokeStyle = palette.colors[depth % palette.colors.length] + 'cc';
+      ctx.lineWidth = depth * 0.5;
+      ctx.stroke();
+
+      const spread = 0.4 + bass * 0.2;
+      const shrink = 0.7;
+
+      drawBranch(endX, endY, len * shrink, angle - spread, depth - 1);
+      drawBranch(endX, endY, len * shrink, angle + spread, depth - 1);
+    };
+
+    drawBranch(0, 100, 60 + bass * 20, -Math.PI / 2 + Math.sin(time * 0.001) * 0.1, 8);
+  }
+
+  // Menger Sponge (2D projection)
+  if (type === 'menger') {
+    const size = 150 + bass * 30;
+    const rotation = time * 0.0004;
+
+    ctx.save();
+    ctx.rotate(rotation);
+
+    const drawMenger = (x: number, y: number, s: number, depth: number) => {
+      if (depth === 0 || s < 3) {
+        ctx.fillStyle = palette.colors[0] + 'aa';
+        ctx.fillRect(x - s / 2, y - s / 2, s, s);
+        return;
+      }
+
+      const newS = s / 3;
+      for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+          if (i === 0 && j === 0) continue; // Center hole
+          drawMenger(x + i * newS, y + j * newS, newS, depth - 1);
+        }
+      }
+    };
+
+    drawMenger(0, 0, size, 3 + Math.floor(beat));
+    ctx.restore();
+  }
+
+  // Apollonian Gasket
+  if (type === 'apollonian') {
+    const drawCircle = (x: number, y: number, r: number, depth: number) => {
+      if (depth === 0 || r < 3) return;
+
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.strokeStyle = palette.colors[depth % palette.colors.length] + 'aa';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      const newR = r * 0.5;
+      drawCircle(x, y - r + newR, newR, depth - 1);
+      drawCircle(x - (r - newR) * 0.866, y + (r - newR) * 0.5, newR, depth - 1);
+      drawCircle(x + (r - newR) * 0.866, y + (r - newR) * 0.5, newR, depth - 1);
+    };
+
+    drawCircle(0, 0, 100 + bass * 30, 6);
+  }
+}
+
+// ============================================
+// CHAOS LAYER - Strange Attractors
+// ============================================
+function drawChaosLayer(ctx: CanvasRenderingContext2D, type: string, _w: number, _h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
+
+  // Lorenz Attractor
+  if (type === 'lorenz') {
+    const sigma = 10, rho = 28, beta = 8 / 3;
+    const dt = 0.01;
+    const scale = 4 + bass;
+    const points: [number, number, number][] = [];
+
+    let x = 0.1, y = 0, z = 0;
+
+    for (let i = 0; i < 3000; i++) {
+      const dx = sigma * (y - x) * dt;
+      const dy = (x * (rho - z) - y) * dt;
+      const dz = (x * y - beta * z) * dt;
+      x += dx; y += dy; z += dz;
+      points.push([x, y, z]);
+    }
+
+    const rotation = time * 0.0003;
+
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      const rx = p[0] * Math.cos(rotation) - p[2] * Math.sin(rotation);
+      const ry = p[1];
+      const px = rx * scale;
+      const py = (ry - 25) * scale;
+
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    });
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Highlight points
+    for (let i = 0; i < points.length; i += 100) {
+      const p = points[i];
+      const rx = p[0] * Math.cos(rotation) - p[2] * Math.sin(rotation);
+      const ry = p[1];
+      ctx.beginPath();
+      ctx.arc(rx * scale, (ry - 25) * scale, 2 + beat, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[(i / 100) % palette.colors.length] + 'ee';
+      ctx.fill();
+    }
+  }
+
+  // Rössler Attractor
+  if (type === 'rossler') {
+    const a = 0.2, b = 0.2, c = 5.7;
+    const dt = 0.02;
+    const scale = 8 + bass * 2;
+    const points: [number, number, number][] = [];
+
+    let x = 0.1, y = 0.1, z = 0.1;
+
+    for (let i = 0; i < 2000; i++) {
+      const dx = (-y - z) * dt;
+      const dy = (x + a * y) * dt;
+      const dz = (b + z * (x - c)) * dt;
+      x += dx; y += dy; z += dz;
+      points.push([x, y, z]);
+    }
+
+    const rotation = time * 0.0004;
+
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      const rx = p[0] * Math.cos(rotation) - p[1] * Math.sin(rotation);
+      const ry = p[0] * Math.sin(rotation) + p[1] * Math.cos(rotation);
+      if (i === 0) ctx.moveTo(rx * scale, ry * scale);
+      else ctx.lineTo(rx * scale, ry * scale);
+    });
+    ctx.strokeStyle = palette.colors[1 % palette.colors.length] + 'cc';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Chua's Circuit
+  if (type === 'chua') {
+    const alpha = 15.6, beta = 28, m0 = -1.143, m1 = -0.714;
+    const dt = 0.01;
+    const scale = 15 + bass * 3;
+
+    let x = 0.7, y = 0, z = 0;
+
+    ctx.beginPath();
+    for (let i = 0; i < 2000; i++) {
+      const h = m1 * x + 0.5 * (m0 - m1) * (Math.abs(x + 1) - Math.abs(x - 1));
+      const dx = alpha * (y - x - h) * dt;
+      const dy = (x - y + z) * dt;
+      const dz = -beta * y * dt;
+      x += dx; y += dy; z += dz;
+
+      const px = x * scale;
+      const py = y * scale;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.strokeStyle = palette.colors[2 % palette.colors.length] + 'cc';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Halvorsen Attractor
+  if (type === 'halvorsen') {
+    const a = 1.89;
+    const dt = 0.005;
+    const scale = 12 + bass * 2;
+    const rotation = time * 0.0003;
+
+    let x = -5, y = 0, z = 0;
+
+    ctx.beginPath();
+    for (let i = 0; i < 3000; i++) {
+      const dx = (-a * x - 4 * y - 4 * z - y * y) * dt;
+      const dy = (-a * y - 4 * z - 4 * x - z * z) * dt;
+      const dz = (-a * z - 4 * x - 4 * y - x * x) * dt;
+      x += dx; y += dy; z += dz;
+
+      const rx = x * Math.cos(rotation) - z * Math.sin(rotation);
+      const ry = y;
+      if (i === 0) ctx.moveTo(rx * scale, ry * scale);
+      else ctx.lineTo(rx * scale, ry * scale);
+    }
+    ctx.strokeStyle = palette.colors[0] + 'bb';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Thomas Attractor
+  if (type === 'thomas') {
+    const b = 0.208186;
+    const dt = 0.04;
+    const scale = 40 + bass * 10;
+    const rotation = time * 0.0004;
+
+    let x = 1.1, y = 1.1, z = -0.01;
+
+    ctx.beginPath();
+    for (let i = 0; i < 2500; i++) {
+      const dx = (Math.sin(y) - b * x) * dt;
+      const dy = (Math.sin(z) - b * y) * dt;
+      const dz = (Math.sin(x) - b * z) * dt;
+      x += dx; y += dy; z += dz;
+
+      const rx = x * Math.cos(rotation) - y * Math.sin(rotation);
+      const ry = x * Math.sin(rotation) + y * Math.cos(rotation);
+      if (i === 0) ctx.moveTo(rx * scale, ry * scale);
+      else ctx.lineTo(rx * scale, ry * scale);
+    }
+    ctx.strokeStyle = palette.colors[3 % palette.colors.length] + 'cc';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Aizawa Attractor
+  if (type === 'aizawa') {
+    const a = 0.95, b = 0.7, c = 0.6, d = 3.5, e = 0.25, f = 0.1;
+    const dt = 0.01;
+    const scale = 60 + bass * 15;
+    const rotation = time * 0.0003;
+
+    let x = 0.1, y = 0, z = 0;
+
+    ctx.beginPath();
+    for (let i = 0; i < 3000; i++) {
+      const dx = ((z - b) * x - d * y) * dt;
+      const dy = (d * x + (z - b) * y) * dt;
+      const dz = (c + a * z - z * z * z / 3 - (x * x + y * y) * (1 + e * z) + f * z * x * x * x) * dt;
+      x += dx; y += dy; z += dz;
+
+      const rx = x * Math.cos(rotation) - y * Math.sin(rotation);
+      const ry = z;
+      if (i === 0) ctx.moveTo(rx * scale, ry * scale);
+      else ctx.lineTo(rx * scale, ry * scale);
+    }
+    ctx.strokeStyle = palette.colors[4 % palette.colors.length] + 'cc';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+}
+
+// ============================================
+// REALITY LAYER - Simulation / Meta-reality
+// ============================================
+function drawRealityLayer(ctx: CanvasRenderingContext2D, type: string, w: number, h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
+
+  // Matrix Rain
+  if (type === 'matrix') {
+    const chars = 'アイウエオカキクケコサシスセソタチツテト0123456789';
+    const columns = 30;
+    const columnWidth = w / columns;
+
+    for (let col = 0; col < columns; col++) {
+      const x = -w / 2 + col * columnWidth + columnWidth / 2;
+      const speed = 0.5 + (col % 5) * 0.2;
+      const offset = (time * speed * 0.1 + col * 50) % (h * 1.5);
+
+      for (let row = 0; row < 15; row++) {
+        const y = -h / 2 + offset + row * 20 - h * 0.25;
+        if (y < -h / 2 || y > h / 2) continue;
+
+        const charIdx = Math.floor((time * 0.01 + col + row) % chars.length);
+        const alpha = 1 - row / 15;
+
+        ctx.font = '14px monospace';
+        ctx.fillStyle = row === 0
+          ? `rgba(200, 255, 200, ${alpha})`
+          : `rgba(0, ${150 + bass * 100}, 0, ${alpha * 0.7})`;
+        ctx.fillText(chars[charIdx], x, y);
+      }
+    }
+  }
+
+  // Glitch Effect
+  if (type === 'glitch') {
+    const glitchIntensity = bass * 0.5 + beat * 0.3;
+
+    for (let i = 0; i < 10 + glitchIntensity * 20; i++) {
+      const x = (Math.random() - 0.5) * w;
+      const y = (Math.random() - 0.5) * h;
+      const gw = 20 + Math.random() * 100;
+      const gh = 2 + Math.random() * 10;
+
+      ctx.fillStyle = palette.colors[Math.floor(Math.random() * palette.colors.length)] + Math.floor(Math.random() * 100 + 50).toString(16);
+      ctx.fillRect(x, y, gw, gh);
+    }
+
+    // Scan lines
+    for (let y = -h / 2; y < h / 2; y += 4) {
+      if (Math.random() < 0.3) {
+        ctx.fillStyle = `rgba(0, 0, 0, ${0.1 + Math.random() * 0.2})`;
+        ctx.fillRect(-w / 2, y, w, 2);
+      }
+    }
+
+    // RGB shift
+    if (beat > 0.5) {
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.05)';
+      ctx.fillRect(-w / 2 + 3, -h / 2, w, h);
+      ctx.fillStyle = 'rgba(0, 0, 255, 0.05)';
+      ctx.fillRect(-w / 2 - 3, -h / 2, w, h);
+    }
+  }
+
+  // Simulation Grid
+  if (type === 'simulation') {
+    const gridSize = 30;
+    const pulse = Math.sin(time * 0.002) * 0.3 + 0.7;
+
+    // Perspective grid
+    for (let z = 1; z <= 10; z++) {
+      const scale = 1 / z;
+      const y = h * 0.4 * (1 - scale);
+
+      ctx.beginPath();
+      ctx.moveTo(-w * 0.5, y);
+      ctx.lineTo(w * 0.5, y);
+      ctx.strokeStyle = `rgba(0, ${200 + bass * 55}, ${200 + bass * 55}, ${scale * pulse})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Vertical lines converging
+    for (let x = -10; x <= 10; x++) {
+      const startX = x * gridSize;
+      ctx.beginPath();
+      ctx.moveTo(startX, h * 0.4);
+      ctx.lineTo(0, -h * 0.3);
+      ctx.strokeStyle = `rgba(0, ${200 + bass * 55}, ${200 + bass * 55}, ${0.3 + beat * 0.3})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Data points
+    for (let i = 0; i < 20; i++) {
+      const t = (time * 0.001 + i * 0.1) % 1;
+      const x = (Math.sin(i * 2.3) * 100) * (1 - t);
+      const y = h * 0.4 - t * h * 0.7;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 2 + beat * 2, 0, Math.PI * 2);
+      ctx.fillStyle = palette.colors[i % palette.colors.length] + 'cc';
+      ctx.fill();
+    }
+  }
+
+  // Observer Effect
+  if (type === 'observer') {
+    // Central observer eye
+    const eyeSize = 40 + bass * 20;
+
+    ctx.beginPath();
+    ctx.ellipse(0, 0, eyeSize, eyeSize * 0.6, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Pupil that follows
+    const pupilX = Math.sin(time * 0.002) * 10;
+    const pupilY = Math.cos(time * 0.003) * 5;
+    ctx.beginPath();
+    ctx.arc(pupilX, pupilY, eyeSize * 0.3, 0, Math.PI * 2);
+    ctx.fillStyle = '#000000';
+    ctx.fill();
+
+    // Observation waves collapsing probability
+    for (let ring = 0; ring < 8; ring++) {
+      const r = eyeSize + 30 + ring * 25 + Math.sin(time * 0.003 + ring) * 10;
+      const collapse = Math.sin(time * 0.002 - ring * 0.3);
+
+      ctx.beginPath();
+      for (let a = 0; a < Math.PI * 2; a += 0.1) {
+        const wobble = Math.sin(a * 8 + time * 0.005) * 5 * (1 - Math.abs(collapse));
+        const px = Math.cos(a) * (r + wobble);
+        const py = Math.sin(a) * (r + wobble) * 0.6;
+        if (a === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = palette.colors[ring % palette.colors.length] + Math.floor((1 - ring / 8) * 150 + 50).toString(16);
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  // Wavefunction Collapse
+  if (type === 'collapse') {
+    const collapsed = Math.sin(time * 0.002) > 0;
+
+    if (collapsed) {
+      // Definite state - single point
+      const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, 50 + bass * 30);
+      glow.addColorStop(0, palette.colors[0] + 'ff');
+      glow.addColorStop(0.5, palette.colors[0] + '40');
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.fillRect(-100, -100, 200, 200);
+    } else {
+      // Superposition - probability cloud
+      for (let i = 0; i < 100; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * 100 + bass * 50;
+        const x = Math.cos(angle) * dist;
+        const y = Math.sin(angle) * dist;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 2 + Math.random() * 3, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[i % palette.colors.length] + '60';
+        ctx.fill();
+      }
+    }
+  }
+
+  // Indra's Net - infinite reflections
+  if (type === 'indras-net') {
+    const gridSize = 50;
+    const cols = Math.ceil(w / gridSize);
+    const rows = Math.ceil(h / gridSize);
+
+    for (let i = -cols / 2; i < cols / 2; i++) {
+      for (let j = -rows / 2; j < rows / 2; j++) {
+        const x = i * gridSize;
+        const y = j * gridSize;
+        const phase = time * 0.002 + i * 0.3 + j * 0.3;
+        const brightness = Math.sin(phase) * 0.5 + 0.5;
+
+        // Jewel
+        ctx.beginPath();
+        ctx.arc(x, y, 3 + brightness * 5 + bass * 3, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[(i + j + 10) % palette.colors.length] + Math.floor(brightness * 200 + 55).toString(16);
+        ctx.fill();
+
+        // Reflection threads
+        if (i < cols / 2 - 1) {
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + gridSize, y);
+          ctx.strokeStyle = palette.colors[0] + '20';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+        if (j < rows / 2 - 1) {
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + gridSize);
+          ctx.strokeStyle = palette.colors[0] + '20';
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // Holofractal
+  if (type === 'holofractal') {
+    const layers = 5;
+    for (let layer = 0; layer < layers; layer++) {
+      const scale = 1 - layer * 0.15;
+      const rotation = time * 0.0005 * (layer + 1);
+      const size = 80 * scale + bass * 20;
+
+      ctx.save();
+      ctx.rotate(rotation);
+      ctx.scale(scale, scale);
+
+      // Torus-like structure at each layer
+      for (let i = 0; i < 36; i++) {
+        const angle = (i / 36) * Math.PI * 2;
+        const r = size;
+        const x = Math.cos(angle) * r;
+        const y = Math.sin(angle) * r * 0.5;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 3 + beat, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[layer % palette.colors.length] + 'aa';
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // Time Crystal
+  if (type === 'time-crystal') {
+    const phases = 6;
+    const currentPhase = Math.floor((time * 0.001) % phases);
+
+    for (let p = 0; p < phases; p++) {
+      const active = p === currentPhase;
+      const size = 60 + bass * 20;
+      const angle = (p / phases) * Math.PI * 2;
+
+      ctx.save();
+      ctx.rotate(angle);
+      ctx.translate(0, -size);
+
+      // Crystal structure
+      ctx.beginPath();
+      ctx.moveTo(0, -20);
+      ctx.lineTo(15, 0);
+      ctx.lineTo(0, 20);
+      ctx.lineTo(-15, 0);
+      ctx.closePath();
+
+      ctx.fillStyle = active
+        ? palette.colors[p % palette.colors.length] + 'ee'
+        : palette.colors[p % palette.colors.length] + '40';
+      ctx.fill();
+      ctx.strokeStyle = palette.colors[p % palette.colors.length] + 'cc';
+      ctx.lineWidth = active ? 2 : 1;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // Time flow indicator
+    ctx.beginPath();
+    ctx.arc(0, 0, 30 + beat * 10, 0, (time * 0.002) % (Math.PI * 2));
+    ctx.strokeStyle = palette.colors[currentPhase % palette.colors.length] + 'cc';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+}
+
+// ============================================
+// PARADOX LAYER - Impossible / Mind-bending geometry
+// ============================================
+function drawParadoxLayer(ctx: CanvasRenderingContext2D, type: string, _w: number, _h: number, bass: number, beat: number, time: number, palette: {colors: string[]}) {
+
+  // Penrose Triangle
+  if (type === 'penrose') {
+    const size = 70 + bass * 20;
+    const rotation = time * 0.0005;
+
+    ctx.save();
+    ctx.rotate(rotation);
+
+    const thickness = 15;
+
+    // Draw three impossible beams
+    for (let beam = 0; beam < 3; beam++) {
+      ctx.save();
+      ctx.rotate((beam * 2 * Math.PI) / 3);
+
+      ctx.beginPath();
+      ctx.moveTo(-size / 2, size * 0.3);
+      ctx.lineTo(0, -size * 0.5);
+      ctx.lineTo(size / 2, size * 0.3);
+      ctx.lineTo(size / 2 - thickness, size * 0.3);
+      ctx.lineTo(0, -size * 0.5 + thickness * 1.5);
+      ctx.lineTo(-size / 2 + thickness, size * 0.3);
+      ctx.closePath();
+
+      ctx.fillStyle = palette.colors[beam % palette.colors.length] + 'cc';
+      ctx.fill();
+      ctx.strokeStyle = palette.colors[beam % palette.colors.length];
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  // Escher-style impossible cube
+  if (type === 'impossible') {
+    const size = 60 + bass * 15;
+    const rotation = time * 0.0006;
+
+    ctx.save();
+    ctx.rotate(rotation);
+
+    // Front face
+    ctx.beginPath();
+    ctx.rect(-size / 2, -size / 2, size, size);
+    ctx.fillStyle = palette.colors[0] + '80';
+    ctx.fill();
+    ctx.strokeStyle = palette.colors[0] + 'cc';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // "Back" face offset (the impossible part)
+    const offset = size * 0.4;
+    ctx.beginPath();
+    ctx.rect(-size / 2 + offset, -size / 2 - offset, size, size);
+    ctx.fillStyle = palette.colors[1 % palette.colors.length] + '60';
+    ctx.fill();
+    ctx.strokeStyle = palette.colors[1 % palette.colors.length] + 'cc';
+    ctx.stroke();
+
+    // Impossible connecting edges
+    ctx.beginPath();
+    ctx.moveTo(-size / 2, -size / 2);
+    ctx.lineTo(-size / 2 + offset, -size / 2 - offset);
+    ctx.moveTo(size / 2, -size / 2);
+    ctx.lineTo(size / 2 + offset, -size / 2 - offset);
+    ctx.moveTo(-size / 2, size / 2);
+    ctx.lineTo(-size / 2 + offset, size / 2 - offset);
+    ctx.moveTo(size / 2, size / 2);
+    ctx.lineTo(size / 2 + offset, size / 2 - offset);
+    ctx.strokeStyle = palette.colors[2 % palette.colors.length] + 'aa';
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // Möbius Strip
+  if (type === 'mobius') {
+    const R = 70 + bass * 20;
+    const w = 25;
+    const rotation = time * 0.0008;
+
+    ctx.save();
+    ctx.rotate(rotation * 0.3);
+
+    for (let u = 0; u < Math.PI * 2; u += 0.03) {
+      for (let v = -1; v <= 1; v += 0.3) {
+        const x = (R + v * w * Math.cos(u / 2)) * Math.cos(u);
+        const y = (R + v * w * Math.cos(u / 2)) * Math.sin(u);
+        const z = v * w * Math.sin(u / 2);
+
+        const scale = 200 / (200 + z);
+        const px = x * scale;
+        const py = y * scale * 0.4;
+
+        const colorIdx = Math.floor((u / (Math.PI * 2)) * palette.colors.length);
+        ctx.beginPath();
+        ctx.arc(px, py, 2 + beat, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[colorIdx % palette.colors.length] + 'bb';
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
+  }
+
+  // Hyperbolic Tiling
+  if (type === 'hyperbolic') {
+    const radius = 100 + bass * 20;
+
+    // Poincaré disk boundary
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = palette.colors[0] + '60';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Hyperbolic tiling (order-7 triangular)
+    for (let ring = 1; ring <= 5; ring++) {
+      const n = 7 * ring;
+      const r = radius * (1 - Math.pow(0.55, ring));
+
+      for (let i = 0; i < n; i++) {
+        const angle = (i / n) * Math.PI * 2 + time * 0.0002 * ring;
+        const x = Math.cos(angle) * r;
+        const y = Math.sin(angle) * r;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 3 - ring * 0.4 + beat, 0, Math.PI * 2);
+        ctx.fillStyle = palette.colors[ring % palette.colors.length] + 'cc';
+        ctx.fill();
+
+        // Geodesic to next point
+        const nextAngle = ((i + 1) / n) * Math.PI * 2 + time * 0.0002 * ring;
+        const nextX = Math.cos(nextAngle) * r;
+        const nextY = Math.sin(nextAngle) * r;
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        const midX = (x + nextX) / 2;
+        const midY = (y + nextY) / 2;
+        ctx.quadraticCurveTo(midX * 1.1, midY * 1.1, nextX, nextY);
+        ctx.strokeStyle = palette.colors[ring % palette.colors.length] + '40';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Non-Euclidean space
+  if (type === 'non-euclidean') {
+    // Parallel lines that curve
+    for (let i = -5; i <= 5; i++) {
+      ctx.beginPath();
+      for (let t = -1; t <= 1; t += 0.02) {
+        const x = t * 150;
+        const curve = Math.sin(t * Math.PI + time * 0.002) * 20 * (1 + Math.abs(i) * 0.2);
+        const y = i * 20 + curve + bass * 10 * Math.sin(t * 2);
+
+        if (t === -1) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = palette.colors[Math.abs(i) % palette.colors.length] + 'aa';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Curved triangles
+    for (let t = 0; t < 3; t++) {
+      const angle = (t / 3) * Math.PI * 2 + time * 0.0005;
+      const r = 60 + bass * 20;
+
+      ctx.beginPath();
+      for (let a = 0; a <= Math.PI * 2 / 3; a += 0.1) {
+        const curveAngle = angle + a;
+        const curveR = r + Math.sin(a * 3) * 10;
+        const x = Math.cos(curveAngle) * curveR;
+        const y = Math.sin(curveAngle) * curveR;
+        if (a === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = palette.colors[t % palette.colors.length] + 'cc';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  // Recursive Reality
+  if (type === 'recursive') {
+    const drawRecursive = (x: number, y: number, size: number, depth: number) => {
+      if (depth === 0 || size < 5) return;
+
+      ctx.beginPath();
+      ctx.rect(x - size / 2, y - size / 2, size, size);
+      ctx.strokeStyle = palette.colors[depth % palette.colors.length] + 'cc';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Inner recursive squares
+      const newSize = size * 0.6;
+      const offset = size * 0.15;
+      drawRecursive(x + offset, y + offset, newSize, depth - 1);
+    };
+
+    const rotation = time * 0.0003;
+    ctx.save();
+    ctx.rotate(rotation);
+    drawRecursive(0, 0, 150 + bass * 30, 6);
+    ctx.restore();
   }
 }
