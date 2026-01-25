@@ -274,6 +274,193 @@ function App() {
       }
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // TRANSCENDENTAL EXPERIENCES - Complex multi-layer presets
+    // ═══════════════════════════════════════════════════════════════════
+
+    // DMT / Breakthrough
+    if (cmd.includes('dmt') || cmd.includes('breakthrough') || cmd.includes('hyperspace') || cmd.includes('machine elves')) {
+      updateVisualParameter('geometryMode', 'fractal');
+      updateVisualParameter('geometryLayer2', 'flower-of-life');
+      updateVisualParameter('geometryLayer7', 'tesseract');
+      updateVisualParameter('geometryLayer11', 'julia');
+      updateVisualParameter('geometryLayer14', 'non-euclidean');
+      updateVisualParameter('colorPalette', 'spectrum');
+      updateVisualParameter('motionDirection', 'inward');
+      updateVisualParameter('motionSpeed', 0.7);
+      updateVisualParameter('chaosFactor', 0.6);
+      updateVisualParameter('overallIntensity', 0.9);
+      setLastInterpretation('🚀 BREAKTHROUGH');
+      return true;
+    }
+
+    // Kundalini Rising
+    if (cmd.includes('kundalini') || cmd.includes('shakti') || cmd.includes('energy rising')) {
+      updateVisualParameter('geometryMode', 'spiral');
+      updateVisualParameter('geometryLayer5', 'kundalini');
+      updateVisualParameter('geometryLayer6', 'chakras');
+      updateVisualParameter('geometryLayer8', 'third-eye');
+      updateVisualParameter('colorPalette', 'spectrum');
+      updateVisualParameter('motionDirection', 'outward');
+      updateVisualParameter('overallIntensity', 0.8);
+      setLastInterpretation('🐍 KUNDALINI');
+      return true;
+    }
+
+    // Shamanic Journey
+    if (cmd.includes('shamanic') || cmd.includes('tribal') || cmd.includes('primal') || cmd.includes('drum')) {
+      updateVisualParameter('geometryMode', 'mandala');
+      updateVisualParameter('geometryLayer6', 'hunab-ku');
+      updateVisualParameter('geometryLayer5', 'mycelium');
+      updateVisualParameter('colorPalette', 'ancient');
+      updateVisualParameter('motionDirection', 'breathing');
+      updateVisualParameter('bassImpact', 0.9);
+      setLastInterpretation('🥁 SHAMANIC');
+      return true;
+    }
+
+    // Om / Meditation
+    if (cmd.includes('om') || cmd.includes('meditation') || cmd.includes('stillness') || cmd.includes('inner peace')) {
+      updateVisualParameter('geometryMode', 'mandala');
+      updateVisualParameter('geometryLayer2', 'flower-of-life');
+      updateVisualParameter('geometryLayer6', 'om');
+      updateVisualParameter('geometryLayer8', 'void-source');
+      updateVisualParameter('colorPalette', 'ethereal');
+      updateVisualParameter('motionDirection', 'breathing');
+      updateVisualParameter('motionSpeed', 0.08);
+      updateVisualParameter('overallIntensity', 0.35);
+      setLastInterpretation('🕉️ OM');
+      return true;
+    }
+
+    // Divine Light / Angel
+    if (cmd.includes('angel') || cmd.includes('divine') || cmd.includes('heavenly') || cmd.includes('seraphim')) {
+      updateVisualParameter('geometryMode', 'mandala');
+      updateVisualParameter('geometryLayer2', 'merkaba');
+      updateVisualParameter('geometryLayer8', 'transcendence');
+      updateVisualParameter('colorPalette', 'light');
+      updateVisualParameter('colorBrightness', 1.0);
+      updateVisualParameter('coronaIntensity', 0.7);
+      setLastInterpretation('👼 DIVINE');
+      return true;
+    }
+
+    // Shadow Work
+    if (cmd.includes('shadow') || cmd.includes('underworld') || cmd.includes('shadow work')) {
+      updateVisualParameter('geometryMode', 'void');
+      updateVisualParameter('geometryLayer8', 'void-source');
+      updateVisualParameter('geometryLayer12', 'rossler');
+      updateVisualParameter('colorPalette', 'obsidian');
+      updateVisualParameter('motionDirection', 'inward');
+      updateVisualParameter('overallIntensity', 0.4);
+      setLastInterpretation('🌑 SHADOW');
+      return true;
+    }
+
+    // Holofractal
+    if (cmd.includes('holofractal') || cmd.includes('holographic') || cmd.includes('as above')) {
+      updateVisualParameter('geometryMode', 'fractal');
+      updateVisualParameter('geometryLayer13', 'holofractal');
+      updateVisualParameter('geometryLayer11', 'mandelbrot');
+      updateVisualParameter('geometryLayer2', 'metatron');
+      updateVisualParameter('geometryComplexity', 0.9);
+      setLastInterpretation('🔮 HOLOFRACTAL');
+      return true;
+    }
+
+    // Akashic Records
+    if (cmd.includes('akashic') || cmd.includes('records') || cmd.includes('all knowledge')) {
+      updateVisualParameter('geometryMode', 'void');
+      updateVisualParameter('geometryLayer8', 'akashic');
+      updateVisualParameter('geometryLayer2', 'tree-of-life');
+      updateVisualParameter('colorPalette', 'ancient');
+      updateVisualParameter('starDensity', 1.0);
+      setLastInterpretation('📜 AKASHIC');
+      return true;
+    }
+
+    // Glitch / Simulation
+    if (cmd.includes('glitch') || cmd.includes('simulation') || cmd.includes('matrix break')) {
+      updateVisualParameter('geometryMode', 'fractal');
+      updateVisualParameter('geometryLayer13', 'glitch');
+      updateVisualParameter('geometryLayer14', 'impossible');
+      updateVisualParameter('colorPalette', 'neon');
+      updateVisualParameter('chaosFactor', 0.8);
+      updateVisualParameter('motionTurbulence', 0.7);
+      setLastInterpretation('⚡ GLITCH');
+      return true;
+    }
+
+    // Creation / Genesis
+    if (cmd.includes('creation') || cmd.includes('genesis') || cmd.includes('big bang')) {
+      updateVisualParameter('geometryMode', 'void');
+      updateVisualParameter('geometryLayer4', 'pulsar');
+      updateVisualParameter('geometryLayer7', 'hypersphere');
+      updateVisualParameter('colorPalette', 'light');
+      updateVisualParameter('motionDirection', 'outward');
+      updateVisualParameter('eclipsePhase', 0.8);
+      updateVisualParameter('coronaIntensity', 0.9);
+      setLastInterpretation('✨ CREATION');
+      return true;
+    }
+
+    // Rebirth / Phoenix
+    if (cmd.includes('rebirth') || cmd.includes('phoenix') || cmd.includes('transform')) {
+      updateVisualParameter('geometryMode', 'void');
+      updateVisualParameter('geometryLayer8', 'transcendence');
+      updateVisualParameter('geometryLayer6', 'ouroboros');
+      updateVisualParameter('geometryLayer4', 'wormhole');
+      updateVisualParameter('colorPalette', 'bloodmoon');
+      updateVisualParameter('motionDirection', 'inward');
+      setLastInterpretation('🔥 REBIRTH');
+      return true;
+    }
+
+    // Floating / Cosmic Ocean
+    if (cmd.includes('floating') || cmd.includes('weightless') || cmd.includes('drift')) {
+      updateVisualParameter('geometryMode', 'void');
+      updateVisualParameter('geometryLayer4', 'nebula');
+      updateVisualParameter('geometryLayer5', 'jellyfish');
+      updateVisualParameter('colorPalette', 'ocean');
+      updateVisualParameter('motionDirection', 'flow');
+      updateVisualParameter('motionSpeed', 0.1);
+      setLastInterpretation('🌊 FLOATING');
+      return true;
+    }
+
+    // Bioluminescent
+    if (cmd.includes('bioluminescent') || cmd.includes('deep sea') || cmd.includes('luminous')) {
+      updateVisualParameter('geometryMode', 'void');
+      updateVisualParameter('geometryLayer5', 'biolum');
+      updateVisualParameter('geometryLayer4', 'nebula');
+      updateVisualParameter('colorPalette', 'ocean');
+      updateVisualParameter('motionDirection', 'flow');
+      setLastInterpretation('🦑 BIOLUMINESCENT');
+      return true;
+    }
+
+    // Telepathy / Mind Meld
+    if (cmd.includes('telepathy') || cmd.includes('mind meld') || cmd.includes('psychic')) {
+      updateVisualParameter('geometryLayer3', 'neural-net');
+      updateVisualParameter('geometryLayer8', 'third-eye');
+      updateVisualParameter('geometryLayer3', 'entanglement');
+      updateVisualParameter('colorPalette', 'cosmos');
+      updateVisualParameter('audioReactGeometry', 0.7);
+      setLastInterpretation('🧠 TELEPATHY');
+      return true;
+    }
+
+    // E8 Lattice / Unified Field
+    if (cmd.includes('e8') || cmd.includes('unified field') || cmd.includes('theory of everything')) {
+      updateVisualParameter('geometryMode', 'hexagon');
+      updateVisualParameter('geometryLayer10', 'e8-lattice');
+      updateVisualParameter('geometryLayer9', 'penteract');
+      updateVisualParameter('colorPalette', 'spectrum');
+      updateVisualParameter('geometryComplexity', 1.0);
+      setLastInterpretation('🌐 E8 LATTICE');
+      return true;
+    }
+
     // --- GEOMETRY MODES ---
     const geometryMap: Record<string, string> = {
       'stars': 'stars', 'star': 'stars', 'starfield': 'stars',

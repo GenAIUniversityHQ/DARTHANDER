@@ -768,6 +768,442 @@ function handleFallbackPrompt(prompt: string): PromptResult | null {
     };
   }
 
+  // ═══════════════════════════════════════════════════════════════════
+  // UNIQUE TRANSCENDENTAL EXPERIENCES
+  // ═══════════════════════════════════════════════════════════════════
+
+  // === DMT / BREAKTHROUGH ===
+  if (lower.includes('dmt') || lower.includes('breakthrough') || lower.includes('hyperspace') || lower.includes('machine elves')) {
+    return {
+      success: true,
+      interpretation: 'Breakthrough',
+      parameterChanges: {
+        geometryMode: 'fractal',
+        geometryLayer2: 'flower-of-life',
+        geometryLayer7: 'tesseract',
+        geometryLayer11: 'julia',
+        geometryLayer14: 'non-euclidean',
+        colorPalette: 'spectrum',
+        colorHueShift: 0.5,
+        motionDirection: 'inward',
+        motionSpeed: 0.7,
+        chaosFactor: 0.6,
+        overallIntensity: 0.9,
+        audioReactColor: 0.8,
+      },
+      transition: { style: 'dramatic', duration_ms: 2000 },
+    };
+  }
+
+  // === AYAHUASCA / SERPENT VISION ===
+  if (lower.includes('ayahuasca') || lower.includes('serpent') || lower.includes('vine') || lower.includes('jungle')) {
+    return {
+      success: true,
+      interpretation: 'Serpent vision',
+      parameterChanges: {
+        geometryMode: 'spiral',
+        geometryLayer5: 'kundalini',
+        geometryLayer6: 'ouroboros',
+        geometryLayer4: 'fluid-flow',
+        colorPalette: 'earth',
+        colorSaturation: 0.8,
+        motionDirection: 'flow',
+        motionSpeed: 0.3,
+        motionTurbulence: 0.4,
+        overallIntensity: 0.7,
+      },
+      transition: { style: 'slow', duration_ms: 8000 },
+    };
+  }
+
+  // === KUNDALINI RISING ===
+  if (lower.includes('kundalini') || lower.includes('rising') || lower.includes('shakti') || lower.includes('energy rising')) {
+    return {
+      success: true,
+      interpretation: 'Kundalini awakens',
+      parameterChanges: {
+        geometryMode: 'spiral',
+        geometryLayer5: 'kundalini',
+        geometryLayer6: 'chakras',
+        geometryLayer8: 'third-eye',
+        colorPalette: 'spectrum',
+        motionDirection: 'outward',
+        motionSpeed: 0.4,
+        overallIntensity: 0.8,
+        bassImpact: 0.7,
+      },
+      transition: { style: 'gradual', duration_ms: 6000 },
+    };
+  }
+
+  // === SHAMANIC / DRUMMING ===
+  if (lower.includes('shamanic') || lower.includes('drum') || lower.includes('tribal') || lower.includes('primal')) {
+    return {
+      success: true,
+      interpretation: 'Shamanic journey',
+      parameterChanges: {
+        geometryMode: 'mandala',
+        geometryLayer6: 'hunab-ku',
+        geometryLayer5: 'mycelium',
+        geometryLayer4: 'aurora',
+        colorPalette: 'ancient',
+        motionDirection: 'breathing',
+        motionSpeed: 0.25,
+        bassImpact: 0.9,
+        audioReactGeometry: 0.8,
+        overallIntensity: 0.6,
+      },
+      transition: { style: 'slow', duration_ms: 5000 },
+    };
+  }
+
+  // === MEDITATION / OM / STILLNESS ===
+  if (lower.includes('om') || lower.includes('meditation') || lower.includes('stillness') || lower.includes('inner peace')) {
+    return {
+      success: true,
+      interpretation: 'Om shanti',
+      parameterChanges: {
+        geometryMode: 'mandala',
+        geometryLayer2: 'flower-of-life',
+        geometryLayer6: 'om',
+        geometryLayer8: 'void-source',
+        colorPalette: 'ethereal',
+        motionDirection: 'breathing',
+        motionSpeed: 0.08,
+        overallIntensity: 0.35,
+        colorBrightness: 0.5,
+      },
+      transition: { style: 'slow', duration_ms: 10000 },
+    };
+  }
+
+  // === COSMIC OCEAN / FLOATING ===
+  if (lower.includes('floating') || lower.includes('cosmic ocean') || lower.includes('weightless') || lower.includes('drift')) {
+    return {
+      success: true,
+      interpretation: 'Floating free',
+      parameterChanges: {
+        geometryMode: 'void',
+        geometryLayer4: 'nebula',
+        geometryLayer5: 'jellyfish',
+        geometryLayer8: 'infinity',
+        colorPalette: 'ocean',
+        motionDirection: 'flow',
+        motionSpeed: 0.1,
+        motionTurbulence: 0.2,
+        overallIntensity: 0.4,
+        starDensity: 0.9,
+      },
+      transition: { style: 'slow', duration_ms: 8000 },
+    };
+  }
+
+  // === BIRTH OF A STAR / CREATION ===
+  if (lower.includes('creation') || lower.includes('birth') || lower.includes('genesis') || lower.includes('big bang')) {
+    return {
+      success: true,
+      interpretation: 'Creation unfolds',
+      parameterChanges: {
+        geometryMode: 'void',
+        geometryLayer4: 'pulsar',
+        geometryLayer7: 'hypersphere',
+        geometryLayer9: 'pentasphere',
+        colorPalette: 'light',
+        colorBrightness: 0.95,
+        motionDirection: 'outward',
+        motionSpeed: 0.6,
+        overallIntensity: 0.9,
+        eclipsePhase: 0.8,
+        coronaIntensity: 0.9,
+      },
+      transition: { style: 'dramatic', duration_ms: 3000 },
+    };
+  }
+
+  // === DEATH / REBIRTH / PHOENIX ===
+  if (lower.includes('death') || lower.includes('rebirth') || lower.includes('phoenix') || lower.includes('transform')) {
+    return {
+      success: true,
+      interpretation: 'Rebirth',
+      parameterChanges: {
+        geometryMode: 'void',
+        geometryLayer8: 'transcendence',
+        geometryLayer6: 'ouroboros',
+        geometryLayer4: 'wormhole',
+        colorPalette: 'bloodmoon',
+        motionDirection: 'inward',
+        motionSpeed: 0.4,
+        chaosFactor: 0.3,
+        overallIntensity: 0.7,
+      },
+      transition: { style: 'slow', duration_ms: 6000 },
+    };
+  }
+
+  // === INDRA'S NET / INTERCONNECTION ===
+  if (lower.includes('indra') || lower.includes('interconnect') || lower.includes('web of life') || lower.includes('all is one')) {
+    return {
+      success: true,
+      interpretation: 'All is one',
+      parameterChanges: {
+        geometryMode: 'hexagon',
+        geometryLayer13: 'indras-net',
+        geometryLayer3: 'neural-net',
+        geometryLayer8: 'unity',
+        colorPalette: 'ethereal',
+        motionDirection: 'breathing',
+        motionSpeed: 0.15,
+        geometryComplexity: 0.8,
+        overallIntensity: 0.6,
+      },
+      transition: { style: 'gradual', duration_ms: 5000 },
+    };
+  }
+
+  // === HOLOFRACTAL / HOLOGRAPHIC ===
+  if (lower.includes('holofractal') || lower.includes('holographic') || lower.includes('as above so below')) {
+    return {
+      success: true,
+      interpretation: 'Holofractal reality',
+      parameterChanges: {
+        geometryMode: 'fractal',
+        geometryLayer13: 'holofractal',
+        geometryLayer11: 'mandelbrot',
+        geometryLayer2: 'metatron',
+        colorPalette: 'cosmos',
+        motionDirection: 'inward',
+        motionSpeed: 0.3,
+        geometryComplexity: 0.9,
+        overallIntensity: 0.75,
+      },
+      transition: { style: 'gradual', duration_ms: 5000 },
+    };
+  }
+
+  // === TIME CRYSTAL / TEMPORAL ===
+  if (lower.includes('time crystal') || lower.includes('temporal') || lower.includes('time loop') || lower.includes('eternal return')) {
+    return {
+      success: true,
+      interpretation: 'Time crystallizes',
+      parameterChanges: {
+        geometryMode: 'mandala',
+        geometryLayer13: 'time-crystal',
+        geometryLayer7: 'tesseract',
+        geometryLayer14: 'recursive',
+        colorPalette: 'glacier',
+        motionDirection: 'counter',
+        motionSpeed: 0.2,
+        overallIntensity: 0.65,
+        audioReactMotion: 0.7,
+      },
+      transition: { style: 'gradual', duration_ms: 4000 },
+    };
+  }
+
+  // === MORPHIC FIELD / RESONANCE ===
+  if (lower.includes('morphic') || lower.includes('resonance') || lower.includes('collective') || lower.includes('field')) {
+    return {
+      success: true,
+      interpretation: 'Morphic resonance',
+      parameterChanges: {
+        geometryMode: 'hexagon',
+        geometryLayer8: 'morphic',
+        geometryLayer3: 'wave-function',
+        geometryLayer5: 'cymatics',
+        colorPalette: 'pastel',
+        motionDirection: 'breathing',
+        motionSpeed: 0.15,
+        audioReactGeometry: 0.9,
+        overallIntensity: 0.5,
+      },
+      transition: { style: 'slow', duration_ms: 6000 },
+    };
+  }
+
+  // === AKASHIC RECORDS / MEMORY ===
+  if (lower.includes('akashic') || lower.includes('records') || lower.includes('cosmic memory') || lower.includes('all knowledge')) {
+    return {
+      success: true,
+      interpretation: 'Akashic access',
+      parameterChanges: {
+        geometryMode: 'void',
+        geometryLayer8: 'akashic',
+        geometryLayer2: 'tree-of-life',
+        geometryLayer6: 'eye-of-horus',
+        colorPalette: 'ancient',
+        motionDirection: 'inward',
+        motionSpeed: 0.1,
+        starDensity: 1.0,
+        starBrightness: 0.9,
+        overallIntensity: 0.55,
+      },
+      transition: { style: 'slow', duration_ms: 8000 },
+    };
+  }
+
+  // === DREAMTIME / ABORIGINAL ===
+  if (lower.includes('dreamtime') || lower.includes('aboriginal') || lower.includes('songline') || lower.includes('ancestral')) {
+    return {
+      success: true,
+      interpretation: 'Dreamtime flows',
+      parameterChanges: {
+        geometryMode: 'spiral',
+        geometryLayer8: 'dreamtime',
+        geometryLayer5: 'roots',
+        geometryLayer6: 'triskele',
+        colorPalette: 'earth',
+        motionDirection: 'flow',
+        motionSpeed: 0.2,
+        motionTurbulence: 0.3,
+        overallIntensity: 0.5,
+      },
+      transition: { style: 'slow', duration_ms: 7000 },
+    };
+  }
+
+  // === BIOLUMINESCENT / DEEP SEA ===
+  if (lower.includes('bioluminescent') || lower.includes('deep sea') || lower.includes('glow') || lower.includes('luminous')) {
+    return {
+      success: true,
+      interpretation: 'Bioluminescence',
+      parameterChanges: {
+        geometryMode: 'void',
+        geometryLayer5: 'biolum',
+        geometryLayer5: 'jellyfish',
+        geometryLayer4: 'nebula',
+        colorPalette: 'ocean',
+        colorBrightness: 0.7,
+        motionDirection: 'flow',
+        motionSpeed: 0.15,
+        overallIntensity: 0.5,
+        starDensity: 0.6,
+      },
+      transition: { style: 'slow', duration_ms: 5000 },
+    };
+  }
+
+  // === E8 LATTICE / UNIFIED FIELD ===
+  if (lower.includes('e8') || lower.includes('unified') || lower.includes('theory of everything') || lower.includes('lattice')) {
+    return {
+      success: true,
+      interpretation: 'E8 unfolds',
+      parameterChanges: {
+        geometryMode: 'hexagon',
+        geometryLayer10: 'e8-lattice',
+        geometryLayer9: 'penteract',
+        geometryLayer3: 'quantum-field',
+        colorPalette: 'spectrum',
+        geometryComplexity: 1.0,
+        motionDirection: 'breathing',
+        motionSpeed: 0.1,
+        overallIntensity: 0.7,
+      },
+      transition: { style: 'slow', duration_ms: 6000 },
+    };
+  }
+
+  // === GLITCH / SIMULATION ===
+  if (lower.includes('glitch') || lower.includes('simulation') || lower.includes('matrix break') || lower.includes('error')) {
+    return {
+      success: true,
+      interpretation: 'Reality glitches',
+      parameterChanges: {
+        geometryMode: 'fractal',
+        geometryLayer13: 'glitch',
+        geometryLayer14: 'impossible',
+        geometryLayer11: 'sierpinski',
+        colorPalette: 'neon',
+        motionSpeed: 0.6,
+        chaosFactor: 0.8,
+        motionTurbulence: 0.7,
+        overallIntensity: 0.85,
+      },
+      transition: { style: 'instant', duration_ms: 500 },
+    };
+  }
+
+  // === PLANT TEACHER / BOTANICAL ===
+  if (lower.includes('plant') || lower.includes('botanical') || lower.includes('nature') || lower.includes('organic')) {
+    return {
+      success: true,
+      interpretation: 'Plant wisdom',
+      parameterChanges: {
+        geometryMode: 'spiral',
+        geometryLayer5: 'mycelium',
+        geometryLayer2: 'seed-of-life',
+        geometryLayer11: 'tree-fractal',
+        colorPalette: 'earth',
+        motionDirection: 'flow',
+        motionSpeed: 0.2,
+        overallIntensity: 0.5,
+        geometryComplexity: 0.6,
+      },
+      transition: { style: 'slow', duration_ms: 6000 },
+    };
+  }
+
+  // === ANGEL / DIVINE LIGHT ===
+  if (lower.includes('angel') || lower.includes('divine') || lower.includes('heavenly') || lower.includes('seraphim')) {
+    return {
+      success: true,
+      interpretation: 'Divine presence',
+      parameterChanges: {
+        geometryMode: 'mandala',
+        geometryLayer2: 'merkaba',
+        geometryLayer8: 'transcendence',
+        geometryLayer7: 'hypersphere',
+        colorPalette: 'light',
+        colorBrightness: 1.0,
+        motionDirection: 'outward',
+        motionSpeed: 0.15,
+        overallIntensity: 0.8,
+        coronaIntensity: 0.7,
+      },
+      transition: { style: 'slow', duration_ms: 6000 },
+    };
+  }
+
+  // === DEMON / SHADOW WORK ===
+  if (lower.includes('demon') || lower.includes('shadow') || lower.includes('underworld') || lower.includes('shadow work')) {
+    return {
+      success: true,
+      interpretation: 'Shadow integration',
+      parameterChanges: {
+        geometryMode: 'void',
+        geometryLayer8: 'void-source',
+        geometryLayer12: 'rossler',
+        geometryLayer14: 'non-euclidean',
+        colorPalette: 'obsidian',
+        motionDirection: 'inward',
+        motionSpeed: 0.25,
+        chaosFactor: 0.4,
+        overallIntensity: 0.4,
+        colorBrightness: 0.3,
+      },
+      transition: { style: 'slow', duration_ms: 5000 },
+    };
+  }
+
+  // === TELEPATHY / MIND MELD ===
+  if (lower.includes('telepathy') || lower.includes('mind meld') || lower.includes('psychic') || lower.includes('connection')) {
+    return {
+      success: true,
+      interpretation: 'Minds merge',
+      parameterChanges: {
+        geometryMode: 'hexagon',
+        geometryLayer3: 'neural-net',
+        geometryLayer8: 'third-eye',
+        geometryLayer3: 'entanglement',
+        colorPalette: 'cosmos',
+        motionDirection: 'breathing',
+        motionSpeed: 0.2,
+        audioReactGeometry: 0.7,
+        overallIntensity: 0.6,
+      },
+      transition: { style: 'gradual', duration_ms: 4000 },
+    };
+  }
+
   return null;
 }
 
