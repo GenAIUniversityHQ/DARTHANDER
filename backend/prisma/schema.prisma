@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./darthander.db"
 }
 
 // ============================================
@@ -168,7 +168,7 @@ model Track {
   // File info
   filename      String
   filePath      String
-  fileSize      BigInt?
+  fileSize      Int?
   duration      Float?  // seconds
   waveformData  Json?   // for visual display
 
