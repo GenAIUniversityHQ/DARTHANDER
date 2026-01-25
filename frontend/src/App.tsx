@@ -1305,8 +1305,11 @@ function App() {
     const canvas = document.querySelector('#preview-canvas') as HTMLCanvasElement;
     if (!canvas) return;
 
-    // Get video stream from canvas
-    const videoStream = canvas.captureStream(30);
+    // Log recording resolution
+    console.log(`Recording at ${canvas.width}x${canvas.height} (canvas resolution)`);
+
+    // Get video stream from canvas at 60fps for smooth playback
+    const videoStream = canvas.captureStream(60);
 
     // Get FRESH audio stream from store state (not stale closure)
     const currentAudioStream = useStore.getState().audioStream;
@@ -1336,11 +1339,11 @@ function App() {
         mimeType = 'video/webm';
       }
     }
-    // High quality settings for YouTube (8 Mbps video bitrate)
+    // HIGH QUALITY settings for YouTube (16 Mbps for 1080p60)
     const options: MediaRecorderOptions = {
       mimeType,
-      videoBitsPerSecond: 8000000,  // 8 Mbps for high quality
-      audioBitsPerSecond: 192000,   // 192 kbps audio
+      videoBitsPerSecond: 16000000,  // 16 Mbps for YouTube 1080p60
+      audioBitsPerSecond: 320000,    // 320 kbps high quality audio
     };
 
     const recorder = new MediaRecorder(combinedStream, options);
@@ -1414,16 +1417,20 @@ function App() {
       const webmData = await fetchFile(webmBlob);
       await ffmpeg.writeFile('input.webm', webmData);
 
-      // Convert to MP4 with high quality settings for YouTube
-      // Using libx264 (H.264) and aac audio - universally compatible
+      // Convert to MP4 with HIGH QUALITY settings for YouTube
+      // CRF 15 = very high quality (lower = better, 15-18 is excellent)
+      // preset fast = good balance of speed/quality
+      // yuv420p = maximum compatibility
+      // 320k audio = high quality audio matching source
       const result = await ffmpeg.exec([
         '-i', 'input.webm',
         '-c:v', 'libx264',
         '-preset', 'fast',
-        '-crf', '18',
+        '-crf', '15',
         '-pix_fmt', 'yuv420p',
+        '-r', '60',
         '-c:a', 'aac',
-        '-b:a', '192k',
+        '-b:a', '320k',
         '-movflags', '+faststart',
         '-y',
         'output.mp4'
