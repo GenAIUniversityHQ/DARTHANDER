@@ -294,9 +294,10 @@ export function AudioSourceSelector() {
         className="hidden"
       />
 
-      {/* Hidden audio element */}
+      {/* Hidden audio element - key forces new element when URL changes */}
       {audioUrl && (
         <audio
+          key={audioUrl}
           ref={audioRef}
           src={audioUrl}
           onEnded={() => setIsPlaying(false)}
