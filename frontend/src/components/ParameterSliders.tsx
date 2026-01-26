@@ -1,7 +1,8 @@
 // DARTHANDER Visual Consciousness Engine
 // Parameter Sliders Component - STAGE READY
 
-import { Flame, Diamond, Zap, Rocket, Music, Waves, Sun } from 'lucide-react';
+import { useState } from 'react';
+import { Flame, Diamond, Zap, Rocket, Music, Waves, Sun, Info } from 'lucide-react';
 
 interface VisualState {
   overallIntensity: number;
@@ -25,6 +26,253 @@ interface ParameterSlidersProps {
   state: VisualState | null;
   onChange: (parameter: string, value: number) => void;
 }
+
+// Layer descriptions for hover info
+const layerDescriptions: Record<string, string> = {
+  // Geometry Modes
+  'stars': 'Animated particle starfield - peaceful cosmic backdrop',
+  'mandala': 'Symmetrical rotating patterns - meditative sacred geometry',
+  'hexagon': '6-sided crystalline structures - ordered perfection',
+  'fractal': 'Infinite recursive branching - endless complexity',
+  'spiral': 'Multi-armed spiraling vortex - hypnotic flow',
+  'tunnel': 'Concentric rings expanding/contracting - portal effect',
+  'void': 'Deep empty space with subtle rings - the abyss',
+  'fibonacci': 'Golden ratio spiral sequences - nature\'s mathematics',
+  'chaos-field': 'Chaotic energy field - raw untamed power',
+  // Sacred Geometry
+  'flower-of-life': 'Ancient creation pattern - source of all forms',
+  'metatron': 'Archangel\'s cube - contains all platonic solids',
+  'sri-yantra': 'Hindu meditation diagram - 9 interlocking triangles',
+  'torus': 'Donut-shaped energy field - continuous flow',
+  'vesica': 'Two overlapping circles - birth of creation',
+  'seed-of-life': '7 circles - genesis pattern of life',
+  'merkaba': 'Star tetrahedron - light body vehicle',
+  'golden-ratio': 'Phi spirals - divine proportion 1.618',
+  'tree-of-life': 'Kabbalistic diagram - 10 spheres of existence',
+  'platonic': 'Five perfect solids - building blocks of reality',
+  // Ancient Wisdom
+  'ankh': 'Egyptian key of life - eternal existence',
+  'eye-of-horus': 'Egyptian protection - all-seeing eye',
+  'ouroboros': 'Snake eating tail - infinite cycle',
+  'enso': 'Zen circle - enlightenment and void',
+  'om': 'Sanskrit sacred sound - universal vibration',
+  'yin-yang': 'Balance of opposites - duality in unity',
+  'dharma-wheel': 'Buddhist wheel - path to enlightenment',
+  'triskele': 'Celtic triple spiral - earth/sea/sky',
+  'hunab-ku': 'Mayan galactic center - source consciousness',
+  'chakras': 'Energy centers - rainbow spine alignment',
+  // 4D Geometry
+  'tesseract': '4D hypercube - cube within cube rotation',
+  'hypersphere': '4D sphere - infinite perspectives',
+  '24-cell': '24 octahedral cells - self-dual polytope',
+  '120-cell': '120 dodecahedral cells - complex beauty',
+  '600-cell': '600 tetrahedra - maximum 4D complexity',
+  'duocylinder': 'Two perpendicular circles - 4D torus',
+  'clifford-torus': 'Flat torus in 4D - twisted space',
+  'klein-bottle': 'One-sided surface - no inside/outside',
+  // 5D+ Geometry
+  'penteract': '5D hypercube - beyond comprehension',
+  '5-simplex': '5D tetrahedron - minimal 5D shape',
+  '5-orthoplex': '5D cross polytope - perpendicular axes',
+  '5-demicube': 'Half 5D cube - alternated vertices',
+  'pentasphere': '5D sphere - infinite dimensions glimpsed',
+  'hexeract': '6D hypercube - reality layers',
+  'e8-lattice': '248-dimensional Lie group - theory of everything',
+  '6-simplex': '6D tetrahedron - pure abstraction',
+  'gosset': 'E8 root system - mathematical perfection',
+  'leech-lattice': '24D sphere packing - densest arrangement',
+  // Quantum
+  'quantum-field': 'Flickering probability - fundamental reality',
+  'wave-function': 'Probability waves - superposition',
+  'particle-grid': 'Point particles - discrete quanta',
+  'entanglement': 'Spooky action - instant connection',
+  'superposition': 'All states at once - before observation',
+  'quantum-foam': 'Spacetime bubbles - Planck scale chaos',
+  'holographic': 'Information surface - reality as hologram',
+  'string-theory': 'Vibrating strings - 11 dimensions',
+  'zero-point': 'Vacuum energy - empty space vibrates',
+  'vacuum-flux': 'Virtual particles - nothing is empty',
+  // Cosmic
+  'nebula': 'Gas clouds - stellar nurseries',
+  'galaxy': 'Spiral arms - billions of stars',
+  'aurora': 'Northern/southern lights - charged particles',
+  'wormhole': 'Spacetime tunnel - cosmic shortcut',
+  'pulsar': 'Spinning neutron star - cosmic lighthouse',
+  'cosmic-web': 'Large scale structure - universe skeleton',
+  'event-horizon': 'Black hole boundary - point of no return',
+  'big-bang': 'Cosmic birth - explosion of existence',
+  'dark-matter': 'Invisible mass - universe scaffolding',
+  'multiverse': 'Parallel realities - infinite possibilities',
+  // Lifeforce
+  'heartbeat': 'Cardiac rhythm - pulse of life',
+  'breath': 'Respiratory flow - prana exchange',
+  'neurons': 'Brain cells - consciousness network',
+  'cells': 'Living units - biological building blocks',
+  'mycelium': 'Fungal network - nature\'s internet',
+  'biolum': 'Living light - deep sea glow',
+  'dna-helix': 'Genetic spiral - code of life',
+  'kundalini': 'Coiled energy - spiritual awakening',
+  'aura': 'Energy field - bioelectric emanation',
+  'cymatics': 'Sound shapes - visible vibration',
+  // Consciousness
+  'third-eye': 'Pineal activation - inner vision',
+  'akashic': 'Cosmic records - all knowledge library',
+  'morphic': 'Field resonance - collective memory',
+  'dreamtime': 'Aboriginal creation - eternal dreaming',
+  'void-source': 'Emptiness - the pregnant nothing',
+  'infinity': 'Endless expanse - no boundaries',
+  'unity': 'All is one - separation dissolves',
+  'transcendence': 'Beyond limits - ego dissolution',
+  // Elemental
+  'fire': 'Dancing flames - transformation energy',
+  'water': 'Flowing liquid - emotional depth',
+  'earth': 'Solid ground - stability and growth',
+  'air': 'Invisible wind - thought and breath',
+  'aether': 'Fifth element - spirit substance',
+  'plasma': 'Ionized gas - fourth state of matter',
+  'lightning': 'Electric discharge - sudden illumination',
+  'ice': 'Frozen crystals - stillness and clarity',
+  'smoke': 'Rising vapor - transition and mystery',
+  'crystal': 'Geometric solids - amplified energy',
+  // Energy
+  'chi': 'Life force - Chinese vital energy',
+  'prana': 'Breath of life - Hindu life force',
+  'reiki': 'Universal energy - healing hands',
+  'orgone': 'Reich\'s energy - life accumulator',
+  'tesla': 'Electric arcs - free energy',
+  'scalar': 'Standing waves - zero-point energy',
+  'tachyon': 'Faster than light - time reversal',
+  'vortex': 'Spinning energy - implosion power',
+  'toroidal': 'Donut field - self-sustaining',
+  // Texture
+  'liquid': 'Flowing surface - mercury feel',
+  'metallic': 'Reflective surface - chrome shine',
+  'glass': 'Transparent material - refraction',
+  'silk': 'Soft flowing fabric - gentle movement',
+  'particle': 'Granular texture - sand/dust',
+  'grain': 'Film grain - analog warmth',
+  'iridescent': 'Rainbow shimmer - oil on water',
+  'holographic': 'Laser interference - 3D surface',
+  'neon-glow': 'Electric tubes - 80s aesthetic',
+  // Altered States
+  'hypnotic': 'Trance induction - spiral focus',
+  'trance': 'Deep state - rhythmic absorption',
+  'lucid': 'Aware dreaming - conscious sleep',
+  'astral': 'Soul travel - etheric projection',
+  'obe': 'Out of body - floating above',
+  'nde': 'Near death - tunnel of light',
+  'ego-death': 'Self dissolution - boundary loss',
+  'peak': 'Mystical experience - cosmic unity',
+  'flow-state': 'In the zone - effortless action',
+  // Celestial
+  'sun': 'Solar power - source of light',
+  'moon': 'Lunar cycles - reflection and tides',
+  'mercury': 'Swift messenger - communication',
+  'venus': 'Love planet - beauty and harmony',
+  'mars': 'War planet - action and drive',
+  'jupiter': 'Giant king - expansion and luck',
+  'saturn': 'Ringed one - structure and time',
+  'neptune': 'Ocean planet - dreams and illusion',
+  'pluto': 'Underworld - death and rebirth',
+  'eclipse-total': 'Sun/moon union - cosmic alignment',
+  // Emotion
+  'joy': 'Pure happiness - golden radiance',
+  'peace': 'Inner calm - still water',
+  'ecstasy': 'Intense bliss - overwhelming joy',
+  'awe': 'Wonder and reverence - humbling vastness',
+  'melancholy': 'Sweet sadness - beautiful sorrow',
+  'rage': 'Intense anger - explosive fire',
+  'grief': 'Deep loss - heavy darkness',
+  'love': 'Heart energy - connection warmth',
+  'serenity': 'Tranquil peace - undisturbed lake',
+  'wonder': 'Childlike amazement - curious magic',
+  // Nature
+  'forest': 'Dense trees - green sanctuary',
+  'ocean': 'Vast water - deep blue mystery',
+  'mountain': 'Stone peaks - solid majesty',
+  'desert': 'Sand expanse - empty vastness',
+  'storm': 'Weather chaos - electric tension',
+  'volcano': 'Molten earth - primal power',
+  'cave': 'Underground dark - inner journey',
+  'waterfall': 'Falling water - powerful flow',
+  'northern-lights': 'Aurora borealis - sky dance',
+  // Mythic
+  'dragon': 'Fire serpent - primal power',
+  'phoenix': 'Reborn bird - death to life',
+  'serpent': 'Coiled wisdom - kundalini energy',
+  'angel': 'Light being - divine messenger',
+  'demon': 'Shadow force - inner darkness',
+  'spirit': 'Ethereal presence - ghost energy',
+  'shadow': 'Dark side - unconscious self',
+  'light-being': 'Pure radiance - ascended form',
+  'shapeshifter': 'Form changer - fluid identity',
+  // Alchemical
+  'nigredo': 'Blackening - decomposition stage',
+  'albedo': 'Whitening - purification stage',
+  'citrinitas': 'Yellowing - awakening stage',
+  'rubedo': 'Reddening - completion stage',
+  'solve': 'Dissolution - breaking down',
+  'coagula': 'Coagulation - coming together',
+  'transmute': 'Transform - lead to gold',
+  'philosophers-stone': 'Ultimate goal - perfection achieved',
+  // Waveform
+  'sine': 'Smooth wave - pure tone',
+  'square': 'On/off wave - digital/harsh',
+  'sawtooth': 'Ramp wave - buzzy/bright',
+  'triangle': 'Linear wave - mellow tone',
+  'pulse': 'Variable width - rhythmic beat',
+  'noise': 'Random - chaos/texture',
+  'harmonic': 'Overtones - rich complexity',
+  'resonance': 'Amplified frequency - standing wave',
+  // Temporal
+  'past': 'Before now - sepia memories',
+  'future': 'Yet to come - chrome tomorrow',
+  'eternal': 'Outside time - always/never',
+  'loop': 'Repeating cycle - groundhog day',
+  'rewind': 'Going back - reverse time',
+  'freeze': 'Stopped time - frozen moment',
+  'decay': 'Entropy - things fall apart',
+  'bloom': 'Growing - things come together',
+  // Fractals
+  'mandelbrot': 'Famous fractal - infinite complexity boundary',
+  'julia': 'Related set - varying parameter',
+  'sierpinski': 'Triangle holes - self-similar',
+  'koch': 'Snowflake curve - infinite coastline',
+  'dragon': 'Folding curve - paper dragon',
+  'tree-fractal': 'Branching pattern - natural growth',
+  'menger': 'Sponge cube - infinite holes',
+  'apollonian': 'Circle packing - nested circles',
+  // Chaos Attractors
+  'lorenz': 'Butterfly effect - weather chaos',
+  'rossler': 'Simple chaos - folded band',
+  'chua': 'Circuit chaos - electronic',
+  'halvorsen': 'Cyclic attractor - three lobes',
+  'thomas': 'Cyclically symmetric - three-fold',
+  'aizawa': 'Spiral chaos - twisted loop',
+  // Reality/Paradox
+  'matrix': 'Simulation code - green rain',
+  'glitch': 'Reality error - broken pixels',
+  'simulation': 'Virtual world - is this real?',
+  'observer': 'Consciousness collapses - you create reality',
+  'collapse': 'Wave function - probability to actuality',
+  'indras-net': 'Infinite reflections - all connected',
+  'holofractal': 'Fractal hologram - part contains whole',
+  'time-crystal': 'Repeating in time - temporal pattern',
+  'penrose': 'Impossible staircase - eternal climb',
+  'impossible': 'Escher shapes - can\'t exist',
+  'mobius': 'One-sided strip - twist in space',
+  'hyperbolic': 'Curved space - infinite tiling',
+  'non-euclidean': 'Bent geometry - parallel lines meet',
+  'recursive': 'Self-referencing - strange loops',
+  // Motion
+  'flow': 'Smooth organic movement - like a dancer',
+  'outward': 'Expanding from center - big bang',
+  'inward': 'Contracting to center - black hole',
+  'clockwise': 'Rotating right - time forward',
+  'counter': 'Rotating left - time backward',
+  'breathing': 'In and out - life rhythm',
+  'still': 'No movement - frozen time',
+};
 
 interface SliderConfig {
   key: string;
@@ -458,12 +706,34 @@ const motionDirs = [
 ];
 
 export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
+  const [hoveredLayer, setHoveredLayer] = useState<{id: string, category: string} | null>(null);
+
   if (!state) return null;
 
   const beamsOn = (state.coronaIntensity ?? 0) > 0.05;
 
   return (
     <div className="space-y-2 overflow-x-hidden">
+      {/* LAYER INFO PANEL - Shows on hover */}
+      <div className="bg-white/5 rounded-lg p-2 border border-white/10 min-h-[48px] flex items-center">
+        {hoveredLayer ? (
+          <div className="flex items-start gap-2">
+            <Info className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" />
+            <div>
+              <div className="text-[10px] font-bold text-white uppercase">{hoveredLayer.id.replace(/-/g, ' ')}</div>
+              <div className="text-[9px] text-purple-400 uppercase mb-0.5">{hoveredLayer.category}</div>
+              <div className="text-[10px] text-white/70 leading-tight">
+                {layerDescriptions[hoveredLayer.id] || 'Visual layer effect'}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-white/30">
+            <Info className="w-4 h-4" />
+            <span className="text-[10px]">Hover a layer to see info</span>
+          </div>
+        )}
+      </div>
       {/* BEAMS TOGGLE - Big clear button */}
       <div className="flex items-center gap-3 pb-2 border-b border-white/20">
         <button
@@ -583,6 +853,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={mode.id}
                 onClick={() => onChange('geometryMode', mode.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: mode.id, category: 'Geometry Mode'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-1 rounded text-[10px] font-bold uppercase
                            ${state.geometryMode === mode.id
                              ? `${mode.color} text-white`
@@ -602,6 +874,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={dir.id}
                 onClick={() => onChange('motionDirection', dir.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: dir.id, category: 'Motion Direction'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-1 rounded text-[10px] font-bold uppercase
                            ${dir.id === 'flow' ? 'relative' : ''}
                            ${state.motionDirection === dir.id
@@ -635,6 +909,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={geo.id}
                 onClick={() => onChange('geometryLayer2', geo.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: geo.id, category: 'Sacred Geometry'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${state.geometryLayer2 === geo.id
                              ? `${geo.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -661,6 +937,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={geo.id}
                 onClick={() => onChange('geometryLayer3', geo.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: geo.id, category: 'Quantum'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer3 === geo.id
                              ? `${geo.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -687,6 +965,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer4', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Cosmic'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer4 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -713,6 +993,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer5', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Lifeforce'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer5 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -739,6 +1021,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer6', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Ancient Wisdom'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer6 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -765,6 +1049,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer7', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: '4D Geometry'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer7 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -791,6 +1077,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer9', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: '5D Geometry'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer9 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -817,6 +1105,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer10', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: '6D+ Geometry'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer10 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -843,6 +1133,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer8', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Consciousness'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer8 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -869,6 +1161,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer11', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Fractal'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer11 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -895,6 +1189,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer12', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Chaos Attractor'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer12 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -921,6 +1217,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer13', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Reality / Simulation'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer13 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -947,6 +1245,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer14', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Impossible / Paradox'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer14 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -978,6 +1278,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('elementalLayer', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Elemental'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).elementalLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1004,6 +1306,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('energyLayer', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Energy'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).energyLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1030,6 +1334,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('textureLayer', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Texture'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).textureLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1056,6 +1362,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('alteredLayer', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Altered States'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).alteredLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1082,6 +1390,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('celestialLayer', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Celestial'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).celestialLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1108,6 +1418,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('emotionLayer', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Emotion'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).emotionLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1134,6 +1446,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('natureLayer', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Nature'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).natureLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1160,6 +1474,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('mythicLayer', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Mythic'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).mythicLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1186,6 +1502,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('alchemicalLayer', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Alchemical'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).alchemicalLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1212,6 +1530,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('waveformLayer', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Waveform'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).waveformLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1238,6 +1558,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('temporalLayer', layer.id as any)}
+                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Temporal'})}
+                onMouseLeave={() => setHoveredLayer(null)}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).temporalLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
