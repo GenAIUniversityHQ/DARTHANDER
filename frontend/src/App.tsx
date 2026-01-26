@@ -1569,12 +1569,10 @@ function App() {
 
       {/* Main Content - Split Layout */}
       <div className="flex-1 flex min-h-0">
-        {/* Left: VISUALIZER - The Star of the Show (16:9 YouTube optimized) */}
-        <div className="w-1/2 p-3 pt-0 flex flex-col min-h-0">
-          <div className="flex-1 min-h-0 flex flex-col bg-black/50 rounded-2xl overflow-hidden">
-            <div className="relative w-full flex-1 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-purple-500/20">
-              <PreviewMonitor state={visualState} canvasId="preview-canvas" />
-            </div>
+        {/* Left: VISUALIZER - The Star of the Show */}
+        <div className="w-1/2 pl-3 pr-1.5 pb-3 flex flex-col min-h-0">
+          <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-purple-500/20 bg-black">
+            <PreviewMonitor state={visualState} canvasId="preview-canvas" />
           </div>
 
           {/* Prompt Bar - Clean and simple */}
