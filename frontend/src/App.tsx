@@ -10,7 +10,8 @@ import { VoiceInput } from './components/VoiceInput';
 import { PresetGrid } from './components/PresetGrid';
 import { ParameterSliders } from './components/ParameterSliders';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
-import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Play } from 'lucide-react';
+import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Play, Info, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Preset } from './services/storage';
 
 function App() {
   const [lastInterpretation, setLastInterpretation] = useState('');
@@ -35,6 +36,10 @@ function App() {
 
   // Popout window
   const [popoutWindow, setPopoutWindow] = useState<Window | null>(null);
+
+  // Preset info panel
+  const [hoveredPreset, setHoveredPreset] = useState<Preset | null>(null);
+  const [showInfoPanel, setShowInfoPanel] = useState(true);
 
   const {
     visualState,
@@ -1600,10 +1605,15 @@ function App() {
         </div>
 
         {/* Right: CONTROLS */}
-        <div className="w-1/2 p-3 flex flex-col gap-2 min-h-0">
+        <div className={`${showInfoPanel ? 'w-[40%]' : 'w-1/2'} p-3 flex flex-col gap-2 min-h-0 transition-all duration-300`}>
           {/* PRESETS - Compact row */}
           <div className="bg-zinc-900/80 backdrop-blur rounded-xl border border-white/10 px-3 py-2 overflow-x-hidden">
-            <PresetGrid presets={presets} onSelect={handleLoadPreset} currentPreset={presets.find(p => p.id === activePreset) || null} />
+            <PresetGrid
+              presets={presets}
+              onSelect={handleLoadPreset}
+              currentPreset={presets.find(p => p.id === activePreset) || null}
+              onHover={setHoveredPreset}
+            />
           </div>
 
           {/* CONTROLS - Takes remaining space */}
@@ -1613,6 +1623,52 @@ function App() {
             </div>
           </div>
         </div>
+
+        {/* Info Panel - Collapsible */}
+        <div className={`${showInfoPanel ? 'w-[10%]' : 'w-0'} transition-all duration-300 overflow-hidden`}>
+          {showInfoPanel && (
+            <div className="h-full p-3 pl-0">
+              <div className="h-full bg-zinc-900/80 backdrop-blur rounded-xl border border-white/10 p-3 flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5 text-white/60">
+                    <Info className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Info</span>
+                  </div>
+                  <button
+                    onClick={() => setShowInfoPanel(false)}
+                    className="text-white/40 hover:text-white/70 transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {hoveredPreset ? (
+                  <div className="flex-1 flex flex-col">
+                    <div className="text-sm font-bold text-white mb-1">{hoveredPreset.name}</div>
+                    <div className="text-[10px] text-purple-400 uppercase tracking-wide mb-2">{hoveredPreset.category}</div>
+                    <div className="text-xs text-white/70 leading-relaxed">{hoveredPreset.description || 'Experience this visual journey'}</div>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center">
+                    <span className="text-[10px] text-white/30 text-center">Hover a preset<br/>to see info</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Collapsed Info Panel Toggle */}
+        {!showInfoPanel && (
+          <div className="p-3 pl-0">
+            <button
+              onClick={() => setShowInfoPanel(true)}
+              className="h-full bg-zinc-900/80 backdrop-blur rounded-xl border border-white/10 px-2 flex items-center justify-center hover:bg-zinc-800/80 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4 text-white/60" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
