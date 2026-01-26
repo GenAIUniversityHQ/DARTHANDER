@@ -2,7 +2,7 @@
 // Parameter Sliders Component - STAGE READY
 
 import { useState } from 'react';
-import { Flame, Diamond, Zap, Rocket, Music, Waves, Sun, Info } from 'lucide-react';
+import { Flame, Diamond, Zap, Rocket, Music, Waves, Sun } from 'lucide-react';
 
 interface VisualState {
   overallIntensity: number;
@@ -734,8 +734,6 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
 
   if (!state) return null;
 
-  const beamsOn = (state.coronaIntensity ?? 0) > 0.05;
-
   // Handler to set local hover state AND notify parent
   const handleLayerHover = (id: string, category: string) => {
     setHoveredLayer({ id, category });
@@ -757,53 +755,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
   };
 
   return (
-    <div className="space-y-2 overflow-x-hidden relative">
-      {/* LAYER INFO PANEL - Sticky at top, always visible */}
-      <div className="sticky top-0 z-20 -mx-3 px-3 py-2 bg-zinc-900/95 backdrop-blur-sm border-b border-white/10">
-        <div className={`rounded-lg p-2.5 min-h-[56px] flex items-center transition-all duration-200
-                        ${hoveredLayer
-                          ? 'bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border border-purple-500/30'
-                          : 'bg-white/5 border border-white/10'}`}>
-          {hoveredLayer ? (
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
-                <Info className="w-4 h-4 text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="text-[11px] font-bold text-white uppercase tracking-wide">{hoveredLayer.id.replace(/-/g, ' ')}</div>
-                <div className="text-[9px] text-purple-400 uppercase mb-0.5">{hoveredLayer.category}</div>
-                <div className="text-[11px] text-white/80 leading-snug">
-                  {layerDescriptions[hoveredLayer.id] || 'Visual layer effect'}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3 text-white/40">
-              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                <Info className="w-4 h-4" />
-              </div>
-              <span className="text-[11px]">Hover any layer button to see what it does</span>
-            </div>
-          )}
-        </div>
-      </div>
-      {/* BEAMS TOGGLE - Big clear button */}
-      <div className="flex items-center gap-3 pb-2 border-b border-white/20">
-        <button
-          onClick={() => onChange('coronaIntensity', beamsOn ? 0 : 0.7)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all
-                     ${beamsOn
-                       ? 'bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/30'
-                       : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
-        >
-          <Sun className="w-5 h-5" />
-          BEAMS {beamsOn ? 'ON' : 'OFF'}
-        </button>
-        <span className="text-[10px] text-white/40">
-          Click to toggle corona rays
-        </span>
-      </div>
-
+    <div className="space-y-2 overflow-x-hidden">
       {/* SLIDERS - Compact */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-1">
         {sliders.map((slider) => {

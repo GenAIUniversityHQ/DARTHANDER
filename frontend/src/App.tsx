@@ -1480,6 +1480,21 @@ function App() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* BEAMS Toggle */}
+          <button
+            onClick={() => updateVisualParameter('coronaIntensity', (visualState?.coronaIntensity ?? 0) > 0.05 ? 0 : 0.7)}
+            className={`px-3 py-2 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all hover:scale-105
+                       ${(visualState?.coronaIntensity ?? 0) > 0.05
+                         ? 'bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/30'
+                         : 'bg-zinc-700 hover:bg-zinc-600 text-white/70'}`}
+            title="Toggle corona beams"
+          >
+            <Sun className="w-4 h-4" />
+            BEAMS {(visualState?.coronaIntensity ?? 0) > 0.05 ? 'ON' : 'OFF'}
+          </button>
+
+          <div className="w-px h-6 bg-white/20 mx-1" />
+
           {/* LIVE CONTROLS - Quick access */}
           <button
             onClick={handleGo}
