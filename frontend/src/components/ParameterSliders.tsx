@@ -713,26 +713,35 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
   const beamsOn = (state.coronaIntensity ?? 0) > 0.05;
 
   return (
-    <div className="space-y-2 overflow-x-hidden">
-      {/* LAYER INFO PANEL - Shows on hover */}
-      <div className="bg-white/5 rounded-lg p-2 border border-white/10 min-h-[48px] flex items-center">
-        {hoveredLayer ? (
-          <div className="flex items-start gap-2">
-            <Info className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" />
-            <div>
-              <div className="text-[10px] font-bold text-white uppercase">{hoveredLayer.id.replace(/-/g, ' ')}</div>
-              <div className="text-[9px] text-purple-400 uppercase mb-0.5">{hoveredLayer.category}</div>
-              <div className="text-[10px] text-white/70 leading-tight">
-                {layerDescriptions[hoveredLayer.id] || 'Visual layer effect'}
+    <div className="space-y-2 overflow-x-hidden relative">
+      {/* LAYER INFO PANEL - Sticky at top, always visible */}
+      <div className="sticky top-0 z-20 -mx-3 px-3 py-2 bg-zinc-900/95 backdrop-blur-sm border-b border-white/10">
+        <div className={`rounded-lg p-2.5 min-h-[56px] flex items-center transition-all duration-200
+                        ${hoveredLayer
+                          ? 'bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border border-purple-500/30'
+                          : 'bg-white/5 border border-white/10'}`}>
+          {hoveredLayer ? (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
+                <Info className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="text-[11px] font-bold text-white uppercase tracking-wide">{hoveredLayer.id.replace(/-/g, ' ')}</div>
+                <div className="text-[9px] text-purple-400 uppercase mb-0.5">{hoveredLayer.category}</div>
+                <div className="text-[11px] text-white/80 leading-snug">
+                  {layerDescriptions[hoveredLayer.id] || 'Visual layer effect'}
+                </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 text-white/30">
-            <Info className="w-4 h-4" />
-            <span className="text-[10px]">Hover a layer to see info</span>
-          </div>
-        )}
+          ) : (
+            <div className="flex items-center gap-3 text-white/40">
+              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                <Info className="w-4 h-4" />
+              </div>
+              <span className="text-[11px]">Hover any layer button to see what it does</span>
+            </div>
+          )}
+        </div>
       </div>
       {/* BEAMS TOGGLE - Big clear button */}
       <div className="flex items-center gap-3 pb-2 border-b border-white/20">
