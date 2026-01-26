@@ -1569,41 +1569,90 @@ function App() {
 
       {/* Main Content - Split Layout */}
       <div className="flex-1 flex min-h-0">
-        {/* Left: VISUALIZER */}
-        <div className="w-1/2 p-3 flex flex-col min-h-0">
-          {/* 16:9 aspect ratio container */}
-          <div className="w-full aspect-video rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-purple-500/20 bg-black">
+        {/* Left: VISUALIZER + INFO */}
+        <div className="w-1/2 p-3 flex flex-col min-h-0 gap-3">
+          {/* Video Preview - Smaller */}
+          <div className="w-[85%] aspect-video rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-purple-500/20 bg-black mx-auto">
             <PreviewMonitor state={visualState} canvasId="preview-canvas" />
           </div>
 
-          {/* Prompt Bar - Clean and simple */}
-          <div className="mt-3 bg-zinc-900/80 backdrop-blur rounded-2xl p-3 flex items-center gap-3 border border-white/10">
+          {/* Layer/Preset Info Panel - Below Video */}
+          <div className={`flex-1 min-h-[120px] rounded-xl border p-3 transition-all duration-200 ${
+            hoveredLayer
+              ? 'bg-gradient-to-br from-purple-900/40 to-indigo-900/40 border-purple-500/40'
+              : hoveredPreset
+                ? 'bg-gradient-to-br from-pink-900/40 to-purple-900/40 border-pink-500/40'
+                : 'bg-zinc-900/60 border-white/10'
+          }`}>
+            {hoveredLayer ? (
+              <div className="h-full flex gap-4">
+                {/* Color Preview */}
+                <div className={`w-24 h-full rounded-xl ${hoveredLayer.color} relative overflow-hidden shadow-lg shrink-0`}>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                </div>
+                {/* Info */}
+                <div className="flex-1 flex flex-col justify-center">
+                  <div className="text-lg font-black text-white uppercase tracking-wide">{hoveredLayer.id.replace(/-/g, ' ')}</div>
+                  <div className="text-xs text-purple-400 uppercase tracking-wide mb-1">{hoveredLayer.category}</div>
+                  <div className="text-sm text-white/70 leading-relaxed">{hoveredLayer.description}</div>
+                </div>
+              </div>
+            ) : hoveredPreset ? (
+              <div className="h-full flex flex-col justify-center">
+                <div className="text-lg font-black text-white mb-1">{hoveredPreset.name}</div>
+                <div className="text-xs text-pink-400 uppercase tracking-wide mb-2">{hoveredPreset.category}</div>
+                <div className="text-sm text-white/70 leading-relaxed">{hoveredPreset.description || 'Experience this visual journey'}</div>
+              </div>
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-white/30 text-sm mb-1">Hover any layer or preset</div>
+                  <div className="text-white/20 text-xs">to see preview info here</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Prompt Bar */}
+          <div className="bg-zinc-900/80 backdrop-blur rounded-xl p-2.5 flex items-center gap-3 border border-white/10">
             <VoiceInput isActive={isVoiceActive} onToggle={() => setIsVoiceActive(!isVoiceActive)} onTranscription={handlePromptSubmit} />
             <div className="flex-1">
               <PromptInput onSubmit={handlePromptSubmit} placeholder="Type a command..." compact />
             </div>
-            <div className={`text-sm font-bold px-3 py-1 rounded-lg ${isProcessing ? 'bg-cyan-500/20 text-cyan-400 animate-pulse' : 'bg-white/5 text-white/60'}`}>
+            <div className={`text-xs font-bold px-2 py-1 rounded ${isProcessing ? 'bg-cyan-500/20 text-cyan-400 animate-pulse' : 'bg-white/5 text-white/60'}`}>
               {lastInterpretation || 'Ready'}
             </div>
           </div>
 
-          {/* Session Context Indicator - Shows what AI is learning about your style */}
-          {sessionContext.recentCommands.length > 0 && (
-            <div className="mt-1 flex items-center gap-2 text-[9px] text-white/40 px-2">
-              <span className="text-purple-400/60">VIBE:</span>
-              <span className="text-white/50">{sessionContext.currentVibe}</span>
-              {sessionContext.detectedStyle.preferredLayers.length > 0 && (
-                <>
-                  <span className="text-purple-400/40">•</span>
-                  <span className="text-cyan-400/50">{sessionContext.detectedStyle.preferredLayers.slice(0, 2).join(', ')}</span>
-                </>
-              )}
-            </div>
-          )}
+          {/* Active Layers Quick View */}
+          <div className="flex flex-wrap gap-1.5 text-[10px]">
+            {visualState?.geometryMode && (
+              <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-medium">{visualState.geometryMode}</span>
+            )}
+            {visualState?.geometryLayer2 && visualState.geometryLayer2 !== 'none' && (
+              <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-medium">{visualState.geometryLayer2}</span>
+            )}
+            {(visualState as any)?.geometryLayer3 && (visualState as any).geometryLayer3 !== 'none' && (
+              <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-medium">{(visualState as any).geometryLayer3}</span>
+            )}
+            {(visualState as any)?.geometryLayer4 && (visualState as any).geometryLayer4 !== 'none' && (
+              <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-medium">{(visualState as any).geometryLayer4}</span>
+            )}
+            {(visualState as any)?.geometryLayer5 && (visualState as any).geometryLayer5 !== 'none' && (
+              <span className="px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 font-medium">{(visualState as any).geometryLayer5}</span>
+            )}
+            {visualState?.colorPalette && (
+              <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-medium">{visualState.colorPalette}</span>
+            )}
+            {visualState?.motionDirection && (
+              <span className="px-2 py-0.5 rounded bg-green-500/20 text-green-300 font-medium">{visualState.motionDirection}</span>
+            )}
+          </div>
         </div>
 
         {/* Right: CONTROLS */}
-        <div className={`${showInfoPanel ? 'w-[40%]' : 'w-1/2'} p-3 flex flex-col gap-2 min-h-0 transition-all duration-300`}>
+        <div className="w-1/2 p-3 flex flex-col gap-2 min-h-0">
           {/* PRESETS - Compact row */}
           <div className="bg-zinc-900/80 backdrop-blur rounded-xl border border-white/10 px-3 py-2 overflow-x-hidden">
             <PresetGrid
@@ -1621,79 +1670,6 @@ function App() {
             </div>
           </div>
         </div>
-
-        {/* Info Panel - Collapsible - LAYER PREVIEW */}
-        <div className={`${showInfoPanel ? 'w-[18%] min-w-[180px]' : 'w-0'} transition-all duration-300 overflow-hidden`}>
-          {showInfoPanel && (
-            <div className="h-full p-3 pl-0">
-              <div className={`h-full backdrop-blur rounded-xl border p-3 flex flex-col transition-all duration-200 ${
-                hoveredLayer
-                  ? 'bg-gradient-to-b from-purple-900/60 to-zinc-900/90 border-purple-500/40 shadow-lg shadow-purple-500/20'
-                  : 'bg-zinc-900/80 border-white/10'
-              }`}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5 text-white/60">
-                    <Info className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">
-                      {hoveredLayer ? 'Layer Preview' : 'Info'}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setShowInfoPanel(false)}
-                    className="text-white/40 hover:text-white/70 transition-colors"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {hoveredLayer ? (
-                  <div className="flex-1 flex flex-col">
-                    {/* Visual color preview - LARGE */}
-                    <div className={`w-full h-24 rounded-xl mb-3 ${hoveredLayer.color} relative overflow-hidden shadow-lg`}>
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                      {/* Animated shimmer effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
-                      <div className="absolute bottom-2 right-2 text-[9px] text-white/80 uppercase tracking-wider font-bold bg-black/30 px-2 py-0.5 rounded">
-                        {hoveredLayer.category}
-                      </div>
-                    </div>
-                    <div className="text-base font-bold text-white mb-1 uppercase tracking-wide">{hoveredLayer.id.replace(/-/g, ' ')}</div>
-                    <div className="text-[11px] text-purple-400 uppercase tracking-wide mb-2 font-medium">{hoveredLayer.category}</div>
-                    <div className="text-sm text-white/80 leading-relaxed flex-1">{hoveredLayer.description}</div>
-                  </div>
-                ) : hoveredPreset ? (
-                  <div className="flex-1 flex flex-col">
-                    <div className="text-sm font-bold text-white mb-1">{hoveredPreset.name}</div>
-                    <div className="text-[10px] text-purple-400 uppercase tracking-wide mb-2">{hoveredPreset.category}</div>
-                    <div className="text-xs text-white/70 leading-relaxed">{hoveredPreset.description || 'Experience this visual journey'}</div>
-                  </div>
-                ) : (
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                        <Info className="w-6 h-6 text-white/20" />
-                      </div>
-                      <span className="text-[11px] text-white/30">Hover any layer<br/>to see preview</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Collapsed Info Panel Toggle */}
-        {!showInfoPanel && (
-          <div className="p-3 pl-0">
-            <button
-              onClick={() => setShowInfoPanel(true)}
-              className="h-full bg-zinc-900/80 backdrop-blur rounded-xl border border-white/10 px-2 flex items-center justify-center hover:bg-zinc-800/80 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4 text-white/60" />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
