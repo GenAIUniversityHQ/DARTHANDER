@@ -1568,13 +1568,12 @@ function App() {
       </header>
 
       {/* Main Content - Split Layout */}
-      <div className="flex-1 flex min-h-0 overflow-hidden">
-        {/* Left: VISUALIZER - The Star of the Show */}
-        <div className="w-1/2 p-2 flex flex-col min-h-0">
-          <div className="flex-1 rounded-xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-purple-500/20 bg-black relative">
-            <div className="absolute inset-0">
-              <PreviewMonitor state={visualState} canvasId="preview-canvas" />
-            </div>
+      <div className="flex-1 flex min-h-0">
+        {/* Left: VISUALIZER */}
+        <div className="w-1/2 p-3 flex flex-col min-h-0">
+          {/* 16:9 aspect ratio container */}
+          <div className="w-full aspect-video rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-purple-500/20 bg-black">
+            <PreviewMonitor state={visualState} canvasId="preview-canvas" />
           </div>
 
           {/* Prompt Bar - Clean and simple */}

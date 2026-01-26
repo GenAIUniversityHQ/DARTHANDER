@@ -644,8 +644,8 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
   }, [state, audioState]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
-      <canvas ref={canvasRef} id={canvasId} className="w-full h-full object-cover" style={{ background: '#050510' }} />
+    <div className="relative w-full h-full">
+      <canvas ref={canvasRef} id={canvasId} className="w-full h-full" style={{ background: '#050510' }} />
       <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-[9px] font-mono text-white/50">
         {state?.geometryMode || 'stars'}
         {state?.geometryLayer2 && state.geometryLayer2 !== 'none' && ` + ${state.geometryLayer2}`}
