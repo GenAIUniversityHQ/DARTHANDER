@@ -1570,12 +1570,10 @@ function App() {
       {/* Main Content - Split Layout */}
       <div className="flex-1 flex min-h-0">
         {/* Left: VISUALIZER - The Star of the Show (16:9 YouTube optimized) */}
-        <div className="w-1/2 p-3 flex flex-col min-h-0">
-          <div className="flex-1 min-h-0 flex items-center justify-center bg-black/50 rounded-2xl">
-            <div className="relative w-full h-0 pb-[56.25%] rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-purple-500/20">
-              <div className="absolute inset-0">
-                <PreviewMonitor state={visualState} canvasId="preview-canvas" />
-              </div>
+        <div className="w-1/2 p-3 pt-0 flex flex-col min-h-0">
+          <div className="flex-1 min-h-0 flex flex-col bg-black/50 rounded-2xl overflow-hidden">
+            <div className="relative w-full flex-1 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-purple-500/20">
+              <PreviewMonitor state={visualState} canvasId="preview-canvas" />
             </div>
           </div>
 
@@ -1625,15 +1623,21 @@ function App() {
           </div>
         </div>
 
-        {/* Info Panel - Collapsible */}
-        <div className={`${showInfoPanel ? 'w-[10%]' : 'w-0'} transition-all duration-300 overflow-hidden`}>
+        {/* Info Panel - Collapsible - LAYER PREVIEW */}
+        <div className={`${showInfoPanel ? 'w-[18%] min-w-[180px]' : 'w-0'} transition-all duration-300 overflow-hidden`}>
           {showInfoPanel && (
             <div className="h-full p-3 pl-0">
-              <div className="h-full bg-zinc-900/80 backdrop-blur rounded-xl border border-white/10 p-3 flex flex-col">
+              <div className={`h-full backdrop-blur rounded-xl border p-3 flex flex-col transition-all duration-200 ${
+                hoveredLayer
+                  ? 'bg-gradient-to-b from-purple-900/60 to-zinc-900/90 border-purple-500/40 shadow-lg shadow-purple-500/20'
+                  : 'bg-zinc-900/80 border-white/10'
+              }`}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5 text-white/60">
                     <Info className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Info</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">
+                      {hoveredLayer ? 'Layer Preview' : 'Info'}
+                    </span>
                   </div>
                   <button
                     onClick={() => setShowInfoPanel(false)}
@@ -1645,17 +1649,19 @@ function App() {
 
                 {hoveredLayer ? (
                   <div className="flex-1 flex flex-col">
-                    {/* Visual color preview */}
-                    <div className={`w-full h-16 rounded-lg mb-2 ${hoveredLayer.color} relative overflow-hidden`}>
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                      <div className="absolute bottom-1 right-1 text-[8px] text-white/60 uppercase tracking-wider">
+                    {/* Visual color preview - LARGE */}
+                    <div className={`w-full h-24 rounded-xl mb-3 ${hoveredLayer.color} relative overflow-hidden shadow-lg`}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                      {/* Animated shimmer effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
+                      <div className="absolute bottom-2 right-2 text-[9px] text-white/80 uppercase tracking-wider font-bold bg-black/30 px-2 py-0.5 rounded">
                         {hoveredLayer.category}
                       </div>
                     </div>
-                    <div className="text-sm font-bold text-white mb-1 uppercase">{hoveredLayer.id.replace(/-/g, ' ')}</div>
-                    <div className="text-[10px] text-purple-400 uppercase tracking-wide mb-1">{hoveredLayer.category}</div>
-                    <div className="text-xs text-white/70 leading-relaxed flex-1">{hoveredLayer.description}</div>
+                    <div className="text-base font-bold text-white mb-1 uppercase tracking-wide">{hoveredLayer.id.replace(/-/g, ' ')}</div>
+                    <div className="text-[11px] text-purple-400 uppercase tracking-wide mb-2 font-medium">{hoveredLayer.category}</div>
+                    <div className="text-sm text-white/80 leading-relaxed flex-1">{hoveredLayer.description}</div>
                   </div>
                 ) : hoveredPreset ? (
                   <div className="flex-1 flex flex-col">
@@ -1665,7 +1671,12 @@ function App() {
                   </div>
                 ) : (
                   <div className="flex-1 flex items-center justify-center">
-                    <span className="text-[10px] text-white/30 text-center">Hover a layer<br/>or preset<br/>to see info</span>
+                    <div className="text-center">
+                      <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                        <Info className="w-6 h-6 text-white/20" />
+                      </div>
+                      <span className="text-[11px] text-white/30">Hover any layer<br/>to see preview</span>
+                    </div>
                   </div>
                 )}
               </div>
