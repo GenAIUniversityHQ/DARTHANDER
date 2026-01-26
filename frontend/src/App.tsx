@@ -10,7 +10,7 @@ import { VoiceInput } from './components/VoiceInput';
 import { PresetGrid } from './components/PresetGrid';
 import { ParameterSliders } from './components/ParameterSliders';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
-import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Play, Sun } from 'lucide-react';
+import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Play, Sun, ChevronDown, ChevronUp } from 'lucide-react';
 import { Preset } from './services/storage';
 
 function App() {
@@ -40,6 +40,7 @@ function App() {
   // Preset info panel
   const [hoveredPreset, setHoveredPreset] = useState<Preset | null>(null);
   const [hoveredLayer, setHoveredLayer] = useState<{id: string, category: string, description: string, color: string} | null>(null);
+  const [infoPanelCollapsed, setInfoPanelCollapsed] = useState(false);
 
   const {
     visualState,
@@ -1590,40 +1591,103 @@ function App() {
             <PreviewMonitor state={visualState} canvasId="preview-canvas" />
           </div>
 
-          {/* Layer/Preset Info Panel - Below Video */}
-          <div className={`flex-1 min-h-[120px] rounded-xl border p-3 transition-all duration-200 ${
+          {/* Layer/Preset Info Panel - Below Video - COLLAPSIBLE */}
+          <div className={`rounded-xl border transition-all duration-200 ${
             hoveredLayer
               ? 'bg-gradient-to-br from-purple-900/40 to-indigo-900/40 border-purple-500/40'
               : hoveredPreset
                 ? 'bg-gradient-to-br from-pink-900/40 to-purple-900/40 border-pink-500/40'
                 : 'bg-zinc-900/60 border-white/10'
           }`}>
-            {hoveredLayer ? (
-              <div className="h-full flex gap-4">
-                {/* Color Preview */}
-                <div className={`w-24 h-full rounded-xl ${hoveredLayer.color} relative overflow-hidden shadow-lg shrink-0`}>
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                </div>
-                {/* Info */}
-                <div className="flex-1 flex flex-col justify-center">
-                  <div className="text-lg font-black text-white uppercase tracking-wide">{hoveredLayer.id.replace(/-/g, ' ')}</div>
-                  <div className="text-xs text-purple-400 uppercase tracking-wide mb-1">{hoveredLayer.category}</div>
-                  <div className="text-sm text-white/70 leading-relaxed">{hoveredLayer.description}</div>
-                </div>
-              </div>
-            ) : hoveredPreset ? (
-              <div className="h-full flex flex-col justify-center">
-                <div className="text-lg font-black text-white mb-1">{hoveredPreset.name}</div>
-                <div className="text-xs text-pink-400 uppercase tracking-wide mb-2">{hoveredPreset.category}</div>
-                <div className="text-sm text-white/70 leading-relaxed">{hoveredPreset.description || 'Experience this visual journey'}</div>
-              </div>
-            ) : (
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-white/30 text-sm mb-1">Hover any layer or preset</div>
-                  <div className="text-white/20 text-xs">to see preview info here</div>
-                </div>
+            {/* Collapse Header */}
+            <button
+              onClick={() => setInfoPanelCollapsed(!infoPanelCollapsed)}
+              className="w-full px-3 py-2 flex items-center justify-between hover:bg-white/5 rounded-t-xl transition-colors"
+            >
+              <span className="text-xs font-bold text-white/50 uppercase tracking-wider">
+                {hoveredLayer ? `${hoveredLayer.category}: ${hoveredLayer.id}` : hoveredPreset ? `Preset: ${hoveredPreset.name}` : 'Layer Preview'}
+              </span>
+              {infoPanelCollapsed ? <ChevronDown className="w-4 h-4 text-white/40" /> : <ChevronUp className="w-4 h-4 text-white/40" />}
+            </button>
+
+            {/* Collapsible Content */}
+            {!infoPanelCollapsed && (
+              <div className="p-3 pt-0">
+                {hoveredLayer ? (
+                  <div className="flex gap-3">
+                    {/* Mini Preview Canvas - Shows Isolated Layer */}
+                    <div className="w-32 h-24 rounded-lg overflow-hidden border border-white/20 bg-black shrink-0 shadow-lg">
+                      <PreviewMonitor
+                        state={{
+                          ...visualState,
+                          // Isolate: only show this layer
+                          geometryMode: hoveredLayer.category === 'Geometry Mode' ? hoveredLayer.id : 'stars',
+                          geometryLayer2: hoveredLayer.category === 'Sacred Geometry' ? hoveredLayer.id : 'none',
+                          geometryLayer3: hoveredLayer.category === 'Quantum' ? hoveredLayer.id : 'none',
+                          geometryLayer4: hoveredLayer.category === 'Cosmic' ? hoveredLayer.id : 'none',
+                          geometryLayer5: hoveredLayer.category === 'Lifeforce' ? hoveredLayer.id : 'none',
+                          geometryLayer6: hoveredLayer.category === 'Ancient Wisdom' ? hoveredLayer.id : 'none',
+                          geometryLayer7: hoveredLayer.category === '4D Geometry' ? hoveredLayer.id : 'none',
+                          geometryLayer8: hoveredLayer.category === 'Consciousness' ? hoveredLayer.id : 'none',
+                          geometryLayer9: hoveredLayer.category === '5D Geometry' ? hoveredLayer.id : 'none',
+                          geometryLayer10: hoveredLayer.category === '6D+ Geometry' ? hoveredLayer.id : 'none',
+                          geometryLayer11: hoveredLayer.category === 'Fractal' ? hoveredLayer.id : 'none',
+                          geometryLayer12: hoveredLayer.category === 'Chaos Attractor' ? hoveredLayer.id : 'none',
+                          geometryLayer13: hoveredLayer.category === 'Reality / Simulation' ? hoveredLayer.id : 'none',
+                          geometryLayer14: hoveredLayer.category === 'Impossible / Paradox' ? hoveredLayer.id : 'none',
+                          elementalLayer: hoveredLayer.category === 'Elemental' ? hoveredLayer.id : 'none',
+                          energyLayer: hoveredLayer.category === 'Energy' ? hoveredLayer.id : 'none',
+                          textureLayer: hoveredLayer.category === 'Texture' ? hoveredLayer.id : 'none',
+                          alteredLayer: hoveredLayer.category === 'Altered States' ? hoveredLayer.id : 'none',
+                          celestialLayer: hoveredLayer.category === 'Celestial' ? hoveredLayer.id : 'none',
+                          emotionLayer: hoveredLayer.category === 'Emotion' ? hoveredLayer.id : 'none',
+                          natureLayer: hoveredLayer.category === 'Nature' ? hoveredLayer.id : 'none',
+                          mythicLayer: hoveredLayer.category === 'Mythic' ? hoveredLayer.id : 'none',
+                          alchemicalLayer: hoveredLayer.category === 'Alchemical' ? hoveredLayer.id : 'none',
+                          waveformLayer: hoveredLayer.category === 'Waveform' ? hoveredLayer.id : 'none',
+                          temporalLayer: hoveredLayer.category === 'Temporal' ? hoveredLayer.id : 'none',
+                          motionDirection: hoveredLayer.category === 'Motion Direction' ? hoveredLayer.id : 'outward',
+                          colorPalette: hoveredLayer.category.includes('Palette') ? hoveredLayer.id : visualState?.colorPalette || 'cosmos',
+                          overallIntensity: 0.7,
+                          motionSpeed: 0.5,
+                        } as any}
+                        canvasId={`preview-isolated-${hoveredLayer.id}`}
+                      />
+                    </div>
+                    {/* Color Swatch + Info */}
+                    <div className="flex-1 flex flex-col justify-center min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className={`w-4 h-4 rounded ${hoveredLayer.color} shrink-0`} />
+                        <div className="text-base font-black text-white uppercase tracking-wide truncate">{hoveredLayer.id.replace(/-/g, ' ')}</div>
+                      </div>
+                      <div className="text-[10px] text-purple-400 uppercase tracking-wide mb-1">{hoveredLayer.category}</div>
+                      <div className="text-xs text-white/70 leading-relaxed line-clamp-2">{hoveredLayer.description}</div>
+                    </div>
+                  </div>
+                ) : hoveredPreset ? (
+                  <div className="flex gap-3">
+                    {/* Mini Preview Canvas - Shows Preset */}
+                    <div className="w-32 h-24 rounded-lg overflow-hidden border border-white/20 bg-black shrink-0 shadow-lg">
+                      <PreviewMonitor
+                        state={hoveredPreset.state as any}
+                        canvasId={`preview-preset-${hoveredPreset.id}`}
+                      />
+                    </div>
+                    {/* Info */}
+                    <div className="flex-1 flex flex-col justify-center min-w-0">
+                      <div className="text-base font-black text-white mb-0.5 truncate">{hoveredPreset.name}</div>
+                      <div className="text-[10px] text-pink-400 uppercase tracking-wide mb-1">{hoveredPreset.category}</div>
+                      <div className="text-xs text-white/70 leading-relaxed line-clamp-2">{hoveredPreset.description || 'Experience this visual journey'}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-16 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-white/30 text-xs mb-0.5">Hover any layer or preset</div>
+                      <div className="text-white/20 text-[10px]">to see isolated preview</div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
