@@ -10,7 +10,7 @@ import { VoiceInput } from './components/VoiceInput';
 import { PresetGrid } from './components/PresetGrid';
 import { ParameterSliders } from './components/ParameterSliders';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
-import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Play, Info, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Play, Sun } from 'lucide-react';
 import { Preset } from './services/storage';
 
 function App() {
@@ -40,7 +40,6 @@ function App() {
   // Preset info panel
   const [hoveredPreset, setHoveredPreset] = useState<Preset | null>(null);
   const [hoveredLayer, setHoveredLayer] = useState<{id: string, category: string, description: string, color: string} | null>(null);
-  const [showInfoPanel, setShowInfoPanel] = useState(true);
 
   const {
     visualState,

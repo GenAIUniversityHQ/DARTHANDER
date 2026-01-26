@@ -160,7 +160,6 @@ const layerDescriptions: Record<string, string> = {
   'particle': 'Granular texture - sand/dust',
   'grain': 'Film grain - analog warmth',
   'iridescent': 'Rainbow shimmer - oil on water',
-  'holographic': 'Laser interference - 3D surface',
   'neon-glow': 'Electric tubes - 80s aesthetic',
   // Altered States
   'hypnotic': 'Trance induction - spiral focus',
@@ -246,7 +245,6 @@ const layerDescriptions: Record<string, string> = {
   'julia': 'Related set - varying parameter',
   'sierpinski': 'Triangle holes - self-similar',
   'koch': 'Snowflake curve - infinite coastline',
-  'dragon': 'Folding curve - paper dragon',
   'tree-fractal': 'Branching pattern - natural growth',
   'menger': 'Sponge cube - infinite holes',
   'apollonian': 'Circle packing - nested circles',
@@ -730,7 +728,7 @@ const getLayerColor = (id: string): string => {
 };
 
 export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSlidersProps) {
-  const [hoveredLayer, setHoveredLayer] = useState<{id: string, category: string} | null>(null);
+  const [_hoveredLayer, setHoveredLayer] = useState<{id: string, category: string} | null>(null);
 
   if (!state) return null;
 
