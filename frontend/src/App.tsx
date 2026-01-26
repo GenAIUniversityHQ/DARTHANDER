@@ -1568,11 +1568,13 @@ function App() {
       </header>
 
       {/* Main Content - Split Layout */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Left: VISUALIZER - The Star of the Show */}
-        <div className="w-1/2 pl-3 pr-1.5 pb-3 flex flex-col min-h-0">
-          <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-purple-500/20 bg-black">
-            <PreviewMonitor state={visualState} canvasId="preview-canvas" />
+        <div className="w-1/2 p-2 flex flex-col min-h-0">
+          <div className="flex-1 rounded-xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-purple-500/20 bg-black relative">
+            <div className="absolute inset-0">
+              <PreviewMonitor state={visualState} canvasId="preview-canvas" />
+            </div>
           </div>
 
           {/* Prompt Bar - Clean and simple */}
