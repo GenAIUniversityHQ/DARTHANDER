@@ -39,6 +39,7 @@ function App() {
 
   // Preset info panel
   const [hoveredPreset, setHoveredPreset] = useState<Preset | null>(null);
+  const [hoveredLayer, setHoveredLayer] = useState<{id: string, category: string, description: string, color: string} | null>(null);
   const [showInfoPanel, setShowInfoPanel] = useState(true);
 
   const {
@@ -1619,7 +1620,7 @@ function App() {
           {/* CONTROLS - Takes remaining space */}
           <div className="bg-zinc-900/80 backdrop-blur rounded-xl border border-white/10 overflow-hidden flex-1 min-h-0 flex flex-col">
             <div className="px-3 py-2 overflow-y-auto overflow-x-hidden flex-1">
-              <ParameterSliders state={visualState} onChange={(p, v) => updateVisualParameter(p, v)} />
+              <ParameterSliders state={visualState} onChange={(p, v) => updateVisualParameter(p, v)} onLayerHover={setHoveredLayer} />
             </div>
           </div>
         </div>
@@ -1642,7 +1643,21 @@ function App() {
                   </button>
                 </div>
 
-                {hoveredPreset ? (
+                {hoveredLayer ? (
+                  <div className="flex-1 flex flex-col">
+                    {/* Visual color preview */}
+                    <div className={`w-full h-16 rounded-lg mb-2 ${hoveredLayer.color} relative overflow-hidden`}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                      <div className="absolute bottom-1 right-1 text-[8px] text-white/60 uppercase tracking-wider">
+                        {hoveredLayer.category}
+                      </div>
+                    </div>
+                    <div className="text-sm font-bold text-white mb-1 uppercase">{hoveredLayer.id.replace(/-/g, ' ')}</div>
+                    <div className="text-[10px] text-purple-400 uppercase tracking-wide mb-1">{hoveredLayer.category}</div>
+                    <div className="text-xs text-white/70 leading-relaxed flex-1">{hoveredLayer.description}</div>
+                  </div>
+                ) : hoveredPreset ? (
                   <div className="flex-1 flex flex-col">
                     <div className="text-sm font-bold text-white mb-1">{hoveredPreset.name}</div>
                     <div className="text-[10px] text-purple-400 uppercase tracking-wide mb-2">{hoveredPreset.category}</div>
@@ -1650,7 +1665,7 @@ function App() {
                   </div>
                 ) : (
                   <div className="flex-1 flex items-center justify-center">
-                    <span className="text-[10px] text-white/30 text-center">Hover a preset<br/>to see info</span>
+                    <span className="text-[10px] text-white/30 text-center">Hover a layer<br/>or preset<br/>to see info</span>
                   </div>
                 )}
               </div>

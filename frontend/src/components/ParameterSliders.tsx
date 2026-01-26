@@ -22,9 +22,17 @@ interface VisualState {
   geometryLayer2?: string;
 }
 
+export interface LayerHoverInfo {
+  id: string;
+  category: string;
+  description: string;
+  color: string;
+}
+
 interface ParameterSlidersProps {
   state: VisualState | null;
   onChange: (parameter: string, value: number) => void;
+  onLayerHover?: (layer: LayerHoverInfo | null) => void;
 }
 
 // Layer descriptions for hover info
@@ -705,12 +713,48 @@ const motionDirs = [
   { id: 'still', label: 'STILL', color: 'bg-slate-500' },
 ];
 
-export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
+// Helper to get color for a layer from our layer arrays
+const getLayerColor = (id: string): string => {
+  // Search through all layer arrays to find the color
+  const allLayers = [
+    ...geometryModes, ...sacredGeometry, ...ancientGeometry, ...geometry4D,
+    ...geometry5D, ...geometry6D, ...impossibleGeometry, ...fractalGeometry,
+    ...chaosGeometry, ...realityGeometry, ...quantumGeometry, ...cosmicLayers,
+    ...lifeforceGeometry, ...consciousnessGeometry, ...elementalLayers,
+    ...energyLayers, ...textureLayers, ...alteredLayers, ...celestialLayers,
+    ...emotionLayers, ...natureLayers, ...mythicLayers, ...alchemicalLayers,
+    ...waveformLayers, ...temporalLayers, ...motionDirs
+  ];
+  const found = allLayers.find(l => l.id === id);
+  return found?.color || 'bg-purple-500';
+};
+
+export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSlidersProps) {
   const [hoveredLayer, setHoveredLayer] = useState<{id: string, category: string} | null>(null);
 
   if (!state) return null;
 
   const beamsOn = (state.coronaIntensity ?? 0) > 0.05;
+
+  // Handler to set local hover state AND notify parent
+  const handleLayerHover = (id: string, category: string) => {
+    setHoveredLayer({ id, category });
+    if (onLayerHover) {
+      onLayerHover({
+        id,
+        category,
+        description: layerDescriptions[id] || 'Visual layer effect',
+        color: getLayerColor(id)
+      });
+    }
+  };
+
+  const handleLayerLeave = () => {
+    setHoveredLayer(null);
+    if (onLayerHover) {
+      onLayerHover(null);
+    }
+  };
 
   return (
     <div className="space-y-2 overflow-x-hidden relative">
@@ -862,8 +906,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={mode.id}
                 onClick={() => onChange('geometryMode', mode.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: mode.id, category: 'Geometry Mode'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(mode.id, 'Geometry Mode')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-1 rounded text-[10px] font-bold uppercase
                            ${state.geometryMode === mode.id
                              ? `${mode.color} text-white`
@@ -883,8 +927,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={dir.id}
                 onClick={() => onChange('motionDirection', dir.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: dir.id, category: 'Motion Direction'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(dir.id, 'Motion Direction')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-1 rounded text-[10px] font-bold uppercase
                            ${dir.id === 'flow' ? 'relative' : ''}
                            ${state.motionDirection === dir.id
@@ -918,8 +962,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={geo.id}
                 onClick={() => onChange('geometryLayer2', geo.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: geo.id, category: 'Sacred Geometry'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(geo.id, 'Sacred Geometry')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${state.geometryLayer2 === geo.id
                              ? `${geo.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -946,8 +990,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={geo.id}
                 onClick={() => onChange('geometryLayer3', geo.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: geo.id, category: 'Quantum'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(geo.id, 'Quantum')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer3 === geo.id
                              ? `${geo.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -974,8 +1018,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer4', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Cosmic'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Cosmic')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer4 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1002,8 +1046,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer5', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Lifeforce'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Lifeforce')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer5 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1030,8 +1074,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer6', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Ancient Wisdom'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Ancient Wisdom')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer6 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1058,8 +1102,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer7', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: '4D Geometry'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, '4D Geometry')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer7 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1086,8 +1130,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer9', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: '5D Geometry'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, '5D Geometry')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer9 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1114,8 +1158,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer10', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: '6D+ Geometry'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, '6D+ Geometry')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer10 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1142,8 +1186,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer8', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Consciousness'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Consciousness')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer8 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1170,8 +1214,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer11', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Fractal'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Fractal')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer11 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1198,8 +1242,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer12', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Chaos Attractor'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Chaos Attractor')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer12 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1226,8 +1270,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer13', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Reality / Simulation'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Reality / Simulation')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer13 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1254,8 +1298,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('geometryLayer14', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Impossible / Paradox'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Impossible / Paradox')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).geometryLayer14 === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1287,8 +1331,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('elementalLayer', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Elemental'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Elemental')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).elementalLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1315,8 +1359,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('energyLayer', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Energy'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Energy')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).energyLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1343,8 +1387,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('textureLayer', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Texture'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Texture')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).textureLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1371,8 +1415,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('alteredLayer', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Altered States'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Altered States')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).alteredLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1399,8 +1443,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('celestialLayer', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Celestial'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Celestial')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).celestialLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1427,8 +1471,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('emotionLayer', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Emotion'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Emotion')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).emotionLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1455,8 +1499,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('natureLayer', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Nature'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Nature')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).natureLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1483,8 +1527,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('mythicLayer', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Mythic'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Mythic')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).mythicLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1511,8 +1555,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('alchemicalLayer', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Alchemical'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Alchemical')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).alchemicalLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1539,8 +1583,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('waveformLayer', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Waveform'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Waveform')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).waveformLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
@@ -1567,8 +1611,8 @@ export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
               <button
                 key={layer.id}
                 onClick={() => onChange('temporalLayer', layer.id as any)}
-                onMouseEnter={() => setHoveredLayer({id: layer.id, category: 'Temporal'})}
-                onMouseLeave={() => setHoveredLayer(null)}
+                onMouseEnter={() => handleLayerHover(layer.id, 'Temporal')}
+                onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
                            ${(state as any).temporalLayer === layer.id
                              ? `${layer.color} text-white` : 'bg-white/10 text-white/50'}`}
