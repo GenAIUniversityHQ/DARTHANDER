@@ -302,6 +302,7 @@ export interface VisualState {
   overallIntensity: number;
   chaosFactor: number;
   bassImpact: number;
+  bassPulseScale: number;  // 0-1, how much the visuals zoom/pulse on bass beats
   audioReactGeometry: number;
   audioReactColor: number;
   audioReactMotion: number;
@@ -376,6 +377,7 @@ export const DEFAULT_VISUAL_STATE: VisualState = {
   overallIntensity: 0.4,
   chaosFactor: 0.0,
   bassImpact: 0.5,
+  bassPulseScale: 0.3,
   audioReactGeometry: 0.3,
   audioReactColor: 0.2,
   audioReactMotion: 0.3,

@@ -23,6 +23,7 @@ interface VisualState {
   depthMode: string;
   chaosFactor: number;
   bassImpact?: number;
+  bassPulseScale?: number;  // 0-1, dramatic zoom/pulse on bass beats
   audioReactGeometry: number;
   audioReactColor: number;
   audioReactMotion: number;
@@ -128,6 +129,10 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
   const timeRef = useRef(0);
   const particlesRef = useRef<Array<{x: number; y: number; vx: number; vy: number; size: number; hue: number}>>([]);
 
+  // Background image ref for rendering
+  const backgroundImageRef = useRef<HTMLImageElement | null>(null);
+  const backgroundImageUrlRef = useRef<string | null>(null);
+
   // Flow state for dancer-like adaptive movement
   const flowRef = useRef<FlowState>({
     energy: 0,
@@ -143,6 +148,7 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
   });
 
   const audioState = useStore((s) => s.audioState);
+  const backgroundImage = useStore((s) => s.backgroundImage);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -258,6 +264,54 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
       ctx.fillStyle = `rgba(${bgColors.baseDark.r}, ${bgColors.baseDark.g}, ${bgColors.baseDark.b}, ${0.15 + bass * 0.1})`;
       ctx.fillRect(0, 0, width, height);
 
+      // === BACKGROUND IMAGE LAYER ===
+      // Load/update background image if URL changed
+      if (backgroundImage.url !== backgroundImageUrlRef.current) {
+        backgroundImageUrlRef.current = backgroundImage.url;
+        if (backgroundImage.url) {
+          const img = new Image();
+          img.onload = () => {
+            backgroundImageRef.current = img;
+          };
+          img.src = backgroundImage.url;
+        } else {
+          backgroundImageRef.current = null;
+        }
+      }
+
+      // Render background image if loaded and enabled
+      if (backgroundImageRef.current && backgroundImage.enabled && backgroundImage.url) {
+        const img = backgroundImageRef.current;
+        const scale = backgroundImage.scale;
+        const opacity = backgroundImage.opacity;
+
+        // Calculate dimensions to cover canvas while maintaining aspect ratio
+        const imgAspect = img.width / img.height;
+        const canvasAspect = width / height;
+
+        let drawWidth, drawHeight;
+        if (imgAspect > canvasAspect) {
+          // Image is wider - fit height
+          drawHeight = height * scale;
+          drawWidth = drawHeight * imgAspect;
+        } else {
+          // Image is taller - fit width
+          drawWidth = width * scale;
+          drawHeight = drawWidth / imgAspect;
+        }
+
+        // Position based on positionX/Y (0-1)
+        const drawX = (width - drawWidth) * backgroundImage.positionX;
+        const drawY = (height - drawHeight) * backgroundImage.positionY;
+
+        // Apply blend mode and opacity
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.globalCompositeOperation = backgroundImage.blendMode;
+        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+        ctx.restore();
+      }
+
       // Background glow with hue-shifted colors
       const bgGlow = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, height * 0.8);
       bgGlow.addColorStop(0, `rgba(${bgColors.glowPrimary.r}, ${bgColors.glowPrimary.g}, ${bgColors.glowPrimary.b}, ${0.1 + bass * 0.4 * intensity})`);
@@ -270,8 +324,11 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
       ctx.translate(centerX, centerY);
 
       const motionDir = state?.motionDirection ?? 'clockwise';
+      const bassPulseScale = (state as any)?.bassPulseScale ?? 0.3;
       let rotation = timeRef.current * 0.0005;
-      let breathScale = 1 + bass * 0.2 * audioReact;
+      // Bass pulse creates a dramatic zoom/scale effect on bass beats
+      const bassPulseAmount = bass * bassPulseScale * 0.5;
+      let breathScale = 1 + bass * 0.2 * audioReact + bassPulseAmount;
       let offsetX = 0;
       let offsetY = 0;
 
@@ -328,7 +385,8 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
         flow.anticipation = avgBeat * 0.3 * Math.sin(timeRef.current * 0.008);
 
         // === SCALE BREATHING - Organic expansion/contraction ===
-        const targetScale = 1 + flow.energy * 0.15 + bass * 0.2 * audioReact;
+        // Include bass pulse for more dramatic effect
+        const targetScale = 1 + flow.energy * 0.15 + bass * 0.2 * audioReact + bassPulseAmount;
         flow.scale += (targetScale - flow.scale) * 0.1; // Smooth interpolation
 
         // Apply all flow transformations
@@ -641,7 +699,7 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
       window.removeEventListener('resize', resize);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [state, audioState]);
+  }, [state, audioState, backgroundImage]);
 
   return (
     <div className="relative w-full h-full">

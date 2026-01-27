@@ -37,6 +37,27 @@ const DEFAULT_AUDIO_STATE: AudioState = {
   spectralFlux: 0,
 };
 
+// Background Image State
+interface BackgroundImageState {
+  url: string | null;
+  opacity: number;
+  blendMode: GlobalCompositeOperation;
+  scale: number;
+  positionX: number;
+  positionY: number;
+  enabled: boolean;
+}
+
+const DEFAULT_BACKGROUND_IMAGE_STATE: BackgroundImageState = {
+  url: null,
+  opacity: 0.5,
+  blendMode: 'multiply',
+  scale: 1,
+  positionX: 0.5,
+  positionY: 0.5,
+  enabled: true,
+};
+
 interface Store {
   // Visual State
   visualState: VisualState;
@@ -47,6 +68,11 @@ interface Store {
   // Audio State
   audioState: AudioState;
   setAudioState: (state: AudioState) => void;
+
+  // Background Image
+  backgroundImage: BackgroundImageState;
+  setBackgroundImage: (state: Partial<BackgroundImageState>) => void;
+  clearBackgroundImage: () => void;
 
   // Presets
   presets: Preset[];
@@ -115,6 +141,20 @@ export const useStore = create<Store>((set, get) => ({
   audioState: DEFAULT_AUDIO_STATE,
   setAudioState: (state) => set({ audioState: state }),
 
+  // Background Image
+  backgroundImage: DEFAULT_BACKGROUND_IMAGE_STATE,
+  setBackgroundImage: (partial) => {
+    const current = get().backgroundImage;
+    set({ backgroundImage: { ...current, ...partial } });
+  },
+  clearBackgroundImage: () => {
+    const current = get().backgroundImage;
+    if (current.url) {
+      URL.revokeObjectURL(current.url);
+    }
+    set({ backgroundImage: DEFAULT_BACKGROUND_IMAGE_STATE });
+  },
+
   // Presets - load from localStorage
   presets: loadPresets(),
   setPresets: (presets) => set({ presets }),
@@ -167,6 +207,7 @@ export const useAudioState = () => useStore((state) => state.audioState);
 export const usePresets = () => useStore((state) => state.presets);
 export const useAudioSource = () => useStore((state) => state.audioSource);
 export const useApiKey = () => useStore((state) => state.apiKey);
+export const useBackgroundImage = () => useStore((state) => state.backgroundImage);
 
-export type { AudioState, Preset };
-export { DEFAULT_VISUAL_STATE, DEFAULT_AUDIO_STATE };
+export type { AudioState, Preset, BackgroundImageState };
+export { DEFAULT_VISUAL_STATE, DEFAULT_AUDIO_STATE, DEFAULT_BACKGROUND_IMAGE_STATE };

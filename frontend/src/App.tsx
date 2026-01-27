@@ -10,6 +10,7 @@ import { VoiceInput } from './components/VoiceInput';
 import { PresetGrid } from './components/PresetGrid';
 import { ParameterSliders } from './components/ParameterSliders';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
+import { BackgroundImageUpload } from './components/BackgroundImageUpload';
 import { Square, Settings, Key, Video, Download, ExternalLink, X, Pause, Power, RotateCcw, Play, Sun, ChevronDown, ChevronUp } from 'lucide-react';
 import { Preset } from './services/storage';
 
@@ -1529,6 +1530,11 @@ function App() {
 
           {/* Audio Source - Inline in nav */}
           <AudioSourceSelector />
+
+          <div className="w-px h-6 bg-white/20 mx-1" />
+
+          {/* Background Image Upload */}
+          <BackgroundImageUpload />
 
           <div className="w-px h-6 bg-white/20 mx-1" />
 

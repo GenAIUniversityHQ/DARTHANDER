@@ -2,7 +2,7 @@
 // Parameter Sliders Component - STAGE READY
 
 import { useState } from 'react';
-import { Flame, Diamond, Zap, Rocket, Music, Waves, Sun } from 'lucide-react';
+import { Flame, Diamond, Zap, Rocket, Music, Waves, Sun, Activity } from 'lucide-react';
 
 interface VisualState {
   overallIntensity: number;
@@ -11,6 +11,7 @@ interface VisualState {
   motionSpeed: number;
   audioReactGeometry: number;
   bassImpact: number;
+  bassPulseScale: number;
   eclipsePhase: number;
   colorBrightness: number;
   depthFocalPoint: number;
@@ -295,6 +296,7 @@ const sliders: SliderConfig[] = [
   { key: 'motionSpeed', label: 'SPEED', color: 'from-green-400 via-cyan-500 to-blue-500', icon: Rocket },
   { key: 'audioReactGeometry', label: 'AUDIO REACT', color: 'from-pink-500 via-purple-500 to-indigo-500', icon: Music },
   { key: 'bassImpact', label: 'BASS IMPACT', color: 'from-red-600 via-red-500 to-orange-500', icon: Waves },
+  { key: 'bassPulseScale', label: 'BASS PULSE', color: 'from-red-700 via-pink-600 to-purple-600', icon: Activity },
   { key: 'coronaIntensity', label: 'CORONA/BEAMS', color: 'from-yellow-400 via-orange-500 to-red-500', icon: Sun },
 ];
 
@@ -911,7 +913,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {sacredGeometry.map((geo) => (
               <button
                 key={geo.id}
-                onClick={() => onChange('geometryLayer2', geo.id as any)}
+                onClick={() => onChange('geometryLayer2', state.geometryLayer2 === geo.id ? 'none' : geo.id as any)}
                 onMouseEnter={() => handleLayerHover(geo.id, 'Sacred Geometry')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -939,7 +941,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {quantumGeometry.map((geo) => (
               <button
                 key={geo.id}
-                onClick={() => onChange('geometryLayer3', geo.id as any)}
+                onClick={() => onChange('geometryLayer3', (state as any).geometryLayer3 === geo.id ? 'none' : geo.id as any)}
                 onMouseEnter={() => handleLayerHover(geo.id, 'Quantum')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -967,7 +969,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {cosmicLayers.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('geometryLayer4', layer.id as any)}
+                onClick={() => onChange('geometryLayer4', (state as any).geometryLayer4 === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Cosmic')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -995,7 +997,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {lifeforceGeometry.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('geometryLayer5', layer.id as any)}
+                onClick={() => onChange('geometryLayer5', (state as any).geometryLayer5 === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Lifeforce')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1023,7 +1025,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {ancientGeometry.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('geometryLayer6', layer.id as any)}
+                onClick={() => onChange('geometryLayer6', (state as any).geometryLayer6 === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Ancient Wisdom')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1051,7 +1053,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {geometry4D.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('geometryLayer7', layer.id as any)}
+                onClick={() => onChange('geometryLayer7', (state as any).geometryLayer7 === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, '4D Geometry')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1079,7 +1081,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {geometry5D.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('geometryLayer9', layer.id as any)}
+                onClick={() => onChange('geometryLayer9', (state as any).geometryLayer9 === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, '5D Geometry')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1107,7 +1109,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {geometry6D.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('geometryLayer10', layer.id as any)}
+                onClick={() => onChange('geometryLayer10', (state as any).geometryLayer10 === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, '6D+ Geometry')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1135,7 +1137,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {consciousnessGeometry.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('geometryLayer8', layer.id as any)}
+                onClick={() => onChange('geometryLayer8', (state as any).geometryLayer8 === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Consciousness')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1163,7 +1165,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {fractalGeometry.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('geometryLayer11', layer.id as any)}
+                onClick={() => onChange('geometryLayer11', (state as any).geometryLayer11 === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Fractal')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1191,7 +1193,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {chaosGeometry.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('geometryLayer12', layer.id as any)}
+                onClick={() => onChange('geometryLayer12', (state as any).geometryLayer12 === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Chaos Attractor')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1219,7 +1221,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {realityGeometry.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('geometryLayer13', layer.id as any)}
+                onClick={() => onChange('geometryLayer13', (state as any).geometryLayer13 === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Reality / Simulation')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1247,7 +1249,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {impossibleGeometry.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('geometryLayer14', layer.id as any)}
+                onClick={() => onChange('geometryLayer14', (state as any).geometryLayer14 === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Impossible / Paradox')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1280,7 +1282,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {elementalLayers.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('elementalLayer', layer.id as any)}
+                onClick={() => onChange('elementalLayer', (state as any).elementalLayer === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Elemental')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1308,7 +1310,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {energyLayers.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('energyLayer', layer.id as any)}
+                onClick={() => onChange('energyLayer', (state as any).energyLayer === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Energy')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1336,7 +1338,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {textureLayers.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('textureLayer', layer.id as any)}
+                onClick={() => onChange('textureLayer', (state as any).textureLayer === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Texture')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1364,7 +1366,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {alteredLayers.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('alteredLayer', layer.id as any)}
+                onClick={() => onChange('alteredLayer', (state as any).alteredLayer === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Altered States')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1392,7 +1394,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {celestialLayers.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('celestialLayer', layer.id as any)}
+                onClick={() => onChange('celestialLayer', (state as any).celestialLayer === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Celestial')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1420,7 +1422,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {emotionLayers.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('emotionLayer', layer.id as any)}
+                onClick={() => onChange('emotionLayer', (state as any).emotionLayer === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Emotion')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1448,7 +1450,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {natureLayers.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('natureLayer', layer.id as any)}
+                onClick={() => onChange('natureLayer', (state as any).natureLayer === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Nature')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1476,7 +1478,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {mythicLayers.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('mythicLayer', layer.id as any)}
+                onClick={() => onChange('mythicLayer', (state as any).mythicLayer === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Mythic')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1504,7 +1506,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {alchemicalLayers.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('alchemicalLayer', layer.id as any)}
+                onClick={() => onChange('alchemicalLayer', (state as any).alchemicalLayer === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Alchemical')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1532,7 +1534,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {waveformLayers.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('waveformLayer', layer.id as any)}
+                onClick={() => onChange('waveformLayer', (state as any).waveformLayer === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Waveform')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
@@ -1560,7 +1562,7 @@ export function ParameterSliders({ state, onChange, onLayerHover }: ParameterSli
             {temporalLayers.map((layer) => (
               <button
                 key={layer.id}
-                onClick={() => onChange('temporalLayer', layer.id as any)}
+                onClick={() => onChange('temporalLayer', (state as any).temporalLayer === layer.id ? 'none' : layer.id as any)}
                 onMouseEnter={() => handleLayerHover(layer.id, 'Temporal')}
                 onMouseLeave={handleLayerLeave}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase
