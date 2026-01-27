@@ -143,6 +143,11 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
   });
 
   const audioState = useStore((s) => s.audioState);
+  const backgroundImage = useStore((s) => s.backgroundImage);
+
+  // Background image refs
+  const backgroundImageRef = useRef<HTMLImageElement | null>(null);
+  const backgroundImageUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -257,6 +262,52 @@ export function PreviewMonitor({ state, canvasId }: PreviewMonitorProps) {
       // Clear with hue-shifted dark color
       ctx.fillStyle = `rgba(${bgColors.baseDark.r}, ${bgColors.baseDark.g}, ${bgColors.baseDark.b}, ${0.15 + bass * 0.1})`;
       ctx.fillRect(0, 0, width, height);
+
+      // === BACKGROUND IMAGE LAYER ===
+      // Load/update background image if URL changed
+      if (backgroundImage.url !== backgroundImageUrlRef.current) {
+        backgroundImageUrlRef.current = backgroundImage.url;
+        if (backgroundImage.url) {
+          const img = new Image();
+          img.onload = () => {
+            backgroundImageRef.current = img;
+          };
+          img.src = backgroundImage.url;
+        } else {
+          backgroundImageRef.current = null;
+        }
+      }
+
+      // Render background image if loaded and enabled
+      if (backgroundImageRef.current && backgroundImage.enabled && backgroundImage.url) {
+        const img = backgroundImageRef.current;
+        const scale = backgroundImage.scale;
+        const opacity = backgroundImage.opacity;
+
+        // Calculate dimensions to cover canvas while maintaining aspect ratio
+        const imgAspect = img.width / img.height;
+        const canvasAspect = width / height;
+
+        let drawWidth, drawHeight;
+        if (imgAspect > canvasAspect) {
+          drawHeight = height * scale;
+          drawWidth = drawHeight * imgAspect;
+        } else {
+          drawWidth = width * scale;
+          drawHeight = drawWidth / imgAspect;
+        }
+
+        // Position based on positionX/Y (0-1)
+        const drawX = (width - drawWidth) * backgroundImage.positionX;
+        const drawY = (height - drawHeight) * backgroundImage.positionY;
+
+        // Apply blend mode and opacity
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.globalCompositeOperation = backgroundImage.blendMode;
+        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+        ctx.restore();
+      }
 
       // Background glow with hue-shifted colors
       const bgGlow = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, height * 0.8);
