@@ -83,14 +83,15 @@ export function BackgroundImageUpload() {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40"
+        className="fixed inset-0"
+        style={{ zIndex: 9998 }}
         onClick={() => setIsOpen(false)}
       />
 
       {/* Panel */}
       <div
-        className="fixed w-72 bg-zinc-900 border border-white/20 rounded-xl shadow-2xl z-50 overflow-hidden"
-        style={{ top: panelPos.top, right: panelPos.right }}
+        className="fixed w-72 bg-zinc-900 border border-white/20 rounded-xl shadow-2xl overflow-hidden"
+        style={{ zIndex: 9999, top: panelPos.top, right: panelPos.right }}
       >
         {/* Header */}
         <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
