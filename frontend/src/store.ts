@@ -715,7 +715,7 @@ export const useStore = create<Store>((set, get) => ({
   // Presets - start with defaults so UI works without backend
   presets: defaultPresets,
   setPresets: (presets) => set({ presets: presets.length > 0 ? presets : defaultPresets }),
-  currentPreset: 'COSMOS',
+  currentPreset: 'ECLIPSE',
   loadPreset: (name: string) => {
     const { presets, visualState } = get();
     const preset = presets.find((p) => p.name === name);

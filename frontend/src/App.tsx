@@ -278,8 +278,10 @@ function App() {
   };
 
   const handleHold = () => {
-    // Apply locally
+    // Freeze all motion
     updateVisualParameter('motionSpeed', 0);
+    updateVisualParameter('chaosFactor', 0);
+    updateVisualParameter('colorShiftSpeed', 0);
     setLastInterpretation('HOLD - Motion frozen');
 
     // Also emit to backend if connected
@@ -289,10 +291,12 @@ function App() {
   };
 
   const handleKill = () => {
-    // Apply locally - fade to darkness
+    // Fade everything to darkness
     updateVisualParameter('overallIntensity', 0);
     updateVisualParameter('starBrightness', 0);
-    updateVisualParameter('colorBrightness', 0.1);
+    updateVisualParameter('colorBrightness', 0.05);
+    updateVisualParameter('coronaIntensity', 0);
+    updateVisualParameter('nebulaPresence', 0);
     setLastInterpretation('KILL - Fade to black');
 
     // Also emit to backend if connected
@@ -302,9 +306,9 @@ function App() {
   };
 
   const handleReset = () => {
-    // Load COSMOS preset locally
-    loadPreset('COSMOS');
-    setLastInterpretation('RESET - Returning to COSMOS');
+    // Load ECLIPSE preset (default)
+    loadPreset('ECLIPSE');
+    setLastInterpretation('RESET - Returning to ECLIPSE');
 
     // Also emit to backend if connected
     if (socket?.connected) {
