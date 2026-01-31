@@ -19,8 +19,8 @@ const mainSliders: SliderConfig[] = [
 
 const audioSliders: SliderConfig[] = [
   { key: 'audioReactGeometry', label: 'AUDIO REACT', color: 'bg-green-500', icon: '♫' },
-  { key: 'bassImpact', label: 'BASS IMPACT', color: 'bg-orange-500', icon: '◉' },
-  { key: 'bassPulse', label: 'BASS PULSE', color: 'bg-pink-500', icon: '◎' },
+  { key: 'bassImpactSensitivity', label: 'BASS IMPACT', color: 'bg-orange-500', icon: '◉' },
+  { key: 'bassPulseSensitivity', label: 'BASS PULSE', color: 'bg-pink-500', icon: '◎' },
   { key: 'coronaIntensity', label: 'CORONA/BEAMS', color: 'bg-yellow-500', icon: '☀' },
 ];
 
@@ -46,15 +46,15 @@ export function ExpandedSliders({ showAudioMeters = true }: ExpandedSlidersProps
     return (visualState as any)[key] ?? 0;
   };
 
-  const getAudioValue = (key: string): number => {
+  const getAudioMeterValue = (key: string): number => {
     if (!audioState) return 0;
-    if (key === 'bassImpact') return audioState.beatIntensity ?? 0;
-    if (key === 'bassPulse') return ((audioState.subBass ?? 0) + (audioState.bass ?? 0)) / 2;
+    if (key === 'bassImpactMeter') return audioState.beatIntensity ?? 0;
+    if (key === 'bassPulseMeter') return ((audioState.subBass ?? 0) + (audioState.bass ?? 0)) / 2;
     return (audioState as any)[key] ?? 0;
   };
 
   const renderSlider = (slider: SliderConfig, isAudioMeter = false) => {
-    const value = isAudioMeter ? getAudioValue(slider.key) : getValue(slider.key);
+    const value = isAudioMeter ? getAudioMeterValue(slider.key) : getValue(slider.key);
     const percentage = Math.round(value * 100);
 
     return (
@@ -98,10 +98,31 @@ export function ExpandedSliders({ showAudioMeters = true }: ExpandedSlidersProps
       {/* Audio Reactive Controls */}
       <div className="border-t border-zinc-800 pt-3">
         <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-          {audioSliders.map((slider, index) =>
-            renderSlider(slider, showAudioMeters && index > 0 && index < 3)
-          )}
+          {audioSliders.map((slider) => renderSlider(slider, false))}
         </div>
+        {/* Live Audio Meters */}
+        {showAudioMeters && (
+          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1">
+            <div className="space-y-0.5">
+              <div className="text-[9px] text-zinc-600">BASS LEVEL</div>
+              <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-orange-500 transition-all duration-75"
+                  style={{ width: `${getAudioMeterValue('bassPulseMeter') * 100}%` }}
+                />
+              </div>
+            </div>
+            <div className="space-y-0.5">
+              <div className="text-[9px] text-zinc-600">BEAT</div>
+              <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-pink-500 transition-all duration-75"
+                  style={{ width: `${getAudioMeterValue('bassImpactMeter') * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Color Controls */}

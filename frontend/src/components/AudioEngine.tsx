@@ -213,39 +213,52 @@ export function AudioEngine() {
         const audioReact = store.visualState?.audioReactGeometry ?? 0.5;
         const audioReactColor = store.visualState?.audioReactColor ?? 0.3;
         const audioReactMotion = store.visualState?.audioReactMotion ?? 0.4;
+        const bassImpactSens = store.visualState?.bassImpactSensitivity ?? 0.7;
+        const bassPulseSens = store.visualState?.bassPulseSensitivity ?? 0.6;
 
-        if (audioReact > 0 || audioReactColor > 0 || audioReactMotion > 0) {
-          // Corona intensity responds to bass and mids
-          const coronaBase = store.visualState?.coronaIntensity ?? 0;
-          const coronaBoost = (currentBass * 0.6 + mid * 0.4) * audioReact;
-          if (coronaBase > 0 || coronaBoost > 0.3) {
-            updateVisualParameter('coronaIntensity', Math.min(1, coronaBase * 0.7 + coronaBoost * 0.5));
-          }
+        if (audioReact > 0 || audioReactColor > 0 || audioReactMotion > 0 || bassImpactSens > 0 || bassPulseSens > 0) {
+          // BASS IMPACT - Corona explodes on bass hits
+          const coronaBase = store.visualState?.coronaIntensity ?? 0.5;
+          const impactBoost = bassImpact * bassImpactSens * 2;
+          const pulseBoost = bassPulse * bassPulseSens;
+          const coronaBoost = (currentBass * 0.4 + impactBoost * 0.4 + pulseBoost * 0.2) * audioReact;
+          updateVisualParameter('coronaIntensity', Math.min(1, Math.max(0.3, coronaBase * 0.5 + coronaBoost)));
 
-          // Overall intensity pulses with amplitude
-          const intensityPulse = overallAmplitude * audioReact * 0.4;
-          updateVisualParameter('overallIntensity', Math.min(1, 0.5 + intensityPulse));
+          // BASS PULSE - Overall intensity breathes with bass
+          const intensityBase = 0.5;
+          const intensityPulse = (overallAmplitude * 0.3 + bassPulse * bassPulseSens * 0.4) * audioReact;
+          updateVisualParameter('overallIntensity', Math.min(1, intensityBase + intensityPulse));
+
+          // Eclipse phase pulses slightly with heavy bass
+          const eclipseBase = store.visualState?.eclipsePhase ?? 0.8;
+          const eclipsePulse = bassImpact * bassImpactSens * 0.1;
+          updateVisualParameter('eclipsePhase', Math.min(1, Math.max(0.6, eclipseBase + eclipsePulse - 0.05)));
 
           // Chaos factor responds to high frequencies and beats
-          const chaosBoost = (beatIntensity * 0.5 + highMid * 0.3 + brilliance * 0.2) * audioReact;
+          const chaosBoost = (beatIntensity * 0.5 + highMid * 0.3 + bassImpact * bassImpactSens * 0.2) * audioReact;
           updateVisualParameter('chaosFactor', Math.min(1, 0.1 + chaosBoost * 0.6));
 
           // Motion speed responds to tempo/energy
-          const motionBoost = (overallAmplitude * 0.5 + beatIntensity * 0.5) * audioReactMotion;
+          const motionBoost = (overallAmplitude * 0.4 + beatIntensity * 0.3 + bassPulse * 0.3) * audioReactMotion;
           updateVisualParameter('motionSpeed', Math.min(1, 0.1 + motionBoost * 0.5));
 
           // Color brightness pulses with mid frequencies
-          const brightnessBoost = (mid * 0.6 + presence * 0.4) * audioReactColor;
+          const brightnessBoost = (mid * 0.5 + presence * 0.3 + bassPulse * 0.2) * audioReactColor;
           updateVisualParameter('colorBrightness', Math.min(1, 0.5 + brightnessBoost * 0.4));
 
           // Star brightness twinkles with high frequencies
-          const starBoost = (brilliance * 0.5 + presence * 0.5) * audioReact;
+          const starBoost = (brilliance * 0.4 + presence * 0.3 + beatIntensity * 0.3) * audioReact;
           updateVisualParameter('starBrightness', Math.min(1, 0.4 + starBoost * 0.5));
 
           // Geometry complexity responds to spectral complexity
           const spectralComplexity = (lowMid + mid + highMid) / 3;
-          const complexityBoost = spectralComplexity * audioReact * 0.3;
+          const complexityBoost = (spectralComplexity * 0.6 + bassImpact * 0.4) * audioReact * 0.4;
           updateVisualParameter('geometryComplexity', Math.min(1, 0.3 + complexityBoost));
+
+          // Geometry scale pulses with bass
+          const scaleBase = store.visualState?.geometryScale ?? 1.2;
+          const scalePulse = bassImpact * bassImpactSens * 0.15;
+          updateVisualParameter('geometryScale', Math.min(2, Math.max(1, scaleBase + scalePulse - 0.05)));
         }
 
         animationRef.current = requestAnimationFrame(analyze);

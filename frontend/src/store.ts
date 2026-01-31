@@ -32,6 +32,8 @@ interface VisualState {
   audioReactColor: number;
   audioReactMotion: number;
   audioReactScale: number;
+  bassImpactSensitivity: number;
+  bassPulseSensitivity: number;
   currentPhase: string;
   transitionDuration: number;
 }
@@ -162,6 +164,8 @@ const defaultVisualState: VisualState = {
   audioReactColor: 0.5,
   audioReactMotion: 0.5,
   audioReactScale: 0.3,
+  bassImpactSensitivity: 0.7,
+  bassPulseSensitivity: 0.6,
   currentPhase: 'totality',
   transitionDuration: 2000,
 };
@@ -408,6 +412,247 @@ const defaultPresets: Preset[] = [
       currentPhase: 'emergence',
     },
   },
+  // Additional awe-inspiring presets
+  {
+    id: '9',
+    name: 'DESERT',
+    description: 'Eclipse over ancient sands',
+    category: 'theme',
+    isCore: false,
+    sortOrder: 9,
+    visualState: {
+      geometryMode: 'mandala',
+      geometryComplexity: 0.4,
+      geometryScale: 1.3,
+      geometrySymmetry: 8,
+      colorPalette: 'desert',
+      colorSaturation: 0.8,
+      colorBrightness: 0.7,
+      colorShiftSpeed: 0.05,
+      motionDirection: 'breathing',
+      motionSpeed: 0.1,
+      motionTurbulence: 0.15,
+      depthMode: 'deep',
+      starDensity: 0.5,
+      starBrightness: 0.6,
+      eclipsePhase: 0.85,
+      coronaIntensity: 0.8,
+      nebulaPresence: 0.3,
+      overallIntensity: 0.75,
+      chaosFactor: 0.1,
+      currentPhase: 'totality',
+    },
+  },
+  {
+    id: '10',
+    name: 'OCEAN',
+    description: 'Deep sea consciousness',
+    category: 'theme',
+    isCore: false,
+    sortOrder: 10,
+    visualState: {
+      geometryMode: 'spiral',
+      geometryComplexity: 0.6,
+      geometryScale: 1.4,
+      geometrySymmetry: 8,
+      colorPalette: 'ocean',
+      colorSaturation: 0.9,
+      colorBrightness: 0.65,
+      colorShiftSpeed: 0.08,
+      motionDirection: 'breathing',
+      motionSpeed: 0.12,
+      motionTurbulence: 0.2,
+      depthMode: 'deep',
+      starDensity: 0.3,
+      starBrightness: 0.5,
+      eclipsePhase: 0.7,
+      coronaIntensity: 0.6,
+      nebulaPresence: 0.7,
+      overallIntensity: 0.7,
+      chaosFactor: 0.15,
+      currentPhase: 'descent',
+    },
+  },
+  {
+    id: '11',
+    name: 'MATRIX',
+    description: 'Digital reality awakening',
+    category: 'theme',
+    isCore: false,
+    sortOrder: 11,
+    visualState: {
+      geometryMode: 'tunnel',
+      geometryComplexity: 0.8,
+      geometryScale: 1.5,
+      geometrySymmetry: 6,
+      colorPalette: 'matrix',
+      colorSaturation: 1.0,
+      colorBrightness: 0.8,
+      colorShiftSpeed: 0.15,
+      motionDirection: 'inward',
+      motionSpeed: 0.35,
+      motionTurbulence: 0.25,
+      depthMode: 'tunnel',
+      starDensity: 0.2,
+      starBrightness: 0.4,
+      eclipsePhase: 0.6,
+      coronaIntensity: 0.5,
+      nebulaPresence: 0.4,
+      overallIntensity: 0.85,
+      chaosFactor: 0.3,
+      currentPhase: 'descent',
+    },
+  },
+  {
+    id: '12',
+    name: 'SUPERNOVA',
+    description: 'Cosmic explosion of light',
+    category: 'cosmic',
+    isCore: false,
+    sortOrder: 12,
+    visualState: {
+      geometryMode: 'fractal',
+      geometryComplexity: 1.0,
+      geometryScale: 2.0,
+      geometrySymmetry: 16,
+      colorPalette: 'fire',
+      colorSaturation: 1.0,
+      colorBrightness: 1.0,
+      colorShiftSpeed: 0.3,
+      motionDirection: 'outward',
+      motionSpeed: 0.6,
+      motionTurbulence: 0.5,
+      depthMode: 'deep',
+      starDensity: 0.9,
+      starBrightness: 1.0,
+      eclipsePhase: 0.2,
+      coronaIntensity: 1.0,
+      nebulaPresence: 1.0,
+      overallIntensity: 1.0,
+      chaosFactor: 0.7,
+      currentPhase: 'emergence',
+    },
+  },
+  {
+    id: '13',
+    name: 'NEBULA',
+    description: 'Stellar nursery dreams',
+    category: 'cosmic',
+    isCore: false,
+    sortOrder: 13,
+    visualState: {
+      geometryMode: 'spiral',
+      geometryComplexity: 0.7,
+      geometryScale: 1.6,
+      geometrySymmetry: 10,
+      colorPalette: 'neon',
+      colorSaturation: 0.95,
+      colorBrightness: 0.75,
+      colorShiftSpeed: 0.1,
+      motionDirection: 'clockwise',
+      motionSpeed: 0.15,
+      motionTurbulence: 0.25,
+      depthMode: 'deep',
+      starDensity: 0.85,
+      starBrightness: 0.8,
+      eclipsePhase: 0.4,
+      coronaIntensity: 0.6,
+      nebulaPresence: 1.0,
+      overallIntensity: 0.8,
+      chaosFactor: 0.25,
+      currentPhase: 'emergence',
+    },
+  },
+  {
+    id: '14',
+    name: 'SACRED',
+    description: 'Ancient wisdom geometry',
+    category: 'spiritual',
+    isCore: false,
+    sortOrder: 14,
+    visualState: {
+      geometryMode: 'mandala',
+      geometryComplexity: 0.9,
+      geometryScale: 1.5,
+      geometrySymmetry: 12,
+      colorPalette: 'sacred',
+      colorSaturation: 0.85,
+      colorBrightness: 0.6,
+      colorShiftSpeed: 0.06,
+      motionDirection: 'breathing',
+      motionSpeed: 0.1,
+      motionTurbulence: 0.1,
+      depthMode: 'deep',
+      starDensity: 0.6,
+      starBrightness: 0.7,
+      eclipsePhase: 0.9,
+      coronaIntensity: 0.8,
+      nebulaPresence: 0.5,
+      overallIntensity: 0.75,
+      chaosFactor: 0.1,
+      currentPhase: 'totality',
+    },
+  },
+  {
+    id: '15',
+    name: 'HYPERDRIVE',
+    description: 'Warp speed through stars',
+    category: 'cosmic',
+    isCore: false,
+    sortOrder: 15,
+    visualState: {
+      geometryMode: 'tunnel',
+      geometryComplexity: 0.95,
+      geometryScale: 2.0,
+      geometrySymmetry: 8,
+      colorPalette: 'cosmos',
+      colorSaturation: 1.0,
+      colorBrightness: 0.9,
+      colorShiftSpeed: 0.25,
+      motionDirection: 'inward',
+      motionSpeed: 0.8,
+      motionTurbulence: 0.3,
+      depthMode: 'tunnel',
+      starDensity: 1.0,
+      starBrightness: 1.0,
+      eclipsePhase: 0.5,
+      coronaIntensity: 0.7,
+      nebulaPresence: 0.6,
+      overallIntensity: 0.95,
+      chaosFactor: 0.4,
+      currentPhase: 'descent',
+    },
+  },
+  {
+    id: '16',
+    name: 'MEDITATION',
+    description: 'Deep inner peace',
+    category: 'spiritual',
+    isCore: false,
+    sortOrder: 16,
+    visualState: {
+      geometryMode: 'mandala',
+      geometryComplexity: 0.5,
+      geometryScale: 1.2,
+      geometrySymmetry: 8,
+      colorPalette: 'void',
+      colorSaturation: 0.5,
+      colorBrightness: 0.4,
+      colorShiftSpeed: 0.03,
+      motionDirection: 'breathing',
+      motionSpeed: 0.05,
+      motionTurbulence: 0.05,
+      depthMode: 'infinite',
+      starDensity: 0.4,
+      starBrightness: 0.5,
+      eclipsePhase: 1.0,
+      coronaIntensity: 0.4,
+      nebulaPresence: 0.3,
+      overallIntensity: 0.5,
+      chaosFactor: 0.05,
+      currentPhase: 'totality',
+    },
+  },
 ];
 
 // Broadcast state changes to other windows (for display sync)
@@ -417,6 +662,23 @@ const broadcastState = (state: VisualState) => {
     localStorage.setItem('darthander_state_timestamp', Date.now().toString());
   }
 };
+
+// Broadcast vibe layers to other windows
+const broadcastVibes = (vibes: VibeLayers) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('darthander_vibes', JSON.stringify(vibes));
+    localStorage.setItem('darthander_vibes_timestamp', Date.now().toString());
+  }
+};
+
+// Initialize by broadcasting initial state
+if (typeof window !== 'undefined') {
+  // Broadcast initial state on load
+  setTimeout(() => {
+    broadcastState(defaultVisualState);
+    broadcastVibes({});
+  }, 100);
+}
 
 export const useStore = create<Store>((set, get) => ({
   // Visual State - start with defaults so UI works without backend
@@ -441,12 +703,14 @@ export const useStore = create<Store>((set, get) => ({
   // Vibe Layers - for extended visual effects
   vibeLayers: {},
   setVibeLayer: (category: string, value: string | null) =>
-    set((state) => ({
-      vibeLayers: {
+    set((state) => {
+      const newVibes = {
         ...state.vibeLayers,
         [category]: value,
-      },
-    })),
+      };
+      broadcastVibes(newVibes);
+      return { vibeLayers: newVibes };
+    }),
 
   // Presets - start with defaults so UI works without backend
   presets: defaultPresets,
