@@ -8,16 +8,19 @@ import { PreviewMonitor } from './components/PreviewMonitor';
 import { PromptInput } from './components/PromptInput';
 import { VoiceInput } from './components/VoiceInput';
 import { PresetGrid } from './components/PresetGrid';
-import { ParameterSliders } from './components/ParameterSliders';
+import { ExpandedSliders } from './components/ExpandedSliders';
+import { VibeLayerPanel } from './components/VibeLayerPanel';
 import { AudioVisualizer } from './components/AudioVisualizer';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
+import { AudioEngine } from './components/AudioEngine';
 import { BackgroundImageUpload } from './components/BackgroundImageUpload';
 import { SessionStatus } from './components/SessionStatus';
 import { GeminiSettings } from './components/GeminiSettings';
 import {
   Pause,
   Square,
-  RotateCcw
+  RotateCcw,
+  Maximize2
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -309,15 +312,6 @@ function App() {
     }
   };
 
-  const handleParameterChange = (parameter: string, value: number | string) => {
-    // Update locally so UI works without backend
-    updateVisualParameter(parameter, value);
-    // Also emit to backend if connected
-    if (socket?.connected) {
-      socket.emit('parameter:set', { parameter, value });
-    }
-  };
-
   return (
     <div className="min-h-screen bg-black text-white font-mono">
       {/* Header */}
@@ -332,11 +326,22 @@ function App() {
         </div>
 
         <div className="flex items-center gap-4">
+          <AudioEngine />
           <span className="text-zinc-500 text-sm">
             Phase: <span className="text-white">{visualState?.currentPhase || 'arrival'}</span>
           </span>
           <GeminiSettings />
           <SessionStatus sessionId={sessionId} onSessionChange={setSessionId} />
+          <button
+            onClick={() => {
+              const displayUrl = `${window.location.origin}/display`;
+              window.open(displayUrl, 'darthander_display', 'width=1920,height=1080');
+            }}
+            className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors"
+            title="Open display window (YouTube 16:9 format)"
+          >
+            <Maximize2 className="w-4 h-4" />
+          </button>
         </div>
       </header>
 
@@ -375,9 +380,15 @@ function App() {
 
         {/* Right Panel - Controls */}
         <div className="w-1/2 flex flex-col overflow-hidden">
-          {/* Presets */}
+          {/* Presets & Quick Actions */}
           <div className="p-4 border-b border-zinc-800">
-            <h2 className="text-sm text-zinc-500 mb-3">PRESETS</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm text-zinc-500">PRESETS</h2>
+              <div className="flex gap-2">
+                <BackgroundImageUpload />
+                <AudioSourceSelector />
+              </div>
+            </div>
             <PresetGrid
               presets={presets}
               onSelect={handleLoadPreset}
@@ -410,24 +421,19 @@ function App() {
             </div>
           </div>
 
-          {/* Parameter Sliders */}
-          <div className="p-4 border-b border-zinc-800 flex-1 overflow-y-auto">
-            <h2 className="text-sm text-zinc-500 mb-3">QUICK CONTROLS</h2>
-            <ParameterSliders
-              state={visualState}
-              onChange={handleParameterChange}
-            />
+          {/* Expanded Sliders - All Controls */}
+          <div className="p-4 border-b border-zinc-800">
+            <h2 className="text-sm text-zinc-500 mb-3">CONTROLS</h2>
+            <ExpandedSliders showAudioMeters={true} />
           </div>
 
-          {/* Audio Section */}
+          {/* Vibe Layers Panel */}
+          <div className="p-4 flex-1 overflow-y-auto">
+            <VibeLayerPanel />
+          </div>
+
+          {/* Audio Visualizer */}
           <div className="p-4 border-t border-zinc-800">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm text-zinc-500">AUDIO & MEDIA</h2>
-              <div className="flex gap-2">
-                <BackgroundImageUpload />
-                <AudioSourceSelector />
-              </div>
-            </div>
             <AudioVisualizer state={audioState} />
           </div>
         </div>

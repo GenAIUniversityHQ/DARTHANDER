@@ -11,6 +11,7 @@ interface VisualState {
   geometryRotation: number;
   geometrySymmetry: number;
   colorPalette: string;
+  colorHueShift: number;
   colorSaturation: number;
   colorBrightness: number;
   colorShiftSpeed: number;
@@ -75,11 +76,20 @@ interface Track {
   sections?: any[];
 }
 
+// Vibe layers for extended visual effects
+interface VibeLayers {
+  [category: string]: string | null;
+}
+
 interface Store {
   // Visual State
   visualState: VisualState;
   setVisualState: (state: VisualState) => void;
   updateVisualParameter: (key: string, value: any) => void;
+
+  // Vibe Layers
+  vibeLayers: VibeLayers;
+  setVibeLayer: (category: string, value: string | null) => void;
 
   // Audio State
   audioState: AudioState | null;
@@ -131,6 +141,7 @@ const defaultVisualState: VisualState = {
   geometryRotation: 0,
   geometrySymmetry: 6,
   colorPalette: 'cosmos',
+  colorHueShift: 0,
   colorSaturation: 0.8,
   colorBrightness: 0.7,
   colorShiftSpeed: 0.1,
@@ -426,6 +437,16 @@ export const useStore = create<Store>((set, get) => ({
   // Audio State
   audioState: null,
   setAudioState: (state) => set({ audioState: state }),
+
+  // Vibe Layers - for extended visual effects
+  vibeLayers: {},
+  setVibeLayer: (category: string, value: string | null) =>
+    set((state) => ({
+      vibeLayers: {
+        ...state.vibeLayers,
+        [category]: value,
+      },
+    })),
 
   // Presets - start with defaults so UI works without backend
   presets: defaultPresets,
