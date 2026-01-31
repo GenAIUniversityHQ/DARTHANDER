@@ -1,0 +1,313 @@
+// DARTHANDER Visual Consciousness Engine
+// Database Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// VISUAL STATE
+// Current live state of the visual engine
+// ============================================
+
+model VisualState {
+  id        String   @id @default(uuid())
+  updatedAt DateTime @updatedAt
+
+  // GEOMETRY
+  geometryMode       String  @default("stars") // stars, mandala, hexagon, fractal, spiral, void, tunnel
+  geometryComplexity Float   @default(0.2)     // 0.0 to 1.0
+  geometryScale      Float   @default(1.0)     // 0.1 to 10.0
+  geometryRotation   Float   @default(0.0)     // -1.0 to 1.0 (negative = reverse)
+  geometrySymmetry   Int     @default(6)       // 1 to 24 (fold symmetry for mandalas)
+
+  // COLOR
+  colorPalette    String @default("cosmos") // cosmos, void, fire, ice, earth, neon, sacred
+  colorSaturation Float  @default(0.7)      // 0.0 to 1.0
+  colorBrightness Float  @default(0.6)      // 0.0 to 1.0
+  colorShiftSpeed Float  @default(0.1)      // 0.0 to 1.0
+
+  // MOTION
+  motionDirection  String @default("clockwise") // outward, inward, clockwise, counter, breathing, still
+  motionSpeed      Float  @default(0.1)         // 0.0 to 1.0
+  motionTurbulence Float  @default(0.0)         // 0.0 to 1.0
+
+  // DEPTH
+  depthMode       String @default("deep")   // flat, shallow, deep, infinite, tunnel
+  depthFocalPoint Float  @default(0.5)      // 0.0 (near) to 1.0 (far)
+  depthParallax   Float  @default(0.3)      // 0.0 to 1.0
+
+  // ENVIRONMENT
+  starDensity     Float @default(0.8)  // 0.0 to 1.0
+  starBrightness  Float @default(0.7)  // 0.0 to 1.0
+  eclipsePhase    Float @default(0.0)  // 0.0 (full light) to 1.0 (totality)
+  coronaIntensity Float @default(0.0)  // 0.0 to 1.0
+  nebulaPresence  Float @default(0.2)  // 0.0 to 1.0
+
+  // ENERGY
+  overallIntensity Float @default(0.4) // 0.0 to 1.0 (master energy level)
+  chaosFactor      Float @default(0.0) // 0.0 (ordered) to 1.0 (chaotic)
+
+  // AUDIO REACTIVITY
+  audioReactGeometry Float @default(0.3) // 0.0 to 1.0
+  audioReactColor    Float @default(0.2) // 0.0 to 1.0
+  audioReactMotion   Float @default(0.3) // 0.0 to 1.0
+  audioReactScale    Float @default(0.2) // 0.0 to 1.0
+
+  // META
+  currentPhase       String @default("arrival") // arrival, emergence, descent, totality, return, close
+  transitionDuration Int    @default(3000)      // milliseconds
+
+  // Singleton pattern - only one active state
+  isActive Boolean @default(true)
+
+  @@map("visual_state")
+}
+
+// ============================================
+// PRESETS
+// Saved visual configurations
+// ============================================
+
+model Preset {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  category    String   @default("custom") // cosmos, geometry, portal, energy, custom
+  sortOrder   Int      @default(0)
+
+  // GEOMETRY
+  geometryMode       String @default("stars")
+  geometryComplexity Float  @default(0.2)
+  geometryScale      Float  @default(1.0)
+  geometryRotation   Float  @default(0.0)
+  geometrySymmetry   Int    @default(6)
+
+  // COLOR
+  colorPalette    String @default("cosmos")
+  colorSaturation Float  @default(0.7)
+  colorBrightness Float  @default(0.6)
+  colorShiftSpeed Float  @default(0.1)
+
+  // MOTION
+  motionDirection  String @default("clockwise")
+  motionSpeed      Float  @default(0.1)
+  motionTurbulence Float  @default(0.0)
+
+  // DEPTH
+  depthMode       String @default("deep")
+  depthFocalPoint Float  @default(0.5)
+  depthParallax   Float  @default(0.3)
+
+  // ENVIRONMENT
+  starDensity     Float @default(0.8)
+  starBrightness  Float @default(0.7)
+  eclipsePhase    Float @default(0.0)
+  coronaIntensity Float @default(0.0)
+  nebulaPresence  Float @default(0.2)
+
+  // ENERGY
+  overallIntensity Float @default(0.4)
+  chaosFactor      Float @default(0.0)
+
+  // AUDIO REACTIVITY
+  audioReactGeometry Float @default(0.3)
+  audioReactColor    Float @default(0.2)
+  audioReactMotion   Float @default(0.3)
+  audioReactScale    Float @default(0.2)
+
+  // META
+  suggestedPhase     String? // which phase this preset is good for
+  transitionDuration Int     @default(3000)
+  isCore             Boolean @default(false) // true for essential presets
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("presets")
+}
+
+// ============================================
+// PROMPT MAPPINGS
+// Teaching Claude your control vocabulary
+// ============================================
+
+model PromptMapping {
+  id String @id @default(uuid())
+
+  triggerPhrase String // "open the portal"
+  intent        String // portal_open
+
+  // Parameter changes this phrase implies (JSON)
+  parameterChanges Json // {"geometryMode": "tunnel", "depthMode": "infinite"}
+
+  transitionStyle    String @default("gradual") // instant, slow, gradual, dramatic
+  transitionDuration Int    @default(5000)
+
+  notes String? // Your notes on when/why to use this
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("prompt_mappings")
+}
+
+// ============================================
+// AUDIO TRACKS
+// Uploaded music files with analysis
+// ============================================
+
+model Track {
+  id String @id @default(uuid())
+
+  // File info
+  filename      String
+  filePath      String
+  fileSize      BigInt?
+  duration      Float?  // seconds
+  waveformData  Json?   // for visual display
+
+  // Metadata
+  title  String?
+  artist String?
+  album  String?
+
+  // Analysis results
+  bpm           Float?
+  key           String? // "C major", "F# minor"
+  overallEnergy Float?  // 0-1 average
+  mood          String? // dark, euphoric, melancholic, driving
+
+  // Section map (JSON array)
+  sections Json? // [{"start": 0, "end": 32, "type": "intro", "energy": 0.3}]
+
+  // Full analysis timeline
+  analysisTimeline Json? // Second-by-second data
+
+  // Visual associations
+  suggestedPreset String? // Starting preset
+  visualNotes     String? // Your notes
+
+  createdAt    DateTime  @default(now())
+  lastPlayedAt DateTime?
+
+  // Relations
+  sessions SessionTrack[]
+
+  @@map("tracks")
+}
+
+// ============================================
+// SESSIONS
+// Recording of live experiences
+// ============================================
+
+model Session {
+  id String @id @default(uuid())
+
+  name      String?
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+
+  // Configuration
+  audioSource String @default("live") // upload, live, stream
+  autoPilot   Boolean @default(false)
+
+  // Relations
+  logs   SessionLog[]
+  tracks SessionTrack[]
+
+  @@map("sessions")
+}
+
+model SessionLog {
+  id        String   @id @default(uuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  timestamp DateTime @default(now())
+
+  promptReceived      String? // Your original prompt
+  claudeInterpretation String? // How Claude understood it
+  parametersChanged   Json?   // What changed
+  audioEnergyLevel    Float?  // Music energy at moment
+  presetTriggered     String? // If a preset was loaded
+
+  notes String? // Post-session annotations
+
+  @@map("session_logs")
+}
+
+model SessionTrack {
+  id        String  @id @default(uuid())
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  trackId   String
+  track     Track   @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  playedAt DateTime @default(now())
+  position Float    @default(0) // Where in the track
+
+  @@map("session_tracks")
+}
+
+// ============================================
+// AUDIO STATE
+// Real-time audio analysis data
+// ============================================
+
+model AudioState {
+  id        String   @id @default(uuid())
+  updatedAt DateTime @updatedAt
+
+  // Frequency bands (normalized 0-1)
+  subBass    Float @default(0) // 20-60 Hz
+  bass       Float @default(0) // 60-250 Hz
+  lowMid     Float @default(0) // 250-500 Hz
+  mid        Float @default(0) // 500-2000 Hz
+  highMid    Float @default(0) // 2000-4000 Hz
+  presence   Float @default(0) // 4000-6000 Hz
+  brilliance Float @default(0) // 6000-20000 Hz
+
+  // Dynamics
+  overallAmplitude Float @default(0) // 0-1
+  peakAmplitude    Float @default(0) // 0-1
+  dynamicRange     Float @default(0) // 0-1
+
+  // Rhythm
+  detectedBpm   Float @default(0)
+  beatIntensity Float @default(0) // 0-1 (how strong the pulse)
+  onsetDensity  Float @default(0) // 0-1 (new sounds per second)
+
+  // Character
+  spectralCentroid Float @default(0.5) // brightness (0=dark, 1=bright)
+  spectralFlux     Float @default(0)   // rate of change
+  harmonicRatio    Float @default(0.5) // 0=noisy, 1=tonal
+
+  // Singleton pattern
+  isActive Boolean @default(true)
+
+  @@map("audio_state")
+}
+
+// ============================================
+// VOICE COMMANDS
+// Quick voice triggers that bypass Claude
+// ============================================
+
+model VoiceCommand {
+  id String @id @default(uuid())
+
+  phrase       String @unique // "cosmos", "portal", "hold"
+  action       String // load_preset, parameter_change, system_action
+  targetPreset String? // If action is load_preset
+  parameters   Json?   // If action is parameter_change
+
+  isEnabled Boolean @default(true)
+
+  @@map("voice_commands")
+}
