@@ -105,7 +105,6 @@ export default function DisplayWindow() {
   const vibeLayersRef = useRef<VibeLayers>({});
   const socketRef = useRef<Socket | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
-  const lastSyncRef = useRef<string | null>(null);
   const [aspectRatio, setAspectRatio] = useState<'fill' | '16:9'>('16:9');
   const [showControls, setShowControls] = useState(true);
 
@@ -135,18 +134,13 @@ export default function DisplayWindow() {
   // Sync visual state and vibe layers from localStorage - HIGH FREQUENCY for audio reactivity
   useEffect(() => {
     const syncFromLocalStorage = () => {
+      // Always read and apply the latest state for seamless sync
       const stateData = localStorage.getItem('darthander_state');
       if (stateData) {
         try {
-          const parsed = JSON.parse(stateData);
-          // Only update if data has changed (check timestamp)
-          const timestamp = localStorage.getItem('darthander_state_timestamp');
-          if (timestamp !== lastSyncRef.current) {
-            stateRef.current = parsed;
-            lastSyncRef.current = timestamp;
-          }
+          stateRef.current = JSON.parse(stateData);
         } catch (e) {
-          console.error('Failed to parse state');
+          // Silent fail - keep current state
         }
       }
       const vibeData = localStorage.getItem('darthander_vibes');
@@ -154,14 +148,14 @@ export default function DisplayWindow() {
         try {
           vibeLayersRef.current = JSON.parse(vibeData);
         } catch (e) {
-          console.error('Failed to parse vibe layers');
+          // Silent fail - keep current vibes
         }
       }
     };
 
     syncFromLocalStorage();
-    // Poll at 30fps for smoother audio-reactive sync
-    const pollInterval = setInterval(syncFromLocalStorage, 33);
+    // Poll at 60fps for seamless real-time audio reactivity
+    const pollInterval = setInterval(syncFromLocalStorage, 16);
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key?.startsWith('darthander_')) syncFromLocalStorage();
     };
@@ -272,83 +266,75 @@ export default function DisplayWindow() {
       timeRef.current += 0.016 * motionSpeed * 60;
       const time = timeRef.current;
 
-      // ===== GALACTIC BACKDROP =====
+      // Eclipse parameters (needed for star exclusion zone)
+      const eclipsePhase = state?.eclipsePhase ?? 0.8;
+      const coronaIntensity = state?.coronaIntensity ?? 0.7;
+      const eclipseRadius = minDim * 0.1;
+
+      // ===== COSMIC BACKDROP - CLEAN & PROFESSIONAL =====
       const starDensity = state?.starDensity ?? 0.7;
       const starBrightness = state?.starBrightness ?? 0.6;
       const nebulaPresence = state?.nebulaPresence ?? 0.5;
 
-      // Galaxy spiral arms (subtle, behind everything)
-      if (nebulaPresence > 0.2) {
-        ctx.save();
-        ctx.globalAlpha = nebulaPresence * 0.15 * intensity;
-        for (let arm = 0; arm < 2; arm++) {
-          ctx.beginPath();
-          for (let i = 0; i < 300; i++) {
-            const armAngle = (i / 40) + arm * Math.PI + time * 0.0002;
-            const armRadius = minDim * 0.15 + i * 1.2;
-            const x = centerX + Math.cos(armAngle) * armRadius;
-            const y = centerY + Math.sin(armAngle) * armRadius;
-            const thickness = 3 + Math.sin(i * 0.05) * 2;
-
-            ctx.fillStyle = `${theme.particles}`;
-            ctx.beginPath();
-            ctx.arc(x, y, thickness, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-        ctx.restore();
-      }
-
-      // Cosmic dust clouds (softer nebula effect)
+      // Soft nebula clouds (ambient background glow - no dots or belts)
       if (nebulaPresence > 0) {
-        for (let i = 0; i < 4; i++) {
-          const angle = (i / 4) * Math.PI * 2 + time * 0.0003;
-          const dist = minDim * 0.25 + Math.sin(time * 0.0008 + i * 1.5) * minDim * 0.08;
-          const nx = centerX + Math.cos(angle) * dist;
-          const ny = centerY + Math.sin(angle) * dist;
-          const nebulaGrad = ctx.createRadialGradient(nx, ny, 0, nx, ny, minDim * 0.2);
-          nebulaGrad.addColorStop(0, `${theme.accent}${Math.floor(nebulaPresence * 20).toString(16).padStart(2, '0')}`);
-          nebulaGrad.addColorStop(0.5, `${theme.glow}${Math.floor(nebulaPresence * 10).toString(16).padStart(2, '0')}`);
+        // Large soft nebula patches
+        for (let i = 0; i < 5; i++) {
+          const seed = i * 7919; // Prime number for pseudo-random
+          const angle = (seed % 1000) / 1000 * Math.PI * 2;
+          const dist = minDim * 0.2 + (seed % 500) / 500 * minDim * 0.25;
+          const nx = centerX + Math.cos(angle + time * 0.0001) * dist;
+          const ny = centerY + Math.sin(angle + time * 0.0001) * dist;
+          const size = minDim * 0.15 + (seed % 300) / 300 * minDim * 0.15;
+
+          const nebulaGrad = ctx.createRadialGradient(nx, ny, 0, nx, ny, size);
+          nebulaGrad.addColorStop(0, `${theme.accent}${Math.floor(nebulaPresence * 15).toString(16).padStart(2, '0')}`);
+          nebulaGrad.addColorStop(0.4, `${theme.glow}${Math.floor(nebulaPresence * 8).toString(16).padStart(2, '0')}`);
           nebulaGrad.addColorStop(1, 'transparent');
           ctx.fillStyle = nebulaGrad;
           ctx.fillRect(viewX, viewY, viewW, viewH);
         }
       }
 
-      // Stars field - distributed throughout the galaxy
-      const numStars = Math.floor(starDensity * 600);
+      // Stars field - CLEAN uniform random distribution (no belts or patterns)
+      // Use seeded random for consistent positions across frames
+      const numStars = Math.floor(starDensity * 400);
       for (let i = 0; i < numStars; i++) {
-        const seed = i * 12345.6789;
-        // Distribute stars with slight concentration toward center (galactic core)
-        const distFromCenter = Math.pow(Math.random(), 0.7); // Bias toward outer regions
-        const starAngle = Math.random() * Math.PI * 2;
-        const starDist = distFromCenter * minDim * 0.55;
-        const x = centerX + Math.cos(starAngle) * starDist + (Math.random() - 0.5) * viewW * 0.3;
-        const y = centerY + Math.sin(starAngle) * starDist + (Math.random() - 0.5) * viewH * 0.3;
+        // Deterministic pseudo-random positioning based on index
+        const seed1 = Math.sin(i * 12345.6789) * 43758.5453;
+        const seed2 = Math.sin(i * 78901.2345) * 23421.6312;
+        const seed3 = Math.sin(i * 45678.9012) * 84756.2341;
 
-        // Keep stars within viewport
-        if (x < viewX || x > viewX + viewW || y < viewY || y > viewY + viewH) continue;
+        // Uniform distribution across viewport
+        const x = viewX + (seed1 - Math.floor(seed1)) * viewW;
+        const y = viewY + (seed2 - Math.floor(seed2)) * viewH;
 
-        const size = ((Math.sin(seed * 3) + 1) / 2) * 2 + 0.3;
-        const twinkle = Math.sin(time * 0.015 + seed) * 0.3 + 0.7;
+        // Skip stars too close to eclipse center
+        const distToCenter = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+        if (distToCenter < eclipseRadius * 2.5) continue;
 
-        // Vary star colors slightly
-        const colorVariant = Math.floor(seed % 3);
+        // Vary star sizes
+        const sizeSeed = seed3 - Math.floor(seed3);
+        const size = sizeSeed < 0.7 ? 0.5 + sizeSeed : 1 + sizeSeed * 1.5;
+
+        // Gentle twinkle
+        const twinkle = Math.sin(time * 0.008 + i * 0.5) * 0.2 + 0.8;
+
+        // Vary star colors naturally
+        const colorSeed = (i * 17) % 10;
         let starColor = '255, 255, 255';
-        if (colorVariant === 1) starColor = '255, 240, 220'; // warm
-        if (colorVariant === 2) starColor = '220, 240, 255'; // cool
+        if (colorSeed < 2) starColor = '255, 250, 240'; // warm white
+        else if (colorSeed < 4) starColor = '240, 248, 255'; // cool white
+        else if (colorSeed === 4) starColor = '255, 220, 180'; // orange tint
+        else if (colorSeed === 5) starColor = '200, 220, 255'; // blue tint
 
-        ctx.fillStyle = `rgba(${starColor}, ${starBrightness * twinkle * intensity * 0.9})`;
+        ctx.fillStyle = `rgba(${starColor}, ${starBrightness * twinkle * intensity})`;
         ctx.beginPath();
         ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
       }
 
       // ===== ECLIPSE - DARK CENTER WITH EFFERVESCENT GLOW =====
-      const eclipsePhase = state?.eclipsePhase ?? 0.8;
-      const coronaIntensity = state?.coronaIntensity ?? 0.7;
-      const eclipseRadius = minDim * 0.1;
-
       if (eclipsePhase > 0) {
         ctx.save();
         ctx.translate(centerX, centerY);
