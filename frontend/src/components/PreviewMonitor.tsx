@@ -58,14 +58,19 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
 
   // Open display window for external monitor
   const openDisplayWindow = () => {
-    // Use origin (base URL) to avoid path issues, add display parameter
-    const displayUrl = `${window.location.origin}?display=true`;
+    // Build URL from current location, preserving path but setting display=true
+    const url = new URL(window.location.href);
+    url.search = ''; // Clear existing query params
+    url.searchParams.set('display', 'true');
+    const displayUrl = url.toString();
+
+    console.log('Opening display window at:', displayUrl);
 
     // Open in new window optimized for fullscreen
     const newWindow = window.open(
       displayUrl,
       'DARTHANDER_DISPLAY',
-      'width=1920,height=1080,menubar=no,toolbar=no,location=no,status=no'
+      'popup=yes,width=1920,height=1080'
     );
 
     if (newWindow) {
