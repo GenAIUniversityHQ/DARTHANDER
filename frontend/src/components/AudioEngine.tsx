@@ -208,21 +208,44 @@ export function AudioEngine() {
           spectralFlux: bassDelta,
         });
 
-        // Apply audio reactivity to visuals
+        // Apply audio reactivity to visuals - REAL-TIME SYNC
         const store = useStore.getState();
         const audioReact = store.visualState?.audioReactGeometry ?? 0.5;
+        const audioReactColor = store.visualState?.audioReactColor ?? 0.3;
+        const audioReactMotion = store.visualState?.audioReactMotion ?? 0.4;
 
-        if (audioReact > 0) {
-          // Modulate intensity with audio
-          const baseIntensity = store.visualState?.overallIntensity ?? 0.5;
-          const modulatedIntensity = baseIntensity + (overallAmplitude * audioReact * 0.3);
-          updateVisualParameter('overallIntensity', Math.min(1, modulatedIntensity));
-
-          // Modulate chaos with beat
-          if (beatIntensity > 0.5) {
-            const baseChaos = store.visualState?.chaosFactor ?? 0.2;
-            updateVisualParameter('chaosFactor', Math.min(1, baseChaos + beatIntensity * 0.2));
+        if (audioReact > 0 || audioReactColor > 0 || audioReactMotion > 0) {
+          // Corona intensity responds to bass and mids
+          const coronaBase = store.visualState?.coronaIntensity ?? 0;
+          const coronaBoost = (currentBass * 0.6 + mid * 0.4) * audioReact;
+          if (coronaBase > 0 || coronaBoost > 0.3) {
+            updateVisualParameter('coronaIntensity', Math.min(1, coronaBase * 0.7 + coronaBoost * 0.5));
           }
+
+          // Overall intensity pulses with amplitude
+          const intensityPulse = overallAmplitude * audioReact * 0.4;
+          updateVisualParameter('overallIntensity', Math.min(1, 0.5 + intensityPulse));
+
+          // Chaos factor responds to high frequencies and beats
+          const chaosBoost = (beatIntensity * 0.5 + highMid * 0.3 + brilliance * 0.2) * audioReact;
+          updateVisualParameter('chaosFactor', Math.min(1, 0.1 + chaosBoost * 0.6));
+
+          // Motion speed responds to tempo/energy
+          const motionBoost = (overallAmplitude * 0.5 + beatIntensity * 0.5) * audioReactMotion;
+          updateVisualParameter('motionSpeed', Math.min(1, 0.1 + motionBoost * 0.5));
+
+          // Color brightness pulses with mid frequencies
+          const brightnessBoost = (mid * 0.6 + presence * 0.4) * audioReactColor;
+          updateVisualParameter('colorBrightness', Math.min(1, 0.5 + brightnessBoost * 0.4));
+
+          // Star brightness twinkles with high frequencies
+          const starBoost = (brilliance * 0.5 + presence * 0.5) * audioReact;
+          updateVisualParameter('starBrightness', Math.min(1, 0.4 + starBoost * 0.5));
+
+          // Geometry complexity responds to spectral complexity
+          const spectralComplexity = (lowMid + mid + highMid) / 3;
+          const complexityBoost = spectralComplexity * audioReact * 0.3;
+          updateVisualParameter('geometryComplexity', Math.min(1, 0.3 + complexityBoost));
         }
 
         animationRef.current = requestAnimationFrame(analyze);

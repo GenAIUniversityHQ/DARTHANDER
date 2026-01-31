@@ -40,7 +40,7 @@ export default function DisplayWindow() {
   const stateRef = useRef<VisualState>(defaultVisualState as VisualState);
   const socketRef = useRef<Socket | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
-  const [aspectRatio, setAspectRatio] = useState<'fill' | '16:9'>('fill');
+  const [aspectRatio, setAspectRatio] = useState<'fill' | '16:9'>('16:9');
   const [showControls, setShowControls] = useState(true);
 
   // Load background image from localStorage (shared with main window)
