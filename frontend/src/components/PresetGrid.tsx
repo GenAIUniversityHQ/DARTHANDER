@@ -1,14 +1,13 @@
 // DARTHANDER Visual Consciousness Engine
 // Preset Grid Component
 
-import React from 'react';
-import { 
-  Star, 
-  Circle, 
-  Hexagon, 
-  Sparkles, 
-  Eye, 
-  Moon, 
+import { ReactNode } from 'react';
+import {
+  Star,
+  Circle,
+  Sparkles,
+  Eye,
+  Moon,
   ArrowRight,
   Flame
 } from 'lucide-react';
@@ -28,7 +27,7 @@ interface PresetGridProps {
 }
 
 // Map preset names to icons
-const presetIcons: Record<string, React.ReactNode> = {
+const presetIcons: Record<string, ReactNode> = {
   COSMOS: <Star className="w-5 h-5" />,
   EMERGENCE: <Sparkles className="w-5 h-5" />,
   DESCENT: <ArrowRight className="w-5 h-5 rotate-90" />,

@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Display Window Component - Standalone visualization for external display
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';

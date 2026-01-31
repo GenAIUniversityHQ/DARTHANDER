@@ -1,8 +1,6 @@
 // DARTHANDER Visual Consciousness Engine
 // Audio Visualizer Component
 
-import React from 'react';
-
 interface AudioState {
   subBass: number;
   bass: number;

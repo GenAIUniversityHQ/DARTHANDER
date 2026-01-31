@@ -1,8 +1,6 @@
 // DARTHANDER Visual Consciousness Engine
 // Parameter Sliders Component
 
-import React from 'react';
-
 interface VisualState {
   overallIntensity: number;
   geometryComplexity: number;
@@ -14,6 +12,9 @@ interface VisualState {
   depthFocalPoint: number;
   starDensity: number;
   coronaIntensity: number;
+  geometryMode: string;
+  motionDirection: string;
+  colorPalette: string;
 }
 
 interface ParameterSlidersProps {

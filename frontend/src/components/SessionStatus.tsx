@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Session Status Component
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Circle, Play, Square } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';

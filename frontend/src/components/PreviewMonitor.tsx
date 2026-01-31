@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Preview Monitor Component - Visual representation of current state
 
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Monitor, ExternalLink } from 'lucide-react';
 import { useStore } from '../store';
 

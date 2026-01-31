@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Main Control Surface Application
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useStore } from './store';
 import { PreviewMonitor } from './components/PreviewMonitor';
@@ -13,15 +13,10 @@ import { AudioVisualizer } from './components/AudioVisualizer';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
 import { BackgroundImageUpload } from './components/BackgroundImageUpload';
 import { SessionStatus } from './components/SessionStatus';
-import { 
-  Mic, 
-  MicOff, 
-  Play, 
-  Pause, 
-  Square, 
-  RotateCcw,
-  Zap,
-  Moon
+import {
+  Pause,
+  Square,
+  RotateCcw
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
