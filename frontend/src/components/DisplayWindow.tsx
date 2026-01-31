@@ -97,12 +97,42 @@ const themes: Record<string, { bg: string[]; accent: string; glow: string; parti
   },
 };
 
+// Get initial state from localStorage immediately (before component renders)
+function getInitialState(): VisualState {
+  if (typeof window !== 'undefined') {
+    const stateData = localStorage.getItem('darthander_state');
+    if (stateData) {
+      try {
+        return JSON.parse(stateData);
+      } catch (e) {
+        // Fall through to default
+      }
+    }
+  }
+  return defaultVisualState as VisualState;
+}
+
+function getInitialVibes(): VibeLayers {
+  if (typeof window !== 'undefined') {
+    const vibeData = localStorage.getItem('darthander_vibes');
+    if (vibeData) {
+      try {
+        return JSON.parse(vibeData);
+      } catch (e) {
+        // Fall through to default
+      }
+    }
+  }
+  return {};
+}
+
 export default function DisplayWindow() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const timeRef = useRef(0);
-  const stateRef = useRef<VisualState>(defaultVisualState as VisualState);
-  const vibeLayersRef = useRef<VibeLayers>({});
+  // Initialize with localStorage state immediately
+  const stateRef = useRef<VisualState>(getInitialState());
+  const vibeLayersRef = useRef<VibeLayers>(getInitialVibes());
   const socketRef = useRef<Socket | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
   const [aspectRatio, setAspectRatio] = useState<'fill' | '16:9'>('16:9');
@@ -167,15 +197,23 @@ export default function DisplayWindow() {
     };
   }, []);
 
-  // WebSocket connection
+  // WebSocket connection (secondary to localStorage - only use if localStorage is empty)
   useEffect(() => {
     const socket = io(API_URL, { transports: ['websocket', 'polling'] });
-    socket.on('connect', () => socket.emit('state:get'));
-    socket.on('state:current', (data: any) => {
-      if (data.visual) stateRef.current = data.visual;
+    socket.on('connect', () => {
+      // Only request state if localStorage is empty
+      if (!localStorage.getItem('darthander_state')) {
+        socket.emit('state:get');
+      }
     });
-    socket.on('state:update', (state: any) => {
-      stateRef.current = state;
+    // Only apply socket updates if localStorage sync is not active
+    socket.on('state:current', (data: any) => {
+      if (data.visual && !localStorage.getItem('darthander_state')) {
+        stateRef.current = data.visual;
+      }
+    });
+    socket.on('state:update', (_state: any) => {
+      // Ignore - localStorage is the source of truth
     });
     socketRef.current = socket;
     return () => { socket.close(); };

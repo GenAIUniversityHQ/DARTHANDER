@@ -19,9 +19,11 @@ const mainSliders: SliderConfig[] = [
 
 const audioSliders: SliderConfig[] = [
   { key: 'audioReactGeometry', label: 'AUDIO REACT', color: 'bg-green-500', icon: '♫' },
+  { key: 'audioReactMotion', label: 'MOTION REACT', color: 'bg-cyan-500', icon: '↻' },
+  { key: 'audioReactColor', label: 'COLOR REACT', color: 'bg-purple-500', icon: '◈' },
   { key: 'bassImpactSensitivity', label: 'BASS IMPACT', color: 'bg-orange-500', icon: '◉' },
   { key: 'bassPulseSensitivity', label: 'BASS PULSE', color: 'bg-pink-500', icon: '◎' },
-  { key: 'coronaIntensity', label: 'CORONA/BEAMS', color: 'bg-yellow-500', icon: '☀' },
+  { key: 'coronaIntensity', label: 'CORONA GLOW', color: 'bg-yellow-500', icon: '☀' },
 ];
 
 const colorSliders: SliderConfig[] = [
@@ -102,22 +104,52 @@ export function ExpandedSliders({ showAudioMeters = true }: ExpandedSlidersProps
         </div>
         {/* Live Audio Meters */}
         {showAudioMeters && (
-          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1">
-            <div className="space-y-0.5">
-              <div className="text-[9px] text-zinc-600">BASS LEVEL</div>
-              <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-orange-500 transition-all duration-75"
-                  style={{ width: `${getAudioMeterValue('bassPulseMeter') * 100}%` }}
-                />
+          <div className="mt-3 space-y-1.5 bg-zinc-900/50 p-2 rounded">
+            <div className="text-[9px] text-zinc-500 mb-1">LIVE AUDIO</div>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="space-y-0.5">
+                <div className="text-[8px] text-zinc-600">BASS</div>
+                <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-orange-500 transition-all duration-75"
+                    style={{ width: `${getAudioMeterValue('bassPulseMeter') * 100}%` }}
+                  />
+                </div>
+              </div>
+              <div className="space-y-0.5">
+                <div className="text-[8px] text-zinc-600">BEAT</div>
+                <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-pink-500 transition-all duration-75"
+                    style={{ width: `${getAudioMeterValue('bassImpactMeter') * 100}%` }}
+                  />
+                </div>
+              </div>
+              <div className="space-y-0.5">
+                <div className="text-[8px] text-zinc-600">MID</div>
+                <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-green-500 transition-all duration-75"
+                    style={{ width: `${getAudioMeterValue('mid') * 100}%` }}
+                  />
+                </div>
+              </div>
+              <div className="space-y-0.5">
+                <div className="text-[8px] text-zinc-600">HIGH</div>
+                <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-cyan-500 transition-all duration-75"
+                    style={{ width: `${getAudioMeterValue('brilliance') * 100}%` }}
+                  />
+                </div>
               </div>
             </div>
             <div className="space-y-0.5">
-              <div className="text-[9px] text-zinc-600">BEAT</div>
-              <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+              <div className="text-[8px] text-zinc-600">OVERALL</div>
+              <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-pink-500 transition-all duration-75"
-                  style={{ width: `${getAudioMeterValue('bassImpactMeter') * 100}%` }}
+                  className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 transition-all duration-75"
+                  style={{ width: `${getAudioMeterValue('overallAmplitude') * 100}%` }}
                 />
               </div>
             </div>
@@ -132,33 +164,7 @@ export function ExpandedSliders({ showAudioMeters = true }: ExpandedSlidersProps
         </div>
       </div>
 
-      {/* Eclipse Control */}
-      <div className="border-t border-zinc-800 pt-3">
-        <div className="space-y-1">
-          <div className="flex justify-between text-[10px]">
-            <span className="text-zinc-500 flex items-center gap-1">
-              <span>◐</span> ECLIPSE
-            </span>
-            <span className="text-zinc-400 font-mono">{Math.round(getValue('eclipsePhase') * 100)}%</span>
-          </div>
-          <div className="relative h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-            <div
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-full transition-all duration-75"
-              style={{ width: `${getValue('eclipsePhase') * 100}%` }}
-            />
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={getValue('eclipsePhase') * 100}
-              onChange={(e) => handleChange('eclipsePhase', parseInt(e.target.value) / 100)}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Star Controls */}
+      {/* Cosmic Controls */}
       <div className="border-t border-zinc-800 pt-3">
         <div className="grid grid-cols-2 gap-x-4 gap-y-2">
           <div className="space-y-1">
@@ -197,6 +203,46 @@ export function ExpandedSliders({ showAudioMeters = true }: ExpandedSlidersProps
                 max="100"
                 value={getValue('starBrightness') * 100}
                 onChange={(e) => handleChange('starBrightness', parseInt(e.target.value) / 100)}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="flex justify-between text-[10px]">
+              <span className="text-zinc-500">☁ NEBULA</span>
+              <span className="text-zinc-400 font-mono">{Math.round(getValue('nebulaPresence') * 100)}%</span>
+            </div>
+            <div className="relative h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 bg-purple-500 rounded-full transition-all duration-75"
+                style={{ width: `${getValue('nebulaPresence') * 100}%` }}
+              />
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={getValue('nebulaPresence') * 100}
+                onChange={(e) => handleChange('nebulaPresence', parseInt(e.target.value) / 100)}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="flex justify-between text-[10px]">
+              <span className="text-zinc-500">◐ ECLIPSE</span>
+              <span className="text-zinc-400 font-mono">{Math.round(getValue('eclipsePhase') * 100)}%</span>
+            </div>
+            <div className="relative h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-full transition-all duration-75"
+                style={{ width: `${getValue('eclipsePhase') * 100}%` }}
+              />
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={getValue('eclipsePhase') * 100}
+                onChange={(e) => handleChange('eclipsePhase', parseInt(e.target.value) / 100)}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
             </div>
