@@ -105,6 +105,7 @@ export default function DisplayWindow() {
   const vibeLayersRef = useRef<VibeLayers>({});
   const socketRef = useRef<Socket | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
+  const lastSyncRef = useRef<string | null>(null);
   const [aspectRatio, setAspectRatio] = useState<'fill' | '16:9'>('16:9');
   const [showControls, setShowControls] = useState(true);
 
@@ -131,13 +132,19 @@ export default function DisplayWindow() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Sync visual state and vibe layers from localStorage
+  // Sync visual state and vibe layers from localStorage - HIGH FREQUENCY for audio reactivity
   useEffect(() => {
     const syncFromLocalStorage = () => {
       const stateData = localStorage.getItem('darthander_state');
       if (stateData) {
         try {
-          stateRef.current = JSON.parse(stateData);
+          const parsed = JSON.parse(stateData);
+          // Only update if data has changed (check timestamp)
+          const timestamp = localStorage.getItem('darthander_state_timestamp');
+          if (timestamp !== lastSyncRef.current) {
+            stateRef.current = parsed;
+            lastSyncRef.current = timestamp;
+          }
         } catch (e) {
           console.error('Failed to parse state');
         }
@@ -153,7 +160,8 @@ export default function DisplayWindow() {
     };
 
     syncFromLocalStorage();
-    const pollInterval = setInterval(syncFromLocalStorage, 50);
+    // Poll at 30fps for smoother audio-reactive sync
+    const pollInterval = setInterval(syncFromLocalStorage, 33);
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key?.startsWith('darthander_')) syncFromLocalStorage();
     };
@@ -264,119 +272,142 @@ export default function DisplayWindow() {
       timeRef.current += 0.016 * motionSpeed * 60;
       const time = timeRef.current;
 
-      // ===== STARS =====
+      // ===== GALACTIC BACKDROP =====
       const starDensity = state?.starDensity ?? 0.7;
       const starBrightness = state?.starBrightness ?? 0.6;
-      const numStars = Math.floor(starDensity * 500);
+      const nebulaPresence = state?.nebulaPresence ?? 0.5;
 
-      for (let i = 0; i < numStars; i++) {
-        const seed = i * 12345.6789;
-        const x = viewX + ((Math.sin(seed) + 1) / 2) * viewW;
-        const y = viewY + ((Math.cos(seed * 2) + 1) / 2) * viewH;
-        const size = ((Math.sin(seed * 3) + 1) / 2) * 2.5 + 0.5;
-        const twinkle = Math.sin(time * 0.02 + seed) * 0.4 + 0.6;
+      // Galaxy spiral arms (subtle, behind everything)
+      if (nebulaPresence > 0.2) {
+        ctx.save();
+        ctx.globalAlpha = nebulaPresence * 0.15 * intensity;
+        for (let arm = 0; arm < 2; arm++) {
+          ctx.beginPath();
+          for (let i = 0; i < 300; i++) {
+            const armAngle = (i / 40) + arm * Math.PI + time * 0.0002;
+            const armRadius = minDim * 0.15 + i * 1.2;
+            const x = centerX + Math.cos(armAngle) * armRadius;
+            const y = centerY + Math.sin(armAngle) * armRadius;
+            const thickness = 3 + Math.sin(i * 0.05) * 2;
 
-        ctx.fillStyle = `rgba(255, 255, 255, ${starBrightness * twinkle * intensity * 0.8})`;
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
+            ctx.fillStyle = `${theme.particles}`;
+            ctx.beginPath();
+            ctx.arc(x, y, thickness, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
       }
 
-      // ===== NEBULA / COSMIC DUST =====
-      const nebulaPresence = state?.nebulaPresence ?? 0.5;
+      // Cosmic dust clouds (softer nebula effect)
       if (nebulaPresence > 0) {
-        for (let i = 0; i < 5; i++) {
-          const angle = (i / 5) * Math.PI * 2 + time * 0.0005;
-          const dist = minDim * 0.3 + Math.sin(time * 0.001 + i) * minDim * 0.1;
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2 + time * 0.0003;
+          const dist = minDim * 0.25 + Math.sin(time * 0.0008 + i * 1.5) * minDim * 0.08;
           const nx = centerX + Math.cos(angle) * dist;
           const ny = centerY + Math.sin(angle) * dist;
-          const nebulaGrad = ctx.createRadialGradient(nx, ny, 0, nx, ny, minDim * 0.25);
-          nebulaGrad.addColorStop(0, `${theme.accent}${Math.floor(nebulaPresence * 30).toString(16).padStart(2, '0')}`);
+          const nebulaGrad = ctx.createRadialGradient(nx, ny, 0, nx, ny, minDim * 0.2);
+          nebulaGrad.addColorStop(0, `${theme.accent}${Math.floor(nebulaPresence * 20).toString(16).padStart(2, '0')}`);
+          nebulaGrad.addColorStop(0.5, `${theme.glow}${Math.floor(nebulaPresence * 10).toString(16).padStart(2, '0')}`);
           nebulaGrad.addColorStop(1, 'transparent');
           ctx.fillStyle = nebulaGrad;
           ctx.fillRect(viewX, viewY, viewW, viewH);
         }
       }
 
-      // ===== ECLIPSE - THE MAIN EVENT =====
+      // Stars field - distributed throughout the galaxy
+      const numStars = Math.floor(starDensity * 600);
+      for (let i = 0; i < numStars; i++) {
+        const seed = i * 12345.6789;
+        // Distribute stars with slight concentration toward center (galactic core)
+        const distFromCenter = Math.pow(Math.random(), 0.7); // Bias toward outer regions
+        const starAngle = Math.random() * Math.PI * 2;
+        const starDist = distFromCenter * minDim * 0.55;
+        const x = centerX + Math.cos(starAngle) * starDist + (Math.random() - 0.5) * viewW * 0.3;
+        const y = centerY + Math.sin(starAngle) * starDist + (Math.random() - 0.5) * viewH * 0.3;
+
+        // Keep stars within viewport
+        if (x < viewX || x > viewX + viewW || y < viewY || y > viewY + viewH) continue;
+
+        const size = ((Math.sin(seed * 3) + 1) / 2) * 2 + 0.3;
+        const twinkle = Math.sin(time * 0.015 + seed) * 0.3 + 0.7;
+
+        // Vary star colors slightly
+        const colorVariant = Math.floor(seed % 3);
+        let starColor = '255, 255, 255';
+        if (colorVariant === 1) starColor = '255, 240, 220'; // warm
+        if (colorVariant === 2) starColor = '220, 240, 255'; // cool
+
+        ctx.fillStyle = `rgba(${starColor}, ${starBrightness * twinkle * intensity * 0.9})`;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // ===== ECLIPSE - DARK CENTER WITH EFFERVESCENT GLOW =====
       const eclipsePhase = state?.eclipsePhase ?? 0.8;
       const coronaIntensity = state?.coronaIntensity ?? 0.7;
-      const eclipseRadius = minDim * 0.12;
+      const eclipseRadius = minDim * 0.1;
 
       if (eclipsePhase > 0) {
         ctx.save();
         ctx.translate(centerX, centerY);
 
-        // Corona glow layers (behind the moon)
+        // Soft outer glow - effervescent aura (multiple soft layers)
         if (coronaIntensity > 0) {
-          // Outer corona aura
-          for (let layer = 5; layer >= 1; layer--) {
-            const coronaRadius = eclipseRadius * (1 + layer * 0.8) * coronaIntensity;
-            const coronaAlpha = (0.15 / layer) * coronaIntensity * intensity;
-            const coronaGrad = ctx.createRadialGradient(0, 0, eclipseRadius, 0, 0, coronaRadius);
-            coronaGrad.addColorStop(0, `rgba(255, 200, 100, ${coronaAlpha})`);
-            coronaGrad.addColorStop(0.3, `rgba(255, 150, 50, ${coronaAlpha * 0.6})`);
-            coronaGrad.addColorStop(0.7, `rgba(255, 100, 30, ${coronaAlpha * 0.3})`);
-            coronaGrad.addColorStop(1, 'transparent');
-            ctx.fillStyle = coronaGrad;
-            ctx.beginPath();
-            ctx.arc(0, 0, coronaRadius, 0, Math.PI * 2);
-            ctx.fill();
-          }
-
-          // Corona beams/rays
-          const numBeams = 24;
-          for (let i = 0; i < numBeams; i++) {
-            const angle = (i / numBeams) * Math.PI * 2 + time * 0.0003;
-            const beamLength = eclipseRadius * (2 + Math.sin(time * 0.005 + i * 0.5) * 1.5) * coronaIntensity;
-            const beamWidth = 0.06 + Math.sin(time * 0.003 + i) * 0.02;
-
-            const beamGrad = ctx.createLinearGradient(
-              Math.cos(angle) * eclipseRadius,
-              Math.sin(angle) * eclipseRadius,
-              Math.cos(angle) * (eclipseRadius + beamLength),
-              Math.sin(angle) * (eclipseRadius + beamLength)
-            );
-            beamGrad.addColorStop(0, `rgba(255, 220, 150, ${coronaIntensity * 0.5})`);
-            beamGrad.addColorStop(0.5, `rgba(255, 180, 80, ${coronaIntensity * 0.25})`);
-            beamGrad.addColorStop(1, 'transparent');
-
-            ctx.beginPath();
-            ctx.moveTo(
-              Math.cos(angle - beamWidth) * eclipseRadius,
-              Math.sin(angle - beamWidth) * eclipseRadius
-            );
-            ctx.lineTo(
-              Math.cos(angle) * (eclipseRadius + beamLength),
-              Math.sin(angle) * (eclipseRadius + beamLength)
-            );
-            ctx.lineTo(
-              Math.cos(angle + beamWidth) * eclipseRadius,
-              Math.sin(angle + beamWidth) * eclipseRadius
-            );
-            ctx.closePath();
-            ctx.fillStyle = beamGrad;
-            ctx.fill();
-          }
-
-          // Bright inner ring (diamond ring effect)
-          const ringGrad = ctx.createRadialGradient(0, 0, eclipseRadius * 0.95, 0, 0, eclipseRadius * 1.15);
-          ringGrad.addColorStop(0, 'transparent');
-          ringGrad.addColorStop(0.3, `rgba(255, 240, 200, ${coronaIntensity * 0.6})`);
-          ringGrad.addColorStop(0.5, `rgba(255, 255, 255, ${coronaIntensity * 0.8})`);
-          ringGrad.addColorStop(0.7, `rgba(255, 240, 200, ${coronaIntensity * 0.6})`);
-          ringGrad.addColorStop(1, 'transparent');
-          ctx.fillStyle = ringGrad;
+          // Very soft outer ambient glow
+          const ambientGlow = ctx.createRadialGradient(0, 0, eclipseRadius * 0.8, 0, 0, eclipseRadius * 6);
+          ambientGlow.addColorStop(0, `rgba(255, 180, 100, ${coronaIntensity * 0.15 * intensity})`);
+          ambientGlow.addColorStop(0.2, `rgba(255, 150, 80, ${coronaIntensity * 0.08 * intensity})`);
+          ambientGlow.addColorStop(0.5, `rgba(255, 120, 60, ${coronaIntensity * 0.03 * intensity})`);
+          ambientGlow.addColorStop(1, 'transparent');
+          ctx.fillStyle = ambientGlow;
           ctx.beginPath();
-          ctx.arc(0, 0, eclipseRadius * 1.15, 0, Math.PI * 2);
+          ctx.arc(0, 0, eclipseRadius * 6, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Mid-range effervescent glow with slight animation
+          const pulse = Math.sin(time * 0.002) * 0.1 + 1;
+          const midGlow = ctx.createRadialGradient(0, 0, eclipseRadius * 0.9, 0, 0, eclipseRadius * 3 * pulse);
+          midGlow.addColorStop(0, `rgba(255, 200, 120, ${coronaIntensity * 0.25 * intensity})`);
+          midGlow.addColorStop(0.3, `rgba(255, 170, 90, ${coronaIntensity * 0.15 * intensity})`);
+          midGlow.addColorStop(0.6, `rgba(255, 140, 70, ${coronaIntensity * 0.06 * intensity})`);
+          midGlow.addColorStop(1, 'transparent');
+          ctx.fillStyle = midGlow;
+          ctx.beginPath();
+          ctx.arc(0, 0, eclipseRadius * 3 * pulse, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Inner corona glow - bright edge around the dark moon
+          const innerGlow = ctx.createRadialGradient(0, 0, eclipseRadius * 0.95, 0, 0, eclipseRadius * 1.5);
+          innerGlow.addColorStop(0, `rgba(255, 220, 150, ${coronaIntensity * 0.4 * intensity})`);
+          innerGlow.addColorStop(0.2, `rgba(255, 200, 120, ${coronaIntensity * 0.3 * intensity})`);
+          innerGlow.addColorStop(0.5, `rgba(255, 160, 80, ${coronaIntensity * 0.15 * intensity})`);
+          innerGlow.addColorStop(1, 'transparent');
+          ctx.fillStyle = innerGlow;
+          ctx.beginPath();
+          ctx.arc(0, 0, eclipseRadius * 1.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Subtle bright rim at the edge of the moon
+          const rimGlow = ctx.createRadialGradient(0, 0, eclipseRadius * 0.97, 0, 0, eclipseRadius * 1.08);
+          rimGlow.addColorStop(0, 'transparent');
+          rimGlow.addColorStop(0.4, `rgba(255, 240, 200, ${coronaIntensity * 0.5 * intensity})`);
+          rimGlow.addColorStop(0.6, `rgba(255, 255, 240, ${coronaIntensity * 0.7 * intensity})`);
+          rimGlow.addColorStop(0.8, `rgba(255, 240, 200, ${coronaIntensity * 0.4 * intensity})`);
+          rimGlow.addColorStop(1, 'transparent');
+          ctx.fillStyle = rimGlow;
+          ctx.beginPath();
+          ctx.arc(0, 0, eclipseRadius * 1.08, 0, Math.PI * 2);
           ctx.fill();
         }
 
-        // The Moon (dark circle) - center of the eclipse
+        // The Moon (dark circle) - perfectly dark center
         const moonGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, eclipseRadius);
         moonGrad.addColorStop(0, '#000000');
-        moonGrad.addColorStop(0.8, '#050505');
-        moonGrad.addColorStop(1, '#0a0a0a');
+        moonGrad.addColorStop(0.7, '#000000');
+        moonGrad.addColorStop(0.9, '#020202');
+        moonGrad.addColorStop(1, '#050505');
         ctx.fillStyle = moonGrad;
         ctx.beginPath();
         ctx.arc(0, 0, eclipseRadius * eclipsePhase, 0, Math.PI * 2);
