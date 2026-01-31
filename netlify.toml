@@ -1,12 +1,15 @@
+# DARTHANDER Netlify Configuration
+# This file should be at the repo root
+
 [build]
   base = "frontend"
   command = "npm install && npm run build"
-  publish = "dist"
+  publish = "frontend/dist"
 
 [build.environment]
   NODE_VERSION = "18"
 
-# SPA fallback - serve index.html for all routes
+# SPA fallback - CRITICAL for React Router / query params to work
 [[redirects]]
   from = "/*"
   to = "/index.html"
