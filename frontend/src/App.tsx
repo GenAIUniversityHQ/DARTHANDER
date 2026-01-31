@@ -13,6 +13,7 @@ import { AudioVisualizer } from './components/AudioVisualizer';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
 import { BackgroundImageUpload } from './components/BackgroundImageUpload';
 import { SessionStatus } from './components/SessionStatus';
+import { GeminiSettings } from './components/GeminiSettings';
 import {
   Pause,
   Square,
@@ -21,13 +22,68 @@ import {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+// Gemini prompt interpretation (client-side)
+async function interpretWithGemini(prompt: string, apiKey: string, currentState: any): Promise<any> {
+  const systemPrompt = `You are the interpretive layer for DARTHANDER: ECLIPSE, a live immersive audiovisual experience. Translate natural language prompts into precise parameter changes.
+
+Available parameters:
+- geometryMode: stars, mandala, hexagon, fractal, spiral, tunnel, void
+- colorPalette: cosmos, void, fire, ice, earth, neon, sacred
+- motionDirection: outward, inward, clockwise, counter, breathing, still
+- motionSpeed: 0.0 to 1.0
+- geometryComplexity: 0.0 to 1.0
+- overallIntensity: 0.0 to 1.0
+- eclipsePhase: 0.0 to 1.0
+- coronaIntensity: 0.0 to 1.0
+- chaosFactor: 0.0 to 1.0
+- starDensity: 0.0 to 1.0
+- starBrightness: 0.0 to 1.0
+
+Current state: ${JSON.stringify(currentState)}
+
+Respond ONLY with valid JSON:
+{
+  "interpretation": "Brief description",
+  "parameter_changes": { "parameter_name": value }
+}`;
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: `${systemPrompt}\n\nPrompt: "${prompt}"` }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 500,
+        }
+      })
+    });
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    // Extract JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    return null;
+  } catch (error) {
+    console.error('Gemini interpretation error:', error);
+    return null;
+  }
+}
+
 function App() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);
   const [lastPrompt, setLastPrompt] = useState('');
   const [lastInterpretation, setLastInterpretation] = useState('');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
-  
+
   const {
     visualState,
     audioState,
@@ -36,8 +92,11 @@ function App() {
     updateVisualParameter,
     presets,
     setPresets,
+    currentPreset,
+    loadPreset,
     sessionId,
     setSessionId,
+    geminiApiKey,
   } = useStore();
 
   // Initialize socket connection
@@ -49,7 +108,7 @@ function App() {
     newSocket.on('connect', () => {
       console.log('Connected to DARTHANDER Engine');
       setConnected(true);
-      
+
       // Request initial state
       newSocket.emit('state:get');
       newSocket.emit('presets:get');
@@ -139,45 +198,115 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [presets, isVoiceActive]);
 
-  // API calls
+  // API calls with Gemini fallback
   const handlePromptSubmit = async (prompt: string) => {
     if (!prompt.trim()) return;
 
-    try {
-      const response = await fetch(`${API_URL}/api/prompt/text`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, sessionId }),
-      });
+    setLastPrompt(prompt);
+    setLastInterpretation('Processing...');
 
-      const data = await response.json();
-      
-      if (data.success) {
-        setLastPrompt(prompt);
-        setLastInterpretation(data.interpretation || data.action || 'Applied');
+    // Try backend first if connected
+    if (connected) {
+      try {
+        const response = await fetch(`${API_URL}/api/prompt/text`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, sessionId }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          setLastInterpretation(data.interpretation || data.action || 'Applied');
+          return;
+        }
+      } catch (error) {
+        console.log('Backend unavailable, trying Gemini...');
       }
-    } catch (error) {
-      console.error('Prompt error:', error);
+    }
+
+    // Fall back to Gemini if available
+    if (geminiApiKey) {
+      const result = await interpretWithGemini(prompt, geminiApiKey, visualState);
+      if (result && result.parameter_changes) {
+        // Apply the parameter changes
+        Object.entries(result.parameter_changes).forEach(([key, value]) => {
+          updateVisualParameter(key, value);
+        });
+        setLastInterpretation(result.interpretation || 'Applied via Gemini');
+        return;
+      }
+    }
+
+    // Simple keyword matching fallback
+    const lowerPrompt = prompt.toLowerCase();
+    if (lowerPrompt.includes('dark') || lowerPrompt.includes('void')) {
+      loadPreset('VOID');
+      setLastInterpretation('Entering the void...');
+    } else if (lowerPrompt.includes('chaos') || lowerPrompt.includes('intense')) {
+      loadPreset('FRACTAL_BLOOM');
+      setLastInterpretation('Unleashing chaos...');
+    } else if (lowerPrompt.includes('calm') || lowerPrompt.includes('peace')) {
+      loadPreset('COSMOS');
+      setLastInterpretation('Finding peace in the cosmos...');
+    } else if (lowerPrompt.includes('eclipse') || lowerPrompt.includes('total')) {
+      loadPreset('TOTALITY');
+      setLastInterpretation('Entering totality...');
+    } else if (lowerPrompt.includes('portal') || lowerPrompt.includes('tunnel')) {
+      loadPreset('PORTAL');
+      setLastInterpretation('Opening the portal...');
+    } else if (lowerPrompt.includes('spiral') || lowerPrompt.includes('descend')) {
+      loadPreset('DESCENT');
+      setLastInterpretation('Beginning descent...');
+    } else {
+      setLastInterpretation('Try: dark, chaos, calm, eclipse, portal, spiral');
     }
   };
 
-  const handleLoadPreset = async (name: string) => {
-    socket?.emit('preset:load', { name });
+  const handleLoadPreset = (name: string) => {
+    // Load preset locally first (always works)
+    loadPreset(name);
+    setLastInterpretation(`Loaded: ${name}`);
+
+    // Also emit to backend if connected
+    if (socket?.connected) {
+      socket.emit('preset:load', { name });
+    }
   };
 
   const handleHold = () => {
-    socket?.emit('system:hold');
+    // Apply locally
+    updateVisualParameter('motionSpeed', 0);
     setLastInterpretation('HOLD - Motion frozen');
+
+    // Also emit to backend if connected
+    if (socket?.connected) {
+      socket.emit('system:hold');
+    }
   };
 
   const handleKill = () => {
-    socket?.emit('system:kill');
+    // Apply locally - fade to darkness
+    updateVisualParameter('overallIntensity', 0);
+    updateVisualParameter('starBrightness', 0);
+    updateVisualParameter('colorBrightness', 0.1);
     setLastInterpretation('KILL - Fade to black');
+
+    // Also emit to backend if connected
+    if (socket?.connected) {
+      socket.emit('system:kill');
+    }
   };
 
   const handleReset = () => {
-    socket?.emit('system:reset');
+    // Load COSMOS preset locally
+    loadPreset('COSMOS');
     setLastInterpretation('RESET - Returning to COSMOS');
+
+    // Also emit to backend if connected
+    if (socket?.connected) {
+      socket.emit('system:reset');
+    }
   };
 
   const handleParameterChange = (parameter: string, value: number | string) => {
@@ -198,13 +327,15 @@ function App() {
             DARTHANDER
           </h1>
           <span className="text-zinc-500">ECLIPSE</span>
-          <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
+          <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-yellow-500'}`}
+               title={connected ? 'Connected to backend' : 'Standalone mode'} />
         </div>
-        
+
         <div className="flex items-center gap-4">
           <span className="text-zinc-500 text-sm">
             Phase: <span className="text-white">{visualState?.currentPhase || 'arrival'}</span>
           </span>
+          <GeminiSettings />
           <SessionStatus sessionId={sessionId} onSessionChange={setSessionId} />
         </div>
       </header>
@@ -220,14 +351,14 @@ function App() {
           {/* Prompt Section */}
           <div className="border-t border-zinc-800 p-4 space-y-4">
             <PromptInput onSubmit={handlePromptSubmit} />
-            
+
             <div className="flex items-center gap-4">
-              <VoiceInput 
+              <VoiceInput
                 isActive={isVoiceActive}
                 onToggle={() => setIsVoiceActive(!isVoiceActive)}
                 onTranscription={handlePromptSubmit}
               />
-              
+
               <div className="text-sm text-zinc-500">
                 {lastPrompt && (
                   <div>
@@ -247,12 +378,12 @@ function App() {
           {/* Presets */}
           <div className="p-4 border-b border-zinc-800">
             <h2 className="text-sm text-zinc-500 mb-3">PRESETS</h2>
-            <PresetGrid 
-              presets={presets} 
+            <PresetGrid
+              presets={presets}
               onSelect={handleLoadPreset}
-              currentPreset={null}
+              currentPreset={currentPreset}
             />
-            
+
             {/* Quick Actions */}
             <div className="flex gap-2 mt-4">
               <button
@@ -282,7 +413,7 @@ function App() {
           {/* Parameter Sliders */}
           <div className="p-4 border-b border-zinc-800 flex-1 overflow-y-auto">
             <h2 className="text-sm text-zinc-500 mb-3">QUICK CONTROLS</h2>
-            <ParameterSliders 
+            <ParameterSliders
               state={visualState}
               onChange={handleParameterChange}
             />
