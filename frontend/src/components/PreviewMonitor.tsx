@@ -241,17 +241,58 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
 
       ctx.restore();
 
-      // Corona effect during eclipse
-      if (eclipsePhase > 0.5 && (state?.coronaIntensity ?? 0) > 0) {
-        const coronaAlpha = (eclipsePhase - 0.5) * 2 * (state?.coronaIntensity ?? 0) * 0.3;
-        const gradient = ctx.createRadialGradient(
-          centerX, centerY, 30,
-          centerX, centerY, 150
-        );
-        gradient.addColorStop(0, `rgba(255, 200, 100, ${coronaAlpha})`);
-        gradient.addColorStop(1, 'rgba(255, 200, 100, 0)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, width, height);
+      // Corona beams effect - ONLY appears during eclipse AND when corona is enabled
+      const coronaIntensity = state?.coronaIntensity ?? 0;
+      if (eclipsePhase > 0.5 && coronaIntensity > 0) {
+        const coronaStrength = (eclipsePhase - 0.5) * 2 * coronaIntensity;
+        const numBeams = 12;
+        const maxBeamLength = Math.min(width, height) * 0.4;
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+
+        // Draw radiating beams
+        for (let i = 0; i < numBeams; i++) {
+          const angle = (i / numBeams) * Math.PI * 2 + timeRef.current * 0.0002;
+          const beamLength = maxBeamLength * (0.6 + Math.sin(timeRef.current * 0.003 + i) * 0.4);
+
+          const gradient = ctx.createLinearGradient(
+            0, 0,
+            Math.cos(angle) * beamLength,
+            Math.sin(angle) * beamLength
+          );
+
+          gradient.addColorStop(0, `rgba(255, 220, 150, ${coronaStrength * 0.6})`);
+          gradient.addColorStop(0.3, `rgba(255, 180, 80, ${coronaStrength * 0.4})`);
+          gradient.addColorStop(1, 'rgba(255, 150, 50, 0)');
+
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          const beamWidth = 0.08 + coronaIntensity * 0.05;
+          ctx.lineTo(
+            Math.cos(angle - beamWidth) * beamLength,
+            Math.sin(angle - beamWidth) * beamLength
+          );
+          ctx.lineTo(
+            Math.cos(angle + beamWidth) * beamLength,
+            Math.sin(angle + beamWidth) * beamLength
+          );
+          ctx.closePath();
+          ctx.fillStyle = gradient;
+          ctx.fill();
+        }
+
+        // Inner glow around eclipse center
+        const glowGradient = ctx.createRadialGradient(0, 0, 5, 0, 0, 60);
+        glowGradient.addColorStop(0, `rgba(255, 240, 200, ${coronaStrength * 0.5})`);
+        glowGradient.addColorStop(0.5, `rgba(255, 200, 100, ${coronaStrength * 0.3})`);
+        glowGradient.addColorStop(1, 'rgba(255, 150, 50, 0)');
+        ctx.fillStyle = glowGradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, 60, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
       }
 
       animationRef.current = requestAnimationFrame(draw);

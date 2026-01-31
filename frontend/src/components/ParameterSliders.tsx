@@ -34,6 +34,7 @@ const sliders: SliderConfig[] = [
   { key: 'motionSpeed', label: 'MOTION', color: 'bg-cyan-500' },
   { key: 'audioReactGeometry', label: 'AUDIO REACT', color: 'bg-green-500' },
   { key: 'eclipsePhase', label: 'ECLIPSE', color: 'bg-yellow-500' },
+  { key: 'coronaIntensity', label: 'CORONA BEAMS', color: 'bg-orange-500' },
 ];
 
 export function ParameterSliders({ state, onChange }: ParameterSlidersProps) {
