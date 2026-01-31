@@ -11,6 +11,7 @@ import { PresetGrid } from './components/PresetGrid';
 import { ParameterSliders } from './components/ParameterSliders';
 import { AudioVisualizer } from './components/AudioVisualizer';
 import { AudioSourceSelector } from './components/AudioSourceSelector';
+import { BackgroundImageUpload } from './components/BackgroundImageUpload';
 import { SessionStatus } from './components/SessionStatus';
 import { 
   Mic, 
@@ -289,8 +290,11 @@ function App() {
           {/* Audio Section */}
           <div className="p-4 border-t border-zinc-800">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm text-zinc-500">AUDIO</h2>
-              <AudioSourceSelector />
+              <h2 className="text-sm text-zinc-500">AUDIO & MEDIA</h2>
+              <div className="flex gap-2">
+                <BackgroundImageUpload />
+                <AudioSourceSelector />
+              </div>
             </div>
             <AudioVisualizer state={audioState} />
           </div>

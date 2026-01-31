@@ -107,6 +107,10 @@ interface Store {
   // Autopilot
   autoPilot: boolean;
   setAutoPilot: (enabled: boolean) => void;
+
+  // Background Image
+  backgroundImage: string | null;
+  setBackgroundImage: (image: string | null) => void;
 }
 
 export const useStore = create<Store>((set) => ({
@@ -149,6 +153,19 @@ export const useStore = create<Store>((set) => ({
   // Autopilot
   autoPilot: false,
   setAutoPilot: (enabled) => set({ autoPilot: enabled }),
+
+  // Background Image (persisted to localStorage)
+  backgroundImage: typeof window !== 'undefined' ? localStorage.getItem('darthander_bg') : null,
+  setBackgroundImage: (image) => {
+    if (typeof window !== 'undefined') {
+      if (image) {
+        localStorage.setItem('darthander_bg', image);
+      } else {
+        localStorage.removeItem('darthander_bg');
+      }
+    }
+    set({ backgroundImage: image });
+  },
 }));
 
 // Selector hooks for specific state slices

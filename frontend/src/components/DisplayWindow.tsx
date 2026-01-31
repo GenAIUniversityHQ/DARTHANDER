@@ -38,6 +38,35 @@ export default function DisplayWindow() {
   const timeRef = useRef(0);
   const stateRef = useRef<VisualState | null>(null);
   const socketRef = useRef<Socket | null>(null);
+  const bgImageRef = useRef<HTMLImageElement | null>(null);
+
+  // Load background image from localStorage (shared with main window)
+  useEffect(() => {
+    const loadBgImage = () => {
+      const bgData = localStorage.getItem('darthander_bg');
+      if (bgData) {
+        const img = new Image();
+        img.onload = () => {
+          bgImageRef.current = img;
+        };
+        img.src = bgData;
+      } else {
+        bgImageRef.current = null;
+      }
+    };
+
+    loadBgImage();
+
+    // Listen for storage changes from main window
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'darthander_bg') {
+        loadBgImage();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   useEffect(() => {
     // Connect to WebSocket for real-time updates
@@ -99,6 +128,31 @@ export default function DisplayWindow() {
       const intensity = state?.overallIntensity ?? 0.4;
       ctx.fillStyle = palette.bg;
       ctx.fillRect(0, 0, width, height);
+
+      // Draw background image if set
+      if (bgImageRef.current) {
+        const img = bgImageRef.current;
+        // Cover the canvas while maintaining aspect ratio
+        const imgRatio = img.width / img.height;
+        const canvasRatio = width / height;
+        let drawWidth, drawHeight, drawX, drawY;
+
+        if (imgRatio > canvasRatio) {
+          drawHeight = height;
+          drawWidth = height * imgRatio;
+          drawX = (width - drawWidth) / 2;
+          drawY = 0;
+        } else {
+          drawWidth = width;
+          drawHeight = width / imgRatio;
+          drawX = 0;
+          drawY = (height - drawHeight) / 2;
+        }
+
+        ctx.globalAlpha = 0.7; // Slight transparency so effects show through
+        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+        ctx.globalAlpha = 1.0;
+      }
 
       // Eclipse overlay
       const eclipsePhase = state?.eclipsePhase ?? 0;

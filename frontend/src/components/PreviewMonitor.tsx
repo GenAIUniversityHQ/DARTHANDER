@@ -3,6 +3,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Monitor, ExternalLink } from 'lucide-react';
+import { useStore } from '../store';
 
 interface VisualState {
   geometryMode: string;
@@ -38,17 +39,31 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const timeRef = useRef(0);
+  const bgImageRef = useRef<HTMLImageElement | null>(null);
   const [displayWindow, setDisplayWindow] = useState<Window | null>(null);
+  const { backgroundImage } = useStore();
+
+  // Load background image when it changes
+  useEffect(() => {
+    if (backgroundImage) {
+      const img = new Image();
+      img.onload = () => {
+        bgImageRef.current = img;
+      };
+      img.src = backgroundImage;
+    } else {
+      bgImageRef.current = null;
+    }
+  }, [backgroundImage]);
 
   // Open display window for external monitor
   const openDisplayWindow = () => {
-    // Get the current URL and add display parameter
-    const url = new URL(window.location.href);
-    url.searchParams.set('display', 'true');
+    // Use origin (base URL) to avoid path issues, add display parameter
+    const displayUrl = `${window.location.origin}?display=true`;
 
     // Open in new window optimized for fullscreen
     const newWindow = window.open(
-      url.toString(),
+      displayUrl,
       'DARTHANDER_DISPLAY',
       'width=1920,height=1080,menubar=no,toolbar=no,location=no,status=no'
     );
@@ -97,7 +112,7 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
       const centerY = height / 2;
 
       // Get current palette
-      const palette = state?.colorPalette 
+      const palette = state?.colorPalette
         ? palettes[state.colorPalette] || palettes.cosmos
         : palettes.cosmos;
 
@@ -106,6 +121,31 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
       const intensity = state?.overallIntensity ?? 0.4;
       ctx.fillStyle = palette.bg;
       ctx.fillRect(0, 0, width, height);
+
+      // Draw background image if set
+      if (bgImageRef.current) {
+        const img = bgImageRef.current;
+        // Cover the canvas while maintaining aspect ratio
+        const imgRatio = img.width / img.height;
+        const canvasRatio = width / height;
+        let drawWidth, drawHeight, drawX, drawY;
+
+        if (imgRatio > canvasRatio) {
+          drawHeight = height;
+          drawWidth = height * imgRatio;
+          drawX = (width - drawWidth) / 2;
+          drawY = 0;
+        } else {
+          drawWidth = width;
+          drawHeight = width / imgRatio;
+          drawX = 0;
+          drawY = (height - drawHeight) / 2;
+        }
+
+        ctx.globalAlpha = 0.7; // Slight transparency so effects show through
+        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+        ctx.globalAlpha = 1.0;
+      }
 
       // Eclipse overlay
       const eclipsePhase = state?.eclipsePhase ?? 0;
