@@ -28,11 +28,12 @@ function App() {
   const [lastInterpretation, setLastInterpretation] = useState('');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   
-  const { 
-    visualState, 
-    audioState, 
-    setVisualState, 
+  const {
+    visualState,
+    audioState,
+    setVisualState,
     setAudioState,
+    updateVisualParameter,
     presets,
     setPresets,
     sessionId,
@@ -179,8 +180,13 @@ function App() {
     setLastInterpretation('RESET - Returning to COSMOS');
   };
 
-  const handleParameterChange = (parameter: string, value: number) => {
-    socket?.emit('parameter:set', { parameter, value });
+  const handleParameterChange = (parameter: string, value: number | string) => {
+    // Update locally so UI works without backend
+    updateVisualParameter(parameter, value);
+    // Also emit to backend if connected
+    if (socket?.connected) {
+      socket.emit('parameter:set', { parameter, value });
+    }
   };
 
   return (
