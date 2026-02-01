@@ -197,11 +197,122 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
         ctx.globalAlpha = 1.0;
       }
 
-      // Eclipse overlay - USE vs (store state) for consistency
+      // ============================================
+      // DRAMATIC ECLIPSE RENDERING
+      // ============================================
       const eclipsePhase = vs?.eclipsePhase ?? 0;
+      const baseCoronaIntensity = vs?.coronaIntensity ?? 0;
+      // Apply audio boost to corona for pulsing effect
+      const coronaIntensity = Math.min(1, baseCoronaIntensity + coronaBoost);
+
       if (eclipsePhase > 0) {
-        ctx.fillStyle = `rgba(0, 0, 0, ${eclipsePhase * 0.9})`;
+        // Subtle ambient darkening (reduced from 0.9 to let eclipse shine)
+        ctx.fillStyle = `rgba(0, 0, 0, ${eclipsePhase * 0.6})`;
         ctx.fillRect(0, 0, width, height);
+
+        // Eclipse disc size scales with phase
+        const maxDiscRadius = Math.min(width, height) * 0.15;
+        const discRadius = maxDiscRadius * Math.min(1, eclipsePhase * 1.2);
+
+        // Only draw eclipse visuals when phase is significant
+        if (eclipsePhase > 0.2) {
+          ctx.save();
+          ctx.translate(centerX, centerY);
+
+          // OUTER CORONA - ethereal glow extending far out
+          if (coronaIntensity > 0) {
+            const outerCoronaRadius = discRadius * (3 + coronaIntensity * 2);
+            const outerGlow = ctx.createRadialGradient(0, 0, discRadius, 0, 0, outerCoronaRadius);
+            outerGlow.addColorStop(0, `rgba(255, 250, 240, ${coronaIntensity * 0.4 * eclipsePhase})`);
+            outerGlow.addColorStop(0.2, `rgba(255, 220, 180, ${coronaIntensity * 0.25 * eclipsePhase})`);
+            outerGlow.addColorStop(0.5, `rgba(255, 180, 120, ${coronaIntensity * 0.1 * eclipsePhase})`);
+            outerGlow.addColorStop(1, 'rgba(255, 150, 80, 0)');
+            ctx.fillStyle = outerGlow;
+            ctx.beginPath();
+            ctx.arc(0, 0, outerCoronaRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // PLASMA STREAMERS - dynamic tendrils
+            const numStreamers = 16;
+            for (let i = 0; i < numStreamers; i++) {
+              const baseAngle = (i / numStreamers) * Math.PI * 2;
+              const wobble = Math.sin(timeRef.current * 0.001 + i * 0.7) * 0.15;
+              const angle = baseAngle + wobble;
+              const streamerLength = discRadius * (1.5 + Math.sin(timeRef.current * 0.002 + i * 1.3) * 0.8) * coronaIntensity;
+
+              const gradient = ctx.createLinearGradient(
+                Math.cos(angle) * discRadius * 0.9,
+                Math.sin(angle) * discRadius * 0.9,
+                Math.cos(angle) * (discRadius + streamerLength),
+                Math.sin(angle) * (discRadius + streamerLength)
+              );
+              gradient.addColorStop(0, `rgba(255, 240, 200, ${coronaIntensity * 0.7 * eclipsePhase})`);
+              gradient.addColorStop(0.4, `rgba(255, 200, 100, ${coronaIntensity * 0.4 * eclipsePhase})`);
+              gradient.addColorStop(1, 'rgba(255, 150, 50, 0)');
+
+              ctx.beginPath();
+              ctx.moveTo(Math.cos(angle - 0.05) * discRadius * 0.95, Math.sin(angle - 0.05) * discRadius * 0.95);
+              ctx.quadraticCurveTo(
+                Math.cos(angle) * (discRadius + streamerLength * 0.5),
+                Math.sin(angle) * (discRadius + streamerLength * 0.5),
+                Math.cos(angle + wobble * 0.5) * (discRadius + streamerLength),
+                Math.sin(angle + wobble * 0.5) * (discRadius + streamerLength)
+              );
+              ctx.quadraticCurveTo(
+                Math.cos(angle) * (discRadius + streamerLength * 0.5),
+                Math.sin(angle) * (discRadius + streamerLength * 0.5),
+                Math.cos(angle + 0.05) * discRadius * 0.95,
+                Math.sin(angle + 0.05) * discRadius * 0.95
+              );
+              ctx.fillStyle = gradient;
+              ctx.fill();
+            }
+          }
+
+          // INNER CORONA RING - bright edge glow
+          const innerCoronaWidth = discRadius * 0.3;
+          const innerCorona = ctx.createRadialGradient(0, 0, discRadius - 2, 0, 0, discRadius + innerCoronaWidth);
+          innerCorona.addColorStop(0, `rgba(255, 100, 50, ${eclipsePhase * 0.8})`); // Chromosphere red
+          innerCorona.addColorStop(0.1, `rgba(255, 200, 100, ${eclipsePhase * 0.9})`);
+          innerCorona.addColorStop(0.3, `rgba(255, 255, 240, ${eclipsePhase * 0.7})`); // Bright white edge
+          innerCorona.addColorStop(0.6, `rgba(255, 230, 180, ${eclipsePhase * 0.4})`);
+          innerCorona.addColorStop(1, 'rgba(255, 200, 150, 0)');
+          ctx.fillStyle = innerCorona;
+          ctx.beginPath();
+          ctx.arc(0, 0, discRadius + innerCoronaWidth, 0, Math.PI * 2);
+          ctx.fill();
+
+          // DIAMOND RING EFFECT - brilliant point during partial phases
+          if (eclipsePhase > 0.3 && eclipsePhase < 0.8) {
+            const diamondAngle = timeRef.current * 0.0003;
+            const diamondX = Math.cos(diamondAngle) * discRadius * 0.95;
+            const diamondY = Math.sin(diamondAngle) * discRadius * 0.95;
+            const diamondIntensity = Math.sin((eclipsePhase - 0.3) * Math.PI / 0.5) * 0.8;
+
+            const diamondGlow = ctx.createRadialGradient(diamondX, diamondY, 0, diamondX, diamondY, discRadius * 0.5);
+            diamondGlow.addColorStop(0, `rgba(255, 255, 255, ${diamondIntensity})`);
+            diamondGlow.addColorStop(0.2, `rgba(255, 250, 220, ${diamondIntensity * 0.6})`);
+            diamondGlow.addColorStop(0.5, `rgba(255, 220, 150, ${diamondIntensity * 0.3})`);
+            diamondGlow.addColorStop(1, 'rgba(255, 200, 100, 0)');
+            ctx.fillStyle = diamondGlow;
+            ctx.beginPath();
+            ctx.arc(diamondX, diamondY, discRadius * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // THE DARK DISC (Moon) - solid black center
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(0, 0, discRadius, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Subtle edge definition on disc
+          ctx.strokeStyle = `rgba(40, 20, 10, ${eclipsePhase * 0.5})`;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.restore();
+        }
       }
 
       // Update time and motion (with audio boost for VISUAL ONLY) - USE vs for consistency
@@ -443,62 +554,6 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
             }
           }
         }
-
-        ctx.restore();
-      }
-
-      // Corona beams effect - ONLY appears during eclipse AND when corona is enabled
-      // Apply audio boost for VISUAL ONLY
-      const baseCoronaIntensity = vs?.coronaIntensity ?? 0;
-      const coronaIntensity = Math.min(1, baseCoronaIntensity + coronaBoost);
-      if (eclipsePhase > 0.5 && coronaIntensity > 0) {
-        const coronaStrength = (eclipsePhase - 0.5) * 2 * coronaIntensity;
-        const numBeams = 12;
-        const maxBeamLength = Math.min(width, height) * 0.4;
-
-        ctx.save();
-        ctx.translate(centerX, centerY);
-
-        // Draw radiating beams
-        for (let i = 0; i < numBeams; i++) {
-          const angle = (i / numBeams) * Math.PI * 2 + timeRef.current * 0.0002;
-          const beamLength = maxBeamLength * (0.6 + Math.sin(timeRef.current * 0.003 + i) * 0.4);
-
-          const gradient = ctx.createLinearGradient(
-            0, 0,
-            Math.cos(angle) * beamLength,
-            Math.sin(angle) * beamLength
-          );
-
-          gradient.addColorStop(0, `rgba(255, 220, 150, ${coronaStrength * 0.6})`);
-          gradient.addColorStop(0.3, `rgba(255, 180, 80, ${coronaStrength * 0.4})`);
-          gradient.addColorStop(1, 'rgba(255, 150, 50, 0)');
-
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          const beamWidth = 0.08 + coronaIntensity * 0.05;
-          ctx.lineTo(
-            Math.cos(angle - beamWidth) * beamLength,
-            Math.sin(angle - beamWidth) * beamLength
-          );
-          ctx.lineTo(
-            Math.cos(angle + beamWidth) * beamLength,
-            Math.sin(angle + beamWidth) * beamLength
-          );
-          ctx.closePath();
-          ctx.fillStyle = gradient;
-          ctx.fill();
-        }
-
-        // Inner glow around eclipse center
-        const glowGradient = ctx.createRadialGradient(0, 0, 5, 0, 0, 60);
-        glowGradient.addColorStop(0, `rgba(255, 240, 200, ${coronaStrength * 0.5})`);
-        glowGradient.addColorStop(0.5, `rgba(255, 200, 100, ${coronaStrength * 0.3})`);
-        glowGradient.addColorStop(1, 'rgba(255, 150, 50, 0)');
-        ctx.fillStyle = glowGradient;
-        ctx.beginPath();
-        ctx.arc(0, 0, 60, 0, Math.PI * 2);
-        ctx.fill();
 
         ctx.restore();
       }
