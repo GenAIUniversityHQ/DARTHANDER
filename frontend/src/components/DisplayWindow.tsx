@@ -257,6 +257,11 @@ export default function DisplayWindow() {
         const width = window.innerWidth;
         const height = window.innerHeight;
 
+        // DEBUG: Confirm draw is running (check browser console)
+        if (timeRef.current === 0) {
+          console.log('[DISPLAY] First draw frame!', { width, height, canvasW: canvas.width, canvasH: canvas.height });
+        }
+
       // Calculate viewport for 16:9 aspect ratio mode (YouTube format)
       let viewX = 0, viewY = 0, viewW = width, viewH = height;
       if (aspectRatio === '16:9') {
@@ -327,8 +332,18 @@ export default function DisplayWindow() {
       const baseBrightness = state?.colorBrightness ?? 0.6;
       const brightness = Math.min(1, baseBrightness + brightnessBoost);
       const intensity = state?.overallIntensity ?? 0.4;
+
+      // ALWAYS clear entire canvas first, then fill with palette background
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, width, height);
       ctx.fillStyle = palette.bg;
       ctx.fillRect(viewX, viewY, viewW, viewH);
+
+      // DEBUG: Draw bright cyan circle to confirm canvas works
+      ctx.fillStyle = '#00ffff';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
+      ctx.fill();
 
       // Draw background image if set
       if (bgImageRef.current) {
