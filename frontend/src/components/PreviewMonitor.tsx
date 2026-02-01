@@ -8,16 +8,22 @@ import { useStore } from '../store';
 interface VisualState {
   geometryMode: string;
   geometryComplexity: number;
+  geometryScale: number;
   colorPalette: string;
   colorBrightness: number;
+  colorHueShift: number;
+  colorSaturation: number;
   motionSpeed: number;
   motionDirection: string;
+  motionTurbulence: number;
   starDensity: number;
   starBrightness: number;
   eclipsePhase: number;
   coronaIntensity: number;
+  nebulaPresence: number;
   overallIntensity: number;
   depthMode: string;
+  chaosFactor: number;
 }
 
 interface PreviewMonitorProps {
@@ -39,9 +45,10 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const timeRef = useRef(0);
+  const motionOffsetRef = useRef({ x: 0, y: 0 });
   const bgImageRef = useRef<HTMLImageElement | null>(null);
   const [displayWindow, setDisplayWindow] = useState<Window | null>(null);
-  const { backgroundImage } = useStore();
+  const { backgroundImage, vibeLayers } = useStore();
 
   // Load background image when it changes
   useEffect(() => {
@@ -159,22 +166,80 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
         ctx.fillRect(0, 0, width, height);
       }
 
-      // Update time
+      // Update time and motion
       const motionSpeed = state?.motionSpeed ?? 0.1;
+      const motionTurbulence = state?.motionTurbulence ?? 0.1;
+      const motionDir = state?.motionDirection ?? 'clockwise';
       timeRef.current += 0.016 * motionSpeed * 60;
 
-      // Draw stars
+      // Update motion offset for outward/inward effects
+      if (motionDir === 'outward') {
+        motionOffsetRef.current.x += motionSpeed * 0.5;
+        if (motionOffsetRef.current.x > 1) motionOffsetRef.current.x = 0;
+      } else if (motionDir === 'inward') {
+        motionOffsetRef.current.x -= motionSpeed * 0.5;
+        if (motionOffsetRef.current.x < 0) motionOffsetRef.current.x = 1;
+      }
+
+      // Draw nebula clouds (BEFORE stars)
+      const nebulaPresence = state?.nebulaPresence ?? 0;
+      if (nebulaPresence > 0) {
+        const numClouds = Math.floor(nebulaPresence * 5 + 1);
+        for (let i = 0; i < numClouds; i++) {
+          const seed = i * 7654.321;
+          const cloudX = ((Math.sin(seed) + 1) / 2) * width;
+          const cloudY = ((Math.cos(seed * 1.5) + 1) / 2) * height;
+          const cloudSize = 40 + ((Math.sin(seed * 2) + 1) / 2) * 80;
+          const pulse = Math.sin(timeRef.current * 0.001 + seed) * 0.2 + 0.8;
+
+          const nebulaGradient = ctx.createRadialGradient(cloudX, cloudY, 0, cloudX, cloudY, cloudSize);
+          const hueShift = state?.colorHueShift ?? 0;
+          const baseHue = (i * 60 + hueShift * 360) % 360;
+          nebulaGradient.addColorStop(0, `hsla(${baseHue}, 80%, 50%, ${nebulaPresence * 0.3 * pulse * (1 - eclipsePhase)})`);
+          nebulaGradient.addColorStop(0.5, `hsla(${baseHue + 30}, 70%, 40%, ${nebulaPresence * 0.15 * pulse * (1 - eclipsePhase)})`);
+          nebulaGradient.addColorStop(1, 'transparent');
+
+          ctx.fillStyle = nebulaGradient;
+          ctx.beginPath();
+          ctx.arc(cloudX, cloudY, cloudSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Draw stars with motion effects
       const starDensity = state?.starDensity ?? 0.8;
       const starBrightness = state?.starBrightness ?? 0.7;
       const numStars = Math.floor(starDensity * 200);
-      
+
       for (let i = 0; i < numStars; i++) {
         const seed = i * 12345.6789;
-        const x = ((Math.sin(seed) + 1) / 2) * width;
-        const y = ((Math.cos(seed * 2) + 1) / 2) * height;
+        let x = ((Math.sin(seed) + 1) / 2) * width;
+        let y = ((Math.cos(seed * 2) + 1) / 2) * height;
+
+        // Apply motion based on direction
+        if (motionDir === 'outward') {
+          const dx = x - centerX;
+          const dy = y - centerY;
+          const expandFactor = (motionOffsetRef.current.x + (seed % 1)) % 1;
+          x = centerX + dx * (0.5 + expandFactor * 0.8);
+          y = centerY + dy * (0.5 + expandFactor * 0.8);
+        } else if (motionDir === 'inward') {
+          const dx = x - centerX;
+          const dy = y - centerY;
+          const contractFactor = (1 - motionOffsetRef.current.x + (seed % 1)) % 1;
+          x = centerX + dx * (0.2 + contractFactor * 0.8);
+          y = centerY + dy * (0.2 + contractFactor * 0.8);
+        }
+
+        // Add turbulence
+        if (motionTurbulence > 0) {
+          x += Math.sin(timeRef.current * 0.002 + seed) * motionTurbulence * 10;
+          y += Math.cos(timeRef.current * 0.002 + seed * 1.5) * motionTurbulence * 10;
+        }
+
         const size = ((Math.sin(seed * 3) + 1) / 2) * 2 + 0.5;
         const twinkle = Math.sin(timeRef.current * 0.01 + seed) * 0.3 + 0.7;
-        
+
         ctx.fillStyle = `rgba(255, 255, 255, ${starBrightness * twinkle * intensity * (1 - eclipsePhase)})`;
         ctx.beginPath();
         ctx.arc(x, y, size, 0, Math.PI * 2);
@@ -184,17 +249,26 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
       // Draw geometry based on mode
       const geometryMode = state?.geometryMode ?? 'stars';
       const complexity = state?.geometryComplexity ?? 0.2;
-      const motionDir = state?.motionDirection ?? 'clockwise';
+      const geometryScale = state?.geometryScale ?? 1.0;
+      const chaosFactor = state?.chaosFactor ?? 0;
 
       // Rotation based on direction
       let rotation = 0;
       if (motionDir === 'clockwise') rotation = timeRef.current * 0.001;
       else if (motionDir === 'counter') rotation = -timeRef.current * 0.001;
 
-      // Breathing scale
-      let scale = 1;
+      // Base scale from geometryScale setting
+      let scale = geometryScale;
+
+      // Breathing motion adds to scale
       if (motionDir === 'breathing') {
-        scale = 1 + Math.sin(timeRef.current * 0.002) * 0.1;
+        scale *= 1 + Math.sin(timeRef.current * 0.002) * 0.15;
+      }
+
+      // Chaos adds random wobble
+      if (chaosFactor > 0) {
+        rotation += Math.sin(timeRef.current * 0.005) * chaosFactor * 0.3;
+        scale *= 1 + Math.sin(timeRef.current * 0.003) * chaosFactor * 0.1;
       }
 
       ctx.save();
@@ -285,6 +359,46 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
       }
 
       ctx.restore();
+
+      // Draw vibe layer effects (simplified for preview)
+      if (vibeLayers && Object.keys(vibeLayers).length > 0) {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+
+        // SACRED geometry overlays
+        if (vibeLayers.SACRED && vibeLayers.SACRED !== 'OFF') {
+          const sacredAlpha = intensity * 0.4 * (1 - eclipsePhase);
+          ctx.strokeStyle = `rgba(255, 215, 0, ${sacredAlpha})`;
+          ctx.lineWidth = 1;
+
+          if (vibeLayers.SACRED === 'FLOWER' || vibeLayers.SACRED === 'SEED') {
+            const radius = Math.min(width, height) * 0.12;
+            for (let i = 0; i < 6; i++) {
+              const angle = (i / 6) * Math.PI * 2;
+              ctx.beginPath();
+              ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, radius, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+
+        // COSMIC effects
+        if (vibeLayers.COSMIC && vibeLayers.COSMIC !== 'OFF') {
+          const cosmicAlpha = intensity * 0.3;
+          if (vibeLayers.COSMIC === 'AURORA') {
+            for (let i = 0; i < 3; i++) {
+              const waveY = Math.sin(timeRef.current * 0.001 + i) * 20;
+              ctx.fillStyle = `rgba(0, 255, 128, ${cosmicAlpha * 0.3})`;
+              ctx.fillRect(-width / 2, waveY - 10 - height * 0.2, width, 20);
+            }
+          }
+        }
+
+        ctx.restore();
+      }
 
       // Corona beams effect - ONLY appears during eclipse AND when corona is enabled
       const coronaIntensity = state?.coronaIntensity ?? 0;

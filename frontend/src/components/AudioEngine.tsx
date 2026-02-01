@@ -208,21 +208,63 @@ export function AudioEngine() {
           spectralFlux: bassDelta,
         });
 
-        // Apply audio reactivity to visuals
+        // Audio reactivity - ONLY affects specific parameters, NOT manual controls
+        // Manual controls (NOT affected by audio): Star Glow, Star Density, Nebula, Eclipse, Hue, Saturation
+        // Audio-reactive controls: Corona, Motion Speed, Chaos, Color Brightness, Geometry Scale
         const store = useStore.getState();
-        const audioReact = store.visualState?.audioReactGeometry ?? 0.5;
+        const vs = store.visualState;
+        const audioReact = vs?.audioReactGeometry ?? 0;
+        const audioReactColor = vs?.audioReactColor ?? 0;
+        const audioReactMotion = vs?.audioReactMotion ?? 0;
+        const bassImpactSens = vs?.bassImpactSensitivity ?? 0;
+        const bassPulseSens = vs?.bassPulseSensitivity ?? 0;
 
-        if (audioReact > 0) {
-          // Modulate intensity with audio
-          const baseIntensity = store.visualState?.overallIntensity ?? 0.5;
-          const modulatedIntensity = baseIntensity + (overallAmplitude * audioReact * 0.3);
-          updateVisualParameter('overallIntensity', Math.min(1, modulatedIntensity));
+        // Only apply if ANY reactivity is enabled
+        const anyReactivity = audioReact > 0 || audioReactColor > 0 || audioReactMotion > 0 || bassImpactSens > 0 || bassPulseSens > 0;
 
-          // Modulate chaos with beat
-          if (beatIntensity > 0.5) {
-            const baseChaos = store.visualState?.chaosFactor ?? 0.2;
-            updateVisualParameter('chaosFactor', Math.min(1, baseChaos + beatIntensity * 0.2));
+        if (anyReactivity) {
+          // CORONA GLOW: Pulses with bass (this is the main visual beat response)
+          if (bassImpactSens > 0 || bassPulseSens > 0) {
+            const coronaUser = vs?.coronaIntensity ?? 0.5;
+            const coronaBoost = (bassImpact * bassImpactSens * 0.5 + bassPulse * bassPulseSens * 0.3) * 0.6;
+            updateVisualParameter('coronaIntensity', Math.min(1, coronaUser + coronaBoost));
           }
+
+          // MOTION SPEED: Responds to energy/tempo
+          if (audioReactMotion > 0) {
+            const motionUser = vs?.motionSpeed ?? 0.2;
+            const motionBoost = (overallAmplitude * 0.4 + beatIntensity * 0.4) * audioReactMotion * 0.5;
+            updateVisualParameter('motionSpeed', Math.min(1, motionUser + motionBoost));
+          }
+
+          // CHAOS: Responds to high frequencies and beats
+          if (audioReact > 0) {
+            const chaosUser = vs?.chaosFactor ?? 0.1;
+            const chaosBoost = (beatIntensity * 0.3 + highMid * 0.3 + bassImpact * 0.2) * audioReact * 0.5;
+            updateVisualParameter('chaosFactor', Math.min(1, chaosUser + chaosBoost));
+          }
+
+          // COLOR BRIGHTNESS: Pulses with mid frequencies
+          if (audioReactColor > 0) {
+            const brightnessUser = vs?.colorBrightness ?? 0.6;
+            const brightnessBoost = (mid * 0.3 + overallAmplitude * 0.2) * audioReactColor * 0.4;
+            updateVisualParameter('colorBrightness', Math.min(1, brightnessUser + brightnessBoost));
+          }
+
+          // GEOMETRY SCALE: Subtle pulse on heavy bass (optional)
+          if (bassImpactSens > 0.5 && bassImpact > 0.4) {
+            const scaleUser = vs?.geometryScale ?? 1.2;
+            const scalePulse = bassImpact * bassImpactSens * 0.08;
+            updateVisualParameter('geometryScale', Math.min(2, scaleUser + scalePulse));
+          }
+
+          // NOTE: These are MANUAL only and NOT modified by audio:
+          // - starBrightness (Star Glow)
+          // - starDensity (Star Density)
+          // - nebulaPresence (Nebula)
+          // - eclipsePhase (Eclipse)
+          // - overallIntensity (Intensity) - user controls this directly
+          // - colorHueShift, colorSaturation - user controls these directly
         }
 
         animationRef.current = requestAnimationFrame(analyze);

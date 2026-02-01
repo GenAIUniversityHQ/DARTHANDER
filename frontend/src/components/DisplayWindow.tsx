@@ -10,16 +10,26 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 interface VisualState {
   geometryMode: string;
   geometryComplexity: number;
+  geometryScale: number;
   colorPalette: string;
   colorBrightness: number;
+  colorHueShift: number;
+  colorSaturation: number;
   motionSpeed: number;
   motionDirection: string;
+  motionTurbulence: number;
   starDensity: number;
   starBrightness: number;
   eclipsePhase: number;
   coronaIntensity: number;
+  nebulaPresence: number;
   overallIntensity: number;
   depthMode: string;
+  chaosFactor: number;
+}
+
+interface VibeLayers {
+  [category: string]: string | null;
 }
 
 // Color palette definitions
@@ -37,7 +47,9 @@ export default function DisplayWindow() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const timeRef = useRef(0);
+  const motionOffsetRef = useRef({ x: 0, y: 0 }); // For outward/inward motion
   const stateRef = useRef<VisualState>(defaultVisualState as VisualState);
+  const vibeLayersRef = useRef<VibeLayers>({});
   const socketRef = useRef<Socket | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
   const [aspectRatio, setAspectRatio] = useState<'fill' | '16:9'>('fill');
@@ -71,7 +83,7 @@ export default function DisplayWindow() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Sync visual state from localStorage (primary sync method - no backend needed)
+  // Sync visual state and vibe layers from localStorage (primary sync method - no backend needed)
   useEffect(() => {
     const syncFromLocalStorage = () => {
       const stateData = localStorage.getItem('darthander_state');
@@ -80,6 +92,14 @@ export default function DisplayWindow() {
           stateRef.current = JSON.parse(stateData);
         } catch (e) {
           console.error('Failed to parse state from localStorage');
+        }
+      }
+      const vibeData = localStorage.getItem('darthander_vibes');
+      if (vibeData) {
+        try {
+          vibeLayersRef.current = JSON.parse(vibeData);
+        } catch (e) {
+          console.error('Failed to parse vibes from localStorage');
         }
       }
     };
@@ -92,7 +112,8 @@ export default function DisplayWindow() {
 
     // Also listen for storage events from same origin but different tab
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'darthander_state' || e.key === 'darthander_state_timestamp') {
+      if (e.key === 'darthander_state' || e.key === 'darthander_state_timestamp' ||
+          e.key === 'darthander_vibes' || e.key === 'darthander_vibes_timestamp') {
         syncFromLocalStorage();
       }
     };
@@ -217,19 +238,79 @@ export default function DisplayWindow() {
         ctx.fillRect(viewX, viewY, viewW, viewH);
       }
 
-      // Update time
+      // Update time and motion
       const motionSpeed = state?.motionSpeed ?? 0.1;
+      const motionTurbulence = state?.motionTurbulence ?? 0.1;
+      const motionDir = state?.motionDirection ?? 'clockwise';
       timeRef.current += 0.016 * motionSpeed * 60;
 
-      // Draw stars
+      // Update motion offset for outward/inward effects
+      if (motionDir === 'outward') {
+        motionOffsetRef.current.x += motionSpeed * 0.5;
+        if (motionOffsetRef.current.x > 1) motionOffsetRef.current.x = 0;
+      } else if (motionDir === 'inward') {
+        motionOffsetRef.current.x -= motionSpeed * 0.5;
+        if (motionOffsetRef.current.x < 0) motionOffsetRef.current.x = 1;
+      }
+
+      // Draw nebula clouds (BEFORE stars so stars appear in front)
+      const nebulaPresence = state?.nebulaPresence ?? 0;
+      if (nebulaPresence > 0) {
+        const numClouds = Math.floor(nebulaPresence * 8 + 2);
+        for (let i = 0; i < numClouds; i++) {
+          const seed = i * 7654.321;
+          const cloudX = viewX + ((Math.sin(seed) + 1) / 2) * viewW;
+          const cloudY = viewY + ((Math.cos(seed * 1.5) + 1) / 2) * viewH;
+          const cloudSize = 100 + ((Math.sin(seed * 2) + 1) / 2) * 200;
+          const pulse = Math.sin(timeRef.current * 0.001 + seed) * 0.2 + 0.8;
+
+          const nebulaGradient = ctx.createRadialGradient(cloudX, cloudY, 0, cloudX, cloudY, cloudSize);
+          const hueShift = state?.colorHueShift ?? 0;
+          const baseHue = (i * 60 + hueShift * 360) % 360;
+          nebulaGradient.addColorStop(0, `hsla(${baseHue}, 80%, 50%, ${nebulaPresence * 0.3 * pulse * (1 - eclipsePhase)})`);
+          nebulaGradient.addColorStop(0.5, `hsla(${baseHue + 30}, 70%, 40%, ${nebulaPresence * 0.15 * pulse * (1 - eclipsePhase)})`);
+          nebulaGradient.addColorStop(1, 'transparent');
+
+          ctx.fillStyle = nebulaGradient;
+          ctx.beginPath();
+          ctx.arc(cloudX, cloudY, cloudSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Draw stars with motion effects
       const starDensity = state?.starDensity ?? 0.8;
       const starBrightness = state?.starBrightness ?? 0.7;
       const numStars = Math.floor(starDensity * 400); // More stars for fullscreen
 
       for (let i = 0; i < numStars; i++) {
         const seed = i * 12345.6789;
-        const x = viewX + ((Math.sin(seed) + 1) / 2) * viewW;
-        const y = viewY + ((Math.cos(seed * 2) + 1) / 2) * viewH;
+        let x = viewX + ((Math.sin(seed) + 1) / 2) * viewW;
+        let y = viewY + ((Math.cos(seed * 2) + 1) / 2) * viewH;
+
+        // Apply motion based on direction
+        if (motionDir === 'outward') {
+          // Stars drift outward from center
+          const dx = x - centerX;
+          const dy = y - centerY;
+          const expandFactor = (motionOffsetRef.current.x + (seed % 1)) % 1;
+          x = centerX + dx * (0.5 + expandFactor * 0.8);
+          y = centerY + dy * (0.5 + expandFactor * 0.8);
+        } else if (motionDir === 'inward') {
+          // Stars drift inward toward center
+          const dx = x - centerX;
+          const dy = y - centerY;
+          const contractFactor = (1 - motionOffsetRef.current.x + (seed % 1)) % 1;
+          x = centerX + dx * (0.2 + contractFactor * 0.8);
+          y = centerY + dy * (0.2 + contractFactor * 0.8);
+        }
+
+        // Add turbulence
+        if (motionTurbulence > 0) {
+          x += Math.sin(timeRef.current * 0.002 + seed) * motionTurbulence * 20;
+          y += Math.cos(timeRef.current * 0.002 + seed * 1.5) * motionTurbulence * 20;
+        }
+
         const size = ((Math.sin(seed * 3) + 1) / 2) * 2 + 0.5;
         const twinkle = Math.sin(timeRef.current * 0.01 + seed) * 0.3 + 0.7;
 
@@ -242,17 +323,26 @@ export default function DisplayWindow() {
       // Draw geometry based on mode
       const geometryMode = state?.geometryMode ?? 'stars';
       const complexity = state?.geometryComplexity ?? 0.2;
-      const motionDir = state?.motionDirection ?? 'clockwise';
+      const geometryScale = state?.geometryScale ?? 1.0;
+      const chaosFactor = state?.chaosFactor ?? 0;
 
       // Rotation based on direction
       let rotation = 0;
       if (motionDir === 'clockwise') rotation = timeRef.current * 0.001;
       else if (motionDir === 'counter') rotation = -timeRef.current * 0.001;
 
-      // Breathing scale
-      let scale = 1;
+      // Base scale from geometryScale setting
+      let scale = geometryScale;
+
+      // Breathing motion adds to scale
       if (motionDir === 'breathing') {
-        scale = 1 + Math.sin(timeRef.current * 0.002) * 0.1;
+        scale *= 1 + Math.sin(timeRef.current * 0.002) * 0.15;
+      }
+
+      // Chaos adds random wobble
+      if (chaosFactor > 0) {
+        rotation += Math.sin(timeRef.current * 0.005) * chaosFactor * 0.3;
+        scale *= 1 + Math.sin(timeRef.current * 0.003) * chaosFactor * 0.1;
       }
 
       ctx.save();
@@ -342,6 +432,108 @@ export default function DisplayWindow() {
       }
 
       ctx.restore();
+
+      // Draw vibe layer effects
+      const vibes = vibeLayersRef.current;
+      if (vibes && Object.keys(vibes).length > 0) {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+
+        // SACRED geometry overlays
+        if (vibes.SACRED && vibes.SACRED !== 'OFF') {
+          const sacredAlpha = intensity * 0.4 * (1 - eclipsePhase);
+          ctx.strokeStyle = `rgba(255, 215, 0, ${sacredAlpha})`;
+          ctx.lineWidth = 1.5;
+
+          if (vibes.SACRED === 'FLOWER' || vibes.SACRED === 'SEED') {
+            // Flower/Seed of Life pattern
+            const radius = Math.min(viewW, viewH) * 0.15;
+            for (let i = 0; i < 6; i++) {
+              const angle = (i / 6) * Math.PI * 2;
+              ctx.beginPath();
+              ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, radius, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.stroke();
+          } else if (vibes.SACRED === 'METATRON') {
+            // Metatron's cube - interconnected circles
+            const r = Math.min(viewW, viewH) * 0.12;
+            for (let i = 0; i < 13; i++) {
+              const angle = i < 6 ? (i / 6) * Math.PI * 2 : ((i - 6) / 6) * Math.PI * 2;
+              const dist = i < 6 ? r * 2 : i === 12 ? 0 : r;
+              ctx.beginPath();
+              ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist, r * 0.5, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+        }
+
+        // COSMIC effects
+        if (vibes.COSMIC && vibes.COSMIC !== 'OFF') {
+          const cosmicAlpha = intensity * 0.3;
+          if (vibes.COSMIC === 'AURORA') {
+            for (let i = 0; i < 5; i++) {
+              const waveY = Math.sin(timeRef.current * 0.001 + i) * 50;
+              const gradient = ctx.createLinearGradient(-viewW / 2, waveY - 30, -viewW / 2, waveY + 30);
+              gradient.addColorStop(0, 'transparent');
+              gradient.addColorStop(0.5, `rgba(0, 255, 128, ${cosmicAlpha * 0.5})`);
+              gradient.addColorStop(1, 'transparent');
+              ctx.fillStyle = gradient;
+              ctx.fillRect(-viewW / 2, waveY - 30 - viewH * 0.3, viewW, 60);
+            }
+          } else if (vibes.COSMIC === 'GALAXY') {
+            ctx.strokeStyle = `rgba(180, 160, 255, ${cosmicAlpha})`;
+            ctx.lineWidth = 2;
+            const arms = 4;
+            for (let arm = 0; arm < arms; arm++) {
+              ctx.beginPath();
+              for (let i = 0; i < 200; i++) {
+                const angle = (arm / arms) * Math.PI * 2 + (i / 30) + timeRef.current * 0.0003;
+                const r = i * 1.5;
+                const x = Math.cos(angle) * r;
+                const y = Math.sin(angle) * r * 0.6;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+              }
+              ctx.stroke();
+            }
+          }
+        }
+
+        // ELEMENT effects
+        if (vibes.ELEMENT && vibes.ELEMENT !== 'OFF') {
+          const elemAlpha = intensity * 0.25;
+          if (vibes.ELEMENT === 'FIRE') {
+            for (let i = 0; i < 20; i++) {
+              const flameX = (Math.random() - 0.5) * viewW * 0.3;
+              const flameY = viewH * 0.3 - Math.random() * 100;
+              const flameSize = 20 + Math.random() * 40;
+              const gradient = ctx.createRadialGradient(flameX, flameY, 0, flameX, flameY, flameSize);
+              gradient.addColorStop(0, `rgba(255, 200, 50, ${elemAlpha})`);
+              gradient.addColorStop(0.5, `rgba(255, 100, 0, ${elemAlpha * 0.5})`);
+              gradient.addColorStop(1, 'transparent');
+              ctx.fillStyle = gradient;
+              ctx.fillRect(flameX - flameSize, flameY - flameSize, flameSize * 2, flameSize * 2);
+            }
+          } else if (vibes.ELEMENT === 'WATER') {
+            ctx.strokeStyle = `rgba(0, 150, 255, ${elemAlpha})`;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 5; i++) {
+              ctx.beginPath();
+              for (let x = -viewW / 2; x < viewW / 2; x += 10) {
+                const waveY = Math.sin(x * 0.02 + timeRef.current * 0.002 + i) * 20 + i * 30;
+                if (x === -viewW / 2) ctx.moveTo(x, waveY);
+                else ctx.lineTo(x, waveY);
+              }
+              ctx.stroke();
+            }
+          }
+        }
+
+        ctx.restore();
+      }
 
       // Corona beams effect - ONLY appears during eclipse AND when corona is enabled
       const coronaIntensity = state?.coronaIntensity ?? 0;

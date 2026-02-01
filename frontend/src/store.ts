@@ -32,6 +32,8 @@ interface VisualState {
   audioReactColor: number;
   audioReactMotion: number;
   audioReactScale: number;
+  bassImpactSensitivity: number;
+  bassPulseSensitivity: number;
   currentPhase: string;
   transitionDuration: number;
 }
@@ -162,6 +164,8 @@ const defaultVisualState: VisualState = {
   audioReactColor: 0.3,
   audioReactMotion: 0.4,
   audioReactScale: 0.2,
+  bassImpactSensitivity: 0.5,
+  bassPulseSensitivity: 0.5,
   currentPhase: 'arrival',
   transitionDuration: 2000,
 };
@@ -418,6 +422,29 @@ const broadcastState = (state: VisualState) => {
   }
 };
 
+// Broadcast vibe layers to other windows
+const broadcastVibes = (vibes: VibeLayers) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('darthander_vibes', JSON.stringify(vibes));
+    localStorage.setItem('darthander_vibes_timestamp', Date.now().toString());
+  }
+};
+
+// Initialize by broadcasting initial state ONLY if localStorage is empty
+// This prevents the display window from overwriting the control panel's state
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    // Only broadcast if no state exists yet (first load of control panel)
+    if (!localStorage.getItem('darthander_state')) {
+      broadcastState(defaultVisualState);
+    }
+    if (!localStorage.getItem('darthander_vibes')) {
+      broadcastVibes({});
+    }
+  }, 100);
+}
+
+
 export const useStore = create<Store>((set, get) => ({
   // Visual State - start with defaults so UI works without backend
   visualState: defaultVisualState,
@@ -441,12 +468,14 @@ export const useStore = create<Store>((set, get) => ({
   // Vibe Layers - for extended visual effects
   vibeLayers: {},
   setVibeLayer: (category: string, value: string | null) =>
-    set((state) => ({
-      vibeLayers: {
+    set((state) => {
+      const newVibes = {
         ...state.vibeLayers,
         [category]: value,
-      },
-    })),
+      };
+      broadcastVibes(newVibes);
+      return { vibeLayers: newVibes };
+    }),
 
   // Presets - start with defaults so UI works without backend
   presets: defaultPresets,
