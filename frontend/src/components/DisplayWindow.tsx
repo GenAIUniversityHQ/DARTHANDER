@@ -243,6 +243,8 @@ export default function DisplayWindow() {
     const resize = () => {
       canvas.width = window.innerWidth * window.devicePixelRatio;
       canvas.height = window.innerHeight * window.devicePixelRatio;
+      // Reset transform before scaling (scale is cumulative!)
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     };
     resize();
@@ -254,6 +256,11 @@ export default function DisplayWindow() {
         const audio = audioStateRef.current;
         const width = window.innerWidth;
         const height = window.innerHeight;
+
+        // DEBUG: Confirm draw is running (check browser console)
+        if (timeRef.current === 0) {
+          console.log('[DISPLAY] First draw frame!', { width, height, canvasW: canvas.width, canvasH: canvas.height });
+        }
 
       // Calculate viewport for 16:9 aspect ratio mode (YouTube format)
       let viewX = 0, viewY = 0, viewW = width, viewH = height;
@@ -316,10 +323,6 @@ export default function DisplayWindow() {
         }
       }
 
-      // Clear entire screen with black
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, width, height);
-
       // Get current palette
       const palette = state?.colorPalette
         ? palettes[state.colorPalette] || palettes.cosmos
@@ -329,8 +332,18 @@ export default function DisplayWindow() {
       const baseBrightness = state?.colorBrightness ?? 0.6;
       const brightness = Math.min(1, baseBrightness + brightnessBoost);
       const intensity = state?.overallIntensity ?? 0.4;
+
+      // ALWAYS clear entire canvas first, then fill with palette background
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, width, height);
       ctx.fillStyle = palette.bg;
       ctx.fillRect(viewX, viewY, viewW, viewH);
+
+      // DEBUG: Draw bright cyan circle to confirm canvas works
+      ctx.fillStyle = '#00ffff';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
+      ctx.fill();
 
       // Draw background image if set
       if (bgImageRef.current) {
@@ -366,8 +379,8 @@ export default function DisplayWindow() {
       const coronaIntensity = Math.min(1, baseCoronaIntensity + coronaBoost);
 
       if (eclipsePhase > 0) {
-        // Subtle ambient darkening (reduced from 0.9 to let eclipse shine)
-        ctx.fillStyle = `rgba(0, 0, 0, ${eclipsePhase * 0.6})`;
+        // Reduced opacity so stars and effects show through
+        ctx.fillStyle = `rgba(0, 0, 0, ${eclipsePhase * 0.5})`;
         ctx.fillRect(viewX, viewY, viewW, viewH);
 
         // Eclipse disc size scales with phase - larger for fullscreen
@@ -1156,6 +1169,10 @@ export default function DisplayWindow() {
 
       } catch (error) {
         console.error('Display draw error (continuing):', error);
+        // Draw error on canvas so we can see it
+        ctx.fillStyle = 'red';
+        ctx.font = '20px monospace';
+        ctx.fillText(`ERROR: ${error}`, 10, 100);
       }
 
       // ALWAYS request next frame, even if draw had an error
