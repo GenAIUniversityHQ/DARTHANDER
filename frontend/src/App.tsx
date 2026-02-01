@@ -193,20 +193,20 @@ function App() {
       setConnected(false);
     });
 
+    // DISABLED: Socket visual state updates are completely disabled
+    // The frontend is the MASTER - sliders stay exactly where user sets them
+    // Backend state updates were causing slider fluctuation during live audio
     newSocket.on('state:current', (data: any) => {
-      // Only accept initial state if NOT in manual control mode
-      // This ensures user's manual settings take priority
-      if (!manualControlModeRef.current && data.visual) setVisualState(data.visual);
+      // ONLY accept audio state, NEVER visual state from backend
       if (data.audio) setAudioState(data.audio);
+      // Visual state is managed 100% locally
+      console.log('Ignored backend visual state - manual control enabled');
     });
 
-    newSocket.on('state:update', (state: any) => {
-      // IMPORTANT: Only accept backend state updates if NOT in manual control mode
-      // This prevents backend audio-reactive updates from overwriting slider positions
-      // Manual control mode = sliders stay where user sets them
-      if (!manualControlModeRef.current) {
-        setVisualState(state);
-      }
+    newSocket.on('state:update', (_state: any) => {
+      // COMPLETELY DISABLED - frontend controls are MASTER
+      // Backend can never override slider positions
+      console.log('Ignored backend state:update - manual control enabled');
     });
 
     newSocket.on('audio:update', (state: any) => {
@@ -575,8 +575,8 @@ function App() {
           </div>
         </div>
 
-        {/* Right Panel - Controls */}
-        <div className="w-1/2 flex flex-col overflow-hidden">
+        {/* Right Panel - Controls (scrollable) */}
+        <div className="w-1/2 flex flex-col overflow-y-auto">
           {/* Presets & Quick Actions */}
           <div className="p-4 border-b border-zinc-800">
             <div className="flex items-center justify-between mb-3">
@@ -625,7 +625,8 @@ function App() {
           </div>
 
           {/* Vibe Layers Panel */}
-          <div className="p-4 flex-1 overflow-y-auto">
+          <div className="p-4 border-b border-zinc-800">
+            <h2 className="text-sm text-zinc-500 mb-3">VIBE LAYERS</h2>
             <VibeLayerPanel />
           </div>
 

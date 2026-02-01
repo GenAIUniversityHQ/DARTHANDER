@@ -2,10 +2,9 @@
 // Display Window Component - Standalone visualization for external display
 
 import { useEffect, useRef, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { defaultVisualState } from '../store';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Socket connection disabled - display syncs only from localStorage
 
 interface VisualState {
   geometryMode: string;
@@ -75,7 +74,6 @@ export default function DisplayWindow() {
   const stateRef = useRef<VisualState & AudioSensitivity>(defaultVisualState as VisualState & AudioSensitivity);
   const vibeLayersRef = useRef<VibeLayers>({});
   const audioStateRef = useRef<AudioState | null>(null);
-  const socketRef = useRef<Socket | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
   const [aspectRatio, setAspectRatio] = useState<'fill' | '16:9'>('fill');
   const [showControls, setShowControls] = useState(true);
@@ -161,32 +159,13 @@ export default function DisplayWindow() {
     };
   }, []);
 
-  // Optional: Also connect to WebSocket for additional sync if backend available
+  // DISABLED: Socket connection removed to prevent state conflicts
+  // Display window now syncs ONLY from localStorage (written by control panel)
+  // This ensures the control panel is the single source of truth
   useEffect(() => {
-    const socket = io(API_URL, {
-      transports: ['websocket', 'polling'],
-    });
-
-    socket.on('connect', () => {
-      console.log('Display window connected to DARTHANDER Engine');
-      socket.emit('state:get');
-    });
-
-    socket.on('state:current', (data: any) => {
-      if (data.visual) {
-        stateRef.current = data.visual;
-      }
-    });
-
-    socket.on('state:update', (state: any) => {
-      stateRef.current = state;
-    });
-
-    socketRef.current = socket;
-
-    return () => {
-      socket.close();
-    };
+    console.log('Display window: Using localStorage sync only (socket disabled)');
+    // Socket is intentionally not connected
+    // All state comes from localStorage polling at 60fps above
   }, []);
 
   useEffect(() => {
@@ -205,10 +184,11 @@ export default function DisplayWindow() {
     window.addEventListener('resize', resize);
 
     const draw = () => {
-      const state = stateRef.current;
-      const audio = audioStateRef.current;
-      const width = window.innerWidth;
-      const height = window.innerHeight;
+      try {
+        const state = stateRef.current || defaultVisualState;
+        const audio = audioStateRef.current;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
 
       // Calculate viewport for 16:9 aspect ratio mode (YouTube format)
       let viewX = 0, viewY = 0, viewW = width, viewH = height;
@@ -694,6 +674,11 @@ export default function DisplayWindow() {
         }
       }
 
+      } catch (error) {
+        console.error('Display draw error (continuing):', error);
+      }
+
+      // ALWAYS request next frame, even if draw had an error
       animationRef.current = requestAnimationFrame(draw);
     };
 
