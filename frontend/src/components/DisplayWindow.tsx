@@ -705,6 +705,34 @@ export default function DisplayWindow() {
 
       ctx.restore();
 
+      // ============================================
+      // AMBIENT PARTICLE SYSTEM (Fullscreen Enhanced)
+      // Floating energy motes for depth and atmosphere
+      // ============================================
+      const particleCount = Math.floor(intensity * 50 + 20);
+      const particleTime = timeRef.current;
+      for (let i = 0; i < particleCount; i++) {
+        const seed = i * 456.789;
+        // Particle position with gentle floating motion
+        const px = viewX + (Math.sin(seed * 1.1 + particleTime * 0.0003) * 0.5 + 0.5) * viewW;
+        const py = viewY + (Math.cos(seed * 0.9 + particleTime * 0.0004) * 0.5 + 0.5) * viewH;
+        // Particle properties - larger for fullscreen
+        const particleSize = 1.5 + Math.sin(seed) * 2;
+        const particleAlpha = (0.25 + Math.sin(particleTime * 0.002 + seed) * 0.15) * intensity * (1 - eclipsePhase * 0.5);
+        // Audio reactivity - particles brighten with audio
+        const audioBoost = audioStateRef.current ? (audioStateRef.current.overallAmplitude ?? 0) * 0.4 : 0;
+
+        // Draw particle with glow
+        const gradient = ctx.createRadialGradient(px, py, 0, px, py, particleSize * 4);
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${particleAlpha + audioBoost})`);
+        gradient.addColorStop(0.4, `rgba(200, 220, 255, ${particleAlpha * 0.6})`);
+        gradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(px, py, particleSize * 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       // Draw vibe layer effects (fullscreen enhanced)
       const vibes = vibeLayersRef.current;
       if (vibes && Object.keys(vibes).length > 0) {

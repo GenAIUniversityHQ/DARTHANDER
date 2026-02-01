@@ -518,6 +518,34 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
 
       ctx.restore();
 
+      // ============================================
+      // AMBIENT PARTICLE SYSTEM
+      // Floating energy motes for depth and atmosphere
+      // ============================================
+      const particleCount = Math.floor(intensity * 30 + 10);
+      const time = timeRef.current;
+      for (let i = 0; i < particleCount; i++) {
+        const seed = i * 456.789;
+        // Particle position with gentle floating motion
+        const px = (Math.sin(seed * 1.1 + time * 0.0003) * 0.5 + 0.5) * width;
+        const py = (Math.cos(seed * 0.9 + time * 0.0004) * 0.5 + 0.5) * height;
+        // Particle properties
+        const particleSize = 1 + Math.sin(seed) * 1.5;
+        const particleAlpha = (0.2 + Math.sin(time * 0.002 + seed) * 0.15) * intensity * (1 - eclipsePhase * 0.5);
+        // Audio reactivity - particles brighten with audio
+        const audioBoost = audioState ? (audioState.overallAmplitude ?? 0) * 0.3 : 0;
+
+        // Draw particle with glow
+        const gradient = ctx.createRadialGradient(px, py, 0, px, py, particleSize * 3);
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${particleAlpha + audioBoost})`);
+        gradient.addColorStop(0.5, `rgba(200, 220, 255, ${particleAlpha * 0.5})`);
+        gradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(px, py, particleSize * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       // Draw vibe layer effects
       if (vibeLayers && Object.keys(vibeLayers).length > 0) {
         ctx.save();

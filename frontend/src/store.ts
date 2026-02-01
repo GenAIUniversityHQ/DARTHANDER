@@ -56,7 +56,7 @@ interface AudioState {
   spectralFlux: number;
 }
 
-// Preset now includes full visual parameters
+// Preset now includes full visual parameters and vibe layers
 interface Preset {
   id: string;
   name: string;
@@ -66,6 +66,8 @@ interface Preset {
   sortOrder: number;
   // Full visual state parameters
   visualState: Partial<VisualState>;
+  // Recommended vibe layers for this preset
+  vibeLayers?: { [key: string]: string | null };
 }
 
 interface Track {
@@ -203,6 +205,7 @@ const defaultPresets: Preset[] = [
       chaosFactor: 0.1,
       currentPhase: 'arrival',
     },
+    vibeLayers: { COSMIC: 'NEBULA', QUANTUM: 'FIELD' },
   },
   {
     id: '2',
@@ -233,6 +236,7 @@ const defaultPresets: Preset[] = [
       chaosFactor: 0.2,
       currentPhase: 'emergence',
     },
+    vibeLayers: { SACRED: 'FLOWER', COSMIC: 'AURORA', EMOTION: 'WONDER' },
   },
   {
     id: '3',
@@ -263,6 +267,7 @@ const defaultPresets: Preset[] = [
       chaosFactor: 0.35,
       currentPhase: 'descent',
     },
+    vibeLayers: { SACRED: 'SRI', COSMIC: 'WORMHOLE', CELESTIAL: 'ECLIPSE' },
   },
   {
     id: '4',
@@ -293,6 +298,7 @@ const defaultPresets: Preset[] = [
       chaosFactor: 0.1,
       currentPhase: 'totality',
     },
+    vibeLayers: { SACRED: 'MERKABA', CELESTIAL: 'ECLIPSE', EMOTION: 'AWE' },
   },
   {
     id: '5',
@@ -323,6 +329,7 @@ const defaultPresets: Preset[] = [
       chaosFactor: 0.4,
       currentPhase: 'descent',
     },
+    vibeLayers: { COSMIC: 'WORMHOLE', ELEMENT: 'PLASMA', QUANTUM: 'WAVE' },
   },
   {
     id: '6',
@@ -353,6 +360,7 @@ const defaultPresets: Preset[] = [
       chaosFactor: 0.7,
       currentPhase: 'emergence',
     },
+    vibeLayers: { ELEMENT: 'FIRE', SACRED: 'TORUS', CELESTIAL: 'SUN' },
   },
   {
     id: '7',
@@ -383,6 +391,7 @@ const defaultPresets: Preset[] = [
       chaosFactor: 0.05,
       currentPhase: 'totality',
     },
+    vibeLayers: { QUANTUM: 'PARTICLE' },
   },
   {
     id: '8',
@@ -413,6 +422,7 @@ const defaultPresets: Preset[] = [
       chaosFactor: 0.05,
       currentPhase: 'return',
     },
+    vibeLayers: { COSMIC: 'AURORA', ELEMENT: 'WATER', CELESTIAL: 'MOON' },
   },
   {
     id: '9',
@@ -443,6 +453,7 @@ const defaultPresets: Preset[] = [
       chaosFactor: 0.05,
       currentPhase: 'totality',
     },
+    vibeLayers: { SACRED: 'METATRON', CELESTIAL: 'ECLIPSE', EMOTION: 'AWE' },
   },
   {
     id: '10',
@@ -473,6 +484,7 @@ const defaultPresets: Preset[] = [
       chaosFactor: 0.1,
       currentPhase: 'descent',
     },
+    vibeLayers: { SACRED: 'FLOWER', EMOTION: 'WONDER', COSMIC: 'NEBULA' },
   },
   {
     id: '11',
@@ -503,6 +515,7 @@ const defaultPresets: Preset[] = [
       chaosFactor: 0.25,
       currentPhase: 'totality',
     },
+    vibeLayers: { ELEMENT: 'FIRE', SACRED: 'TORUS', CELESTIAL: 'SUN' },
   },
 ];
 
@@ -597,7 +610,13 @@ export const useStore = create<Store>((set, get) => ({
         ...preset.visualState,
         id: `preset-${name}`,
       };
-      set({ visualState: newState, currentPreset: name });
+      // Apply vibe layers if preset has them
+      if (preset.vibeLayers) {
+        set({ visualState: newState, currentPreset: name, vibeLayers: preset.vibeLayers });
+        broadcastVibes(preset.vibeLayers);
+      } else {
+        set({ visualState: newState, currentPreset: name });
+      }
       broadcastState(newState);
     }
   },
