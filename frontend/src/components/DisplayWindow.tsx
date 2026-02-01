@@ -68,14 +68,49 @@ export default function DisplayWindow() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  // Sync state from localStorage (works without backend)
   useEffect(() => {
-    // Connect to WebSocket for real-time updates
+    const syncFromLocalStorage = () => {
+      const stateData = localStorage.getItem('darthander_state');
+      if (stateData) {
+        try {
+          stateRef.current = JSON.parse(stateData);
+        } catch (e) {
+          console.error('Failed to parse state from localStorage');
+        }
+      }
+    };
+
+    // Initial sync
+    syncFromLocalStorage();
+
+    // Poll for changes at 60fps for smooth updates
+    const pollInterval = setInterval(syncFromLocalStorage, 16);
+
+    // Also listen for storage events
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'darthander_state') {
+        syncFromLocalStorage();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Try WebSocket as secondary sync method (if backend exists)
     const socket = io(API_URL, {
       transports: ['websocket', 'polling'],
+      reconnectionAttempts: 3,
+      timeout: 5000,
     });
 
     socket.on('connect', () => {
-      console.log('Display window connected to DARTHANDER Engine');
+      console.log('Display connected to backend (optional)');
       socket.emit('state:get');
     });
 
@@ -106,6 +141,8 @@ export default function DisplayWindow() {
     const resize = () => {
       canvas.width = window.innerWidth * window.devicePixelRatio;
       canvas.height = window.innerHeight * window.devicePixelRatio;
+      // CRITICAL: Reset transform before scaling (scale is cumulative!)
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     };
     resize();

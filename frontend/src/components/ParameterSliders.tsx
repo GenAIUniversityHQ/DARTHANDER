@@ -14,6 +14,9 @@ interface VisualState {
   depthFocalPoint: number;
   starDensity: number;
   coronaIntensity: number;
+  geometryMode: string;
+  motionDirection: string;
+  colorPalette: string;
 }
 
 interface ParameterSlidersProps {
