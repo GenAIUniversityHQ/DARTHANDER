@@ -103,9 +103,6 @@ function getInitialVibes(): VibeLayers {
 }
 
 export default function DisplayWindow() {
-  // CRITICAL DEBUG: Log when component mounts
-  console.log('[DisplayWindow] Component rendering!');
-
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const timeRef = useRef(0);
@@ -254,39 +251,11 @@ export default function DisplayWindow() {
     window.addEventListener('resize', resize);
 
     const draw = () => {
-      // CRITICAL DEBUG: Log every frame to confirm draw is running
-      console.log('[DRAW] Frame start - canvas:', canvas.width, 'x', canvas.height);
-
       try {
         const state = stateRef.current || defaultVisualState;
         const audio = audioStateRef.current;
         const width = window.innerWidth;
         const height = window.innerHeight;
-
-        // CRITICAL DEBUG: Draw bright red background FIRST to confirm canvas works
-        ctx.fillStyle = '#ff0000';
-        ctx.fillRect(0, 0, width, height);
-
-        // Draw big white text
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 48px Arial';
-        ctx.fillText('DISPLAY WORKING', 50, 100);
-        ctx.font = '24px Arial';
-        ctx.fillText(`Width: ${width}, Height: ${height}`, 50, 150);
-        ctx.fillText(`State: ${state?.geometryMode || 'NO STATE'}`, 50, 180);
-        ctx.fillText(`LocalStorage: ${localStorage.getItem('darthander_state') ? 'HAS DATA' : 'EMPTY'}`, 50, 210);
-
-        // DEBUG: Log draw info periodically
-        if (Math.random() < 0.01) {
-          console.log('[DRAW] Running:', {
-            hasState: !!state,
-            width,
-            height,
-            intensity: state?.overallIntensity,
-            palette: state?.colorPalette,
-            eclipse: state?.eclipsePhase
-          });
-        }
 
       // Calculate viewport for 16:9 aspect ratio mode (YouTube format)
       let viewX = 0, viewY = 0, viewW = width, viewH = height;
@@ -349,14 +318,6 @@ export default function DisplayWindow() {
         }
       }
 
-      // Clear entire screen with black
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, width, height);
-
-      // DEBUG: Draw a visible colored bar to confirm canvas is working
-      ctx.fillStyle = '#ff00ff';
-      ctx.fillRect(0, height - 20, 100, 20);
-
       // Get current palette
       const palette = state?.colorPalette
         ? palettes[state.colorPalette] || palettes.cosmos
@@ -394,10 +355,11 @@ export default function DisplayWindow() {
         ctx.globalAlpha = 1.0;
       }
 
-      // Eclipse overlay
+      // Eclipse overlay - reduced opacity so content stays visible
       const eclipsePhase = state?.eclipsePhase ?? 0;
       if (eclipsePhase > 0) {
-        ctx.fillStyle = `rgba(0, 0, 0, ${eclipsePhase * 0.9})`;
+        // Max 50% darkness instead of 90% - lets stars and effects show through
+        ctx.fillStyle = `rgba(0, 0, 0, ${eclipsePhase * 0.5})`;
         ctx.fillRect(viewX, viewY, viewW, viewH);
       }
 
@@ -775,16 +737,6 @@ export default function DisplayWindow() {
           ctx.fillRect(0, viewY + viewH, width, viewY);
         }
       }
-
-      // DEBUG: Draw state info directly on canvas
-      ctx.save();
-      ctx.fillStyle = 'rgba(255, 255, 0, 0.8)';
-      ctx.font = '14px monospace';
-      ctx.fillText(`State: ${state?.geometryMode || 'NULL'} | Intensity: ${(state?.overallIntensity ?? 0).toFixed(2)}`, 10, 30);
-      ctx.fillText(`Eclipse: ${(state?.eclipsePhase ?? 0).toFixed(2)} | Corona: ${(state?.coronaIntensity ?? 0).toFixed(2)}`, 10, 50);
-      ctx.fillText(`Palette: ${state?.colorPalette || 'NULL'} | Stars: ${(state?.starDensity ?? 0).toFixed(2)}`, 10, 70);
-      ctx.fillText(`Frame: ${Math.floor(timeRef.current)} | LocalStorage: ${localStorage.getItem('darthander_state') ? 'YES' : 'NO'}`, 10, 90);
-      ctx.restore();
 
       } catch (error) {
         console.error('Display draw error (continuing):', error);
