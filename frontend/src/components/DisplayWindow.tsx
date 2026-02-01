@@ -339,12 +339,6 @@ export default function DisplayWindow() {
       ctx.fillStyle = palette.bg;
       ctx.fillRect(viewX, viewY, viewW, viewH);
 
-      // DEBUG: Draw bright cyan circle to confirm canvas works
-      ctx.fillStyle = '#00ffff';
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
-      ctx.fill();
-
       // Draw background image if set
       if (bgImageRef.current) {
         const img = bgImageRef.current;
