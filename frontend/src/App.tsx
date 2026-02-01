@@ -173,21 +173,20 @@ function App() {
     geminiApiKey,
   } = useStore();
 
-  // CRITICAL: Broadcast current state to localStorage immediately on mount
-  // This ensures display window always gets the current state, not stale data
+  // CRITICAL: Broadcast state to localStorage whenever it changes
+  // This ensures display window always gets the current state
   useEffect(() => {
-    console.log('[APP MOUNT] useEffect running, visualState:', visualState ? 'EXISTS' : 'NULL');
     if (visualState) {
       const stateJson = JSON.stringify(visualState);
       localStorage.setItem('darthander_state', stateJson);
       localStorage.setItem('darthander_state_timestamp', Date.now().toString());
-      console.log('[APP MOUNT] Broadcast to localStorage:', {
-        intensity: visualState.overallIntensity,
-        speed: visualState.motionSpeed,
+      console.log('[APP SYNC] Broadcast to localStorage:', {
+        intensity: visualState.overallIntensity?.toFixed(2),
+        speed: visualState.motionSpeed?.toFixed(2),
         mode: visualState.geometryMode
       });
     }
-  }, []); // Only on mount
+  }, [visualState]); // Run whenever visualState changes
 
   // Initialize socket connection
   useEffect(() => {
