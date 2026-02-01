@@ -50,6 +50,8 @@ interface AudioState {
   peakAmplitude: number;
   detectedBpm: number;
   beatIntensity: number;
+  bassImpact: number;
+  bassPulse: number;
   spectralCentroid: number;
   spectralFlux: number;
 }

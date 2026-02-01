@@ -48,7 +48,7 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
   const motionOffsetRef = useRef({ x: 0, y: 0 });
   const bgImageRef = useRef<HTMLImageElement | null>(null);
   const [displayWindow, setDisplayWindow] = useState<Window | null>(null);
-  const { backgroundImage, vibeLayers } = useStore();
+  const { backgroundImage, vibeLayers, audioState, visualState } = useStore();
 
   // Load background image when it changes
   useEffect(() => {
@@ -123,13 +123,49 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
       const centerX = width / 2;
       const centerY = height / 2;
 
+      // ============================================
+      // AUDIO-REACTIVE VISUAL BOOSTS
+      // These add to user's base values for DISPLAY ONLY
+      // ============================================
+      const vs = visualState || state;
+      const bassImpactSens = (vs as any)?.bassImpactSensitivity ?? 0;
+      const bassPulseSens = (vs as any)?.bassPulseSensitivity ?? 0;
+      const audioReactMotion = (vs as any)?.audioReactMotion ?? 0;
+      const audioReactColor = (vs as any)?.audioReactColor ?? 0;
+      const audioReactGeo = (vs as any)?.audioReactGeometry ?? 0;
+
+      // Calculate audio boosts
+      let coronaBoost = 0;
+      let motionBoost = 0;
+      let brightnessBoost = 0;
+      let chaosBoost = 0;
+      let scaleBoost = 0;
+
+      if (audioState) {
+        const bassImpact = audioState.bassImpact ?? 0;
+        const bassPulse = audioState.bassPulse ?? 0;
+        const beatIntensity = audioState.beatIntensity ?? 0;
+        const overallAmp = audioState.overallAmplitude ?? 0;
+        const mid = audioState.mid ?? 0;
+        const highMid = audioState.highMid ?? 0;
+
+        coronaBoost = (bassImpact * bassImpactSens * 0.5 + bassPulse * bassPulseSens * 0.3) * 0.6;
+        motionBoost = (overallAmp * 0.4 + beatIntensity * 0.4) * audioReactMotion * 0.5;
+        brightnessBoost = (mid * 0.3 + overallAmp * 0.2) * audioReactColor * 0.4;
+        chaosBoost = (beatIntensity * 0.3 + highMid * 0.3 + bassImpact * 0.2) * audioReactGeo * 0.5;
+        if (bassImpactSens > 0.5 && bassImpact > 0.4) {
+          scaleBoost = bassImpact * bassImpactSens * 0.08;
+        }
+      }
+
       // Get current palette
       const palette = state?.colorPalette
         ? palettes[state.colorPalette] || palettes.cosmos
         : palettes.cosmos;
 
-      // Clear with background
-      const brightness = state?.colorBrightness ?? 0.6;
+      // Apply audio boost to brightness (VISUAL ONLY)
+      const baseBrightness = state?.colorBrightness ?? 0.6;
+      const brightness = Math.min(1, baseBrightness + brightnessBoost);
       const intensity = state?.overallIntensity ?? 0.4;
       ctx.fillStyle = palette.bg;
       ctx.fillRect(0, 0, width, height);
@@ -166,8 +202,9 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
         ctx.fillRect(0, 0, width, height);
       }
 
-      // Update time and motion
-      const motionSpeed = state?.motionSpeed ?? 0.1;
+      // Update time and motion (with audio boost for VISUAL ONLY)
+      const baseMotionSpeed = state?.motionSpeed ?? 0.1;
+      const motionSpeed = Math.min(1, baseMotionSpeed + motionBoost);
       const motionTurbulence = state?.motionTurbulence ?? 0.1;
       const motionDir = state?.motionDirection ?? 'clockwise';
       timeRef.current += 0.016 * motionSpeed * 60;
@@ -246,11 +283,15 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
         ctx.fill();
       }
 
-      // Draw geometry based on mode
+      // Draw geometry based on mode (with audio boosts for VISUAL ONLY)
       const geometryMode = state?.geometryMode ?? 'stars';
       const complexity = state?.geometryComplexity ?? 0.2;
-      const geometryScale = state?.geometryScale ?? 1.0;
-      const chaosFactor = state?.chaosFactor ?? 0;
+      const baseGeometryScale = state?.geometryScale ?? 1.0;
+      const baseChaos = state?.chaosFactor ?? 0;
+
+      // Apply audio boosts
+      const geometryScale = Math.min(2, baseGeometryScale + scaleBoost);
+      const chaosFactor = Math.min(1, baseChaos + chaosBoost);
 
       // Rotation based on direction
       let rotation = 0;
@@ -401,7 +442,9 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
       }
 
       // Corona beams effect - ONLY appears during eclipse AND when corona is enabled
-      const coronaIntensity = state?.coronaIntensity ?? 0;
+      // Apply audio boost for VISUAL ONLY
+      const baseCoronaIntensity = state?.coronaIntensity ?? 0;
+      const coronaIntensity = Math.min(1, baseCoronaIntensity + coronaBoost);
       if (eclipsePhase > 0.5 && coronaIntensity > 0) {
         const coronaStrength = (eclipsePhase - 0.5) * 2 * coronaIntensity;
         const numBeams = 12;

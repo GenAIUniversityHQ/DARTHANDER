@@ -32,6 +32,30 @@ interface VibeLayers {
   [category: string]: string | null;
 }
 
+interface AudioState {
+  subBass: number;
+  bass: number;
+  lowMid: number;
+  mid: number;
+  highMid: number;
+  presence: number;
+  brilliance: number;
+  overallAmplitude: number;
+  peakAmplitude: number;
+  beatIntensity: number;
+  bassImpact: number;
+  bassPulse: number;
+}
+
+// Audio sensitivity settings (read from visualState)
+interface AudioSensitivity {
+  bassImpactSensitivity: number;
+  bassPulseSensitivity: number;
+  audioReactMotion: number;
+  audioReactColor: number;
+  audioReactGeometry: number;
+}
+
 // Color palette definitions
 const palettes: Record<string, { bg: string; primary: string; secondary: string }> = {
   cosmos: { bg: '#0a0a1a', primary: '#4a4aff', secondary: '#8a4aff' },
@@ -48,8 +72,9 @@ export default function DisplayWindow() {
   const animationRef = useRef<number>();
   const timeRef = useRef(0);
   const motionOffsetRef = useRef({ x: 0, y: 0 }); // For outward/inward motion
-  const stateRef = useRef<VisualState>(defaultVisualState as VisualState);
+  const stateRef = useRef<VisualState & AudioSensitivity>(defaultVisualState as VisualState & AudioSensitivity);
   const vibeLayersRef = useRef<VibeLayers>({});
+  const audioStateRef = useRef<AudioState | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
   const [aspectRatio, setAspectRatio] = useState<'fill' | '16:9'>('fill');
@@ -83,9 +108,10 @@ export default function DisplayWindow() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Sync visual state and vibe layers from localStorage (primary sync method - no backend needed)
+  // Sync visual state, vibe layers, and audio state from localStorage
   useEffect(() => {
     const syncFromLocalStorage = () => {
+      // Sync visual state
       const stateData = localStorage.getItem('darthander_state');
       if (stateData) {
         try {
@@ -94,6 +120,7 @@ export default function DisplayWindow() {
           console.error('Failed to parse state from localStorage');
         }
       }
+      // Sync vibe layers
       const vibeData = localStorage.getItem('darthander_vibes');
       if (vibeData) {
         try {
@@ -102,18 +129,26 @@ export default function DisplayWindow() {
           console.error('Failed to parse vibes from localStorage');
         }
       }
+      // Sync audio state (for audio-reactive visuals)
+      const audioData = localStorage.getItem('darthander_audio');
+      if (audioData) {
+        try {
+          audioStateRef.current = JSON.parse(audioData);
+        } catch (e) {
+          // Audio data might not exist, that's OK
+        }
+      }
     };
 
     // Initial sync
     syncFromLocalStorage();
 
-    // Poll for changes (since storage event only fires from other windows)
-    const pollInterval = setInterval(syncFromLocalStorage, 50); // 20fps sync
+    // Poll for changes at 60fps for smooth audio-reactive visuals
+    const pollInterval = setInterval(syncFromLocalStorage, 16);
 
     // Also listen for storage events from same origin but different tab
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'darthander_state' || e.key === 'darthander_state_timestamp' ||
-          e.key === 'darthander_vibes' || e.key === 'darthander_vibes_timestamp') {
+      if (e.key?.startsWith('darthander_')) {
         syncFromLocalStorage();
       }
     };
@@ -171,6 +206,7 @@ export default function DisplayWindow() {
 
     const draw = () => {
       const state = stateRef.current;
+      const audio = audioStateRef.current;
       const width = window.innerWidth;
       const height = window.innerHeight;
 
@@ -191,6 +227,50 @@ export default function DisplayWindow() {
       const centerX = viewX + viewW / 2;
       const centerY = viewY + viewH / 2;
 
+      // ============================================
+      // AUDIO-REACTIVE VISUAL BOOSTS
+      // These add to user's base values for DISPLAY ONLY
+      // They do NOT modify the stored slider values
+      // ============================================
+      const bassImpactSens = (state as any)?.bassImpactSensitivity ?? 0;
+      const bassPulseSens = (state as any)?.bassPulseSensitivity ?? 0;
+      const audioReactMotion = (state as any)?.audioReactMotion ?? 0;
+      const audioReactColor = (state as any)?.audioReactColor ?? 0;
+      const audioReactGeo = (state as any)?.audioReactGeometry ?? 0;
+
+      // Calculate audio boosts (only if audio is active)
+      let coronaBoost = 0;
+      let motionBoost = 0;
+      let brightnessBoost = 0;
+      let chaosBoost = 0;
+      let scaleBoost = 0;
+
+      if (audio) {
+        const bassImpact = audio.bassImpact ?? 0;
+        const bassPulse = audio.bassPulse ?? 0;
+        const beatIntensity = audio.beatIntensity ?? 0;
+        const overallAmp = audio.overallAmplitude ?? 0;
+        const mid = audio.mid ?? 0;
+        const highMid = audio.highMid ?? 0;
+
+        // Corona pulses with bass
+        coronaBoost = (bassImpact * bassImpactSens * 0.5 + bassPulse * bassPulseSens * 0.3) * 0.6;
+
+        // Motion responds to energy
+        motionBoost = (overallAmp * 0.4 + beatIntensity * 0.4) * audioReactMotion * 0.5;
+
+        // Brightness pulses with mids
+        brightnessBoost = (mid * 0.3 + overallAmp * 0.2) * audioReactColor * 0.4;
+
+        // Chaos responds to beats and highs
+        chaosBoost = (beatIntensity * 0.3 + highMid * 0.3 + bassImpact * 0.2) * audioReactGeo * 0.5;
+
+        // Scale pulse on heavy bass
+        if (bassImpactSens > 0.5 && bassImpact > 0.4) {
+          scaleBoost = bassImpact * bassImpactSens * 0.08;
+        }
+      }
+
       // Clear entire screen with black
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, width, height);
@@ -200,8 +280,9 @@ export default function DisplayWindow() {
         ? palettes[state.colorPalette] || palettes.cosmos
         : palettes.cosmos;
 
-      // Clear viewport with background
-      const brightness = state?.colorBrightness ?? 0.6;
+      // Apply audio boost to brightness (VISUAL ONLY)
+      const baseBrightness = state?.colorBrightness ?? 0.6;
+      const brightness = Math.min(1, baseBrightness + brightnessBoost);
       const intensity = state?.overallIntensity ?? 0.4;
       ctx.fillStyle = palette.bg;
       ctx.fillRect(viewX, viewY, viewW, viewH);
@@ -238,8 +319,9 @@ export default function DisplayWindow() {
         ctx.fillRect(viewX, viewY, viewW, viewH);
       }
 
-      // Update time and motion
-      const motionSpeed = state?.motionSpeed ?? 0.1;
+      // Update time and motion (with audio boost for VISUAL ONLY)
+      const baseMotionSpeed = state?.motionSpeed ?? 0.1;
+      const motionSpeed = Math.min(1, baseMotionSpeed + motionBoost);
       const motionTurbulence = state?.motionTurbulence ?? 0.1;
       const motionDir = state?.motionDirection ?? 'clockwise';
       timeRef.current += 0.016 * motionSpeed * 60;
@@ -320,11 +402,15 @@ export default function DisplayWindow() {
         ctx.fill();
       }
 
-      // Draw geometry based on mode
+      // Draw geometry based on mode (with audio boosts for VISUAL ONLY)
       const geometryMode = state?.geometryMode ?? 'stars';
       const complexity = state?.geometryComplexity ?? 0.2;
-      const geometryScale = state?.geometryScale ?? 1.0;
-      const chaosFactor = state?.chaosFactor ?? 0;
+      const baseGeometryScale = state?.geometryScale ?? 1.0;
+      const baseChaos = state?.chaosFactor ?? 0;
+
+      // Apply audio boosts (VISUAL ONLY - does not affect stored values)
+      const geometryScale = Math.min(2, baseGeometryScale + scaleBoost);
+      const chaosFactor = Math.min(1, baseChaos + chaosBoost);
 
       // Rotation based on direction
       let rotation = 0;
@@ -536,7 +622,9 @@ export default function DisplayWindow() {
       }
 
       // Corona beams effect - ONLY appears during eclipse AND when corona is enabled
-      const coronaIntensity = state?.coronaIntensity ?? 0;
+      // Apply audio boost for VISUAL ONLY
+      const baseCoronaIntensity = state?.coronaIntensity ?? 0;
+      const coronaIntensity = Math.min(1, baseCoronaIntensity + coronaBoost);
       if (eclipsePhase > 0.5 && coronaIntensity > 0) {
         const coronaStrength = (eclipsePhase - 0.5) * 2 * coronaIntensity;
         const numBeams = 16; // More beams for fullscreen
