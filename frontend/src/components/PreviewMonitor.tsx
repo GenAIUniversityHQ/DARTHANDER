@@ -207,7 +207,11 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
       const motionSpeed = Math.min(1, baseMotionSpeed + motionBoost);
       const motionTurbulence = state?.motionTurbulence ?? 0.1;
       const motionDir = state?.motionDirection ?? 'clockwise';
-      timeRef.current += 0.016 * motionSpeed * 60;
+
+      // Only update time if not "still" - this controls all animation
+      if (motionDir !== 'still') {
+        timeRef.current += 0.016 * motionSpeed * 60;
+      }
 
       // Update motion offset for outward/inward effects
       if (motionDir === 'outward') {

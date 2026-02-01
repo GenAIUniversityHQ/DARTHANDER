@@ -14,8 +14,10 @@ interface SliderConfig {
 const mainSliders: SliderConfig[] = [
   { key: 'overallIntensity', label: 'INTENSITY', color: 'bg-purple-500', icon: '✧' },
   { key: 'geometryComplexity', label: 'COMPLEXITY', color: 'bg-blue-500', icon: '◎' },
+  { key: 'geometryScale', label: 'SCALE', color: 'bg-indigo-500', icon: '⬡' },
   { key: 'chaosFactor', label: 'CHAOS', color: 'bg-red-500', icon: '✦' },
   { key: 'motionSpeed', label: 'SPEED', color: 'bg-cyan-500', icon: '◈' },
+  { key: 'motionTurbulence', label: 'TURBULENCE', color: 'bg-teal-500', icon: '≋' },
 ];
 
 // AUDIO SENSITIVITY CONTROLS - These control HOW MUCH audio affects the visuals
@@ -74,7 +76,31 @@ export function ExpandedSliders({ showAudioMeters = true }: ExpandedSlidersProps
 
   const renderSlider = (slider: SliderConfig) => {
     const value = getValue(slider.key);
-    const percentage = Math.round(value * 100);
+
+    // Special handling for geometryScale (range 0.5-2.0 instead of 0-1)
+    const isScaleSlider = slider.key === 'geometryScale';
+    let percentage: number;
+    let displayValue: string;
+
+    if (isScaleSlider) {
+      // Scale: 0.5-2.0, show as 50%-200%
+      percentage = Math.round(((value - 0.5) / 1.5) * 100);
+      displayValue = `${Math.round(value * 100)}%`;
+    } else {
+      percentage = Math.round(value * 100);
+      displayValue = `${percentage}%`;
+    }
+
+    const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const rawValue = parseInt(e.target.value);
+      if (isScaleSlider) {
+        // Convert 0-100 slider to 0.5-2.0 range
+        const scaleValue = 0.5 + (rawValue / 100) * 1.5;
+        handleChange(slider.key, scaleValue);
+      } else {
+        handleChange(slider.key, rawValue / 100);
+      }
+    };
 
     return (
       <div key={slider.key} className="space-y-1">
@@ -83,7 +109,7 @@ export function ExpandedSliders({ showAudioMeters = true }: ExpandedSlidersProps
             {slider.icon && <span>{slider.icon}</span>}
             {slider.label}
           </span>
-          <span className="text-zinc-400 font-mono">{percentage}%</span>
+          <span className="text-zinc-400 font-mono">{displayValue}</span>
         </div>
         <div className="relative h-1.5 bg-zinc-800 rounded-full overflow-hidden">
           <div
@@ -95,7 +121,7 @@ export function ExpandedSliders({ showAudioMeters = true }: ExpandedSlidersProps
             min="0"
             max="100"
             value={percentage}
-            onChange={(e) => handleChange(slider.key, parseInt(e.target.value) / 100)}
+            onChange={handleSliderChange}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           />
         </div>

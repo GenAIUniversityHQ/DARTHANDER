@@ -27,36 +27,62 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // Gemini prompt interpretation (client-side)
 async function interpretWithGemini(prompt: string, apiKey: string, currentState: any): Promise<any> {
-  const systemPrompt = `You are the AI brain for DARTHANDER: ECLIPSE, a live immersive visual experience. Interpret spoken/typed prompts and translate them into parameter changes.
+  const systemPrompt = `You are the AI brain for DARTHANDER: ECLIPSE, a live immersive visual experience for DJs. Interpret spoken/typed prompts and translate them into parameter changes.
 
-AVAILABLE PARAMETERS (all numeric values 0.0-1.0 unless noted):
-- geometryMode: "mandala" | "hexagon" | "fractal" | "spiral" | "tunnel" | "stars"
-- colorPalette: "cosmos" | "void" | "fire" | "ice" | "earth" | "neon" | "sacred" | "desert" | "ocean" | "matrix"
+AVAILABLE PARAMETERS:
+
+GEOMETRY (string values):
+- geometryMode: "stars" | "mandala" | "hexagon" | "fractal" | "spiral" | "tunnel" | "void"
 - motionDirection: "outward" | "inward" | "clockwise" | "counter" | "breathing" | "still"
-- motionSpeed: 0.0-1.0 (0=still, 1=fast)
-- geometryComplexity: 0.0-1.0 (detail level)
-- overallIntensity: 0.0-1.0 (master brightness)
-- eclipsePhase: 0.0-1.0 (0=no moon, 1=full eclipse)
-- coronaIntensity: 0.0-1.0 (eclipse glow)
-- chaosFactor: 0.0-1.0 (visual turbulence)
-- starDensity: 0.0-1.0 (number of stars)
-- starBrightness: 0.0-1.0 (star glow)
-- nebulaPresence: 0.0-1.0 (cosmic clouds)
-- colorBrightness: 0.0-1.0 (color vibrancy)
-- colorSaturation: 0.0-1.0
+- colorPalette: "cosmos" | "void" | "fire" | "ice" | "earth" | "neon" | "sacred" | "sunset" | "ocean" | "forest" | "royal" | "blood"
+
+NUMERIC PARAMETERS (0.0-1.0):
+- overallIntensity: master brightness/intensity
+- geometryComplexity: detail level of geometry
+- geometryScale: size of geometry (0.5-2.0, default 1.0)
+- motionSpeed: animation speed
+- motionTurbulence: randomness/drift in motion
+- chaosFactor: visual chaos/wobble
+- starDensity: number of stars
+- starBrightness: star glow intensity
+- nebulaPresence: cosmic cloud intensity
+- eclipsePhase: 0=no eclipse, 1=full eclipse
+- coronaIntensity: eclipse glow beams
+- colorBrightness: color vibrancy
+- colorSaturation: color intensity
+- colorHueShift: shift all colors (0-1 = 0-360 degrees)
+
+AUDIO SENSITIVITY (0.0-1.0, how much audio affects visuals):
+- bassImpactSensitivity: bass hits boost corona
+- bassPulseSensitivity: bass presence boost
+- audioReactMotion: audio affects speed
+- audioReactColor: audio affects brightness
+- audioReactGeometry: audio affects chaos/scale
 
 INTERPRETATION GUIDELINES:
-- "more intense/brighter/louder" → increase overallIntensity, coronaIntensity
-- "darker/dimmer/less" → decrease overallIntensity
-- "faster/speed up" → increase motionSpeed
-- "slower/calm" → decrease motionSpeed, chaosFactor
+- "intense/brighter/more" → increase overallIntensity, maybe coronaIntensity
+- "darker/dim/less" → decrease overallIntensity
+- "faster/speed" → increase motionSpeed
+- "slower/calm/peace" → decrease motionSpeed, chaosFactor
 - "chaos/wild/crazy" → increase chaosFactor
-- "peaceful/meditative" → low chaosFactor, slow motionSpeed
-- "cosmic/galaxy" → colorPalette: cosmos, high starDensity
-- "void/darkness" → colorPalette: void, low everything
+- "bigger/larger" → increase geometryScale
+- "smaller" → decrease geometryScale
+- "stars/cosmic" → geometryMode: stars, high starDensity
+- "mandala/sacred" → geometryMode: mandala
+- "spiral" → geometryMode: spiral, motionDirection: inward or outward
+- "tunnel/portal" → geometryMode: tunnel, motionDirection: inward
+- "void/darkness" → colorPalette: void, low overallIntensity
 - "fire/flames" → colorPalette: fire, high coronaIntensity
 - "ice/cold" → colorPalette: ice
 - "eclipse/totality" → high eclipsePhase and coronaIntensity
+- "nebula/clouds" → high nebulaPresence
+- "spin/rotate" → motionDirection: clockwise or counter
+- "breathe" → motionDirection: breathing
+- "stop/still/freeze" → motionDirection: still, low motionSpeed
+- "flow out" → motionDirection: outward
+- "flow in" → motionDirection: inward
+- "more bass/reactive" → increase bassImpactSensitivity
+- "less reactive" → decrease audio sensitivity parameters
 
 Current state: ${JSON.stringify(currentState)}
 
@@ -315,10 +341,65 @@ function App() {
     else if (lowerPrompt.includes('chaos') || lowerPrompt.includes('wild') || lowerPrompt.includes('crazy')) {
       updateVisualParameter('chaosFactor', Math.min(1, (visualState?.chaosFactor ?? 0.2) + 0.3));
       setLastInterpretation('🌀 Chaos unleashed');
-    } else if (lowerPrompt.includes('calm') || lowerPrompt.includes('peace') || lowerPrompt.includes('still')) {
+    } else if (lowerPrompt.includes('calm') || lowerPrompt.includes('peace')) {
       updateVisualParameter('chaosFactor', 0.05);
       updateVisualParameter('motionSpeed', 0.1);
       setLastInterpretation('🧘 Finding peace...');
+    }
+    // Motion direction controls
+    else if (lowerPrompt.includes('stop') || lowerPrompt.includes('freeze') || lowerPrompt.includes('still')) {
+      updateVisualParameter('motionDirection', 'still');
+      updateVisualParameter('motionSpeed', 0);
+      setLastInterpretation('⏸️ Motion stopped');
+    } else if (lowerPrompt.includes('spin') || lowerPrompt.includes('rotate')) {
+      updateVisualParameter('motionDirection', lowerPrompt.includes('counter') || lowerPrompt.includes('left') ? 'counter' : 'clockwise');
+      setLastInterpretation('🔄 Spinning...');
+    } else if (lowerPrompt.includes('breathe') || lowerPrompt.includes('pulse')) {
+      updateVisualParameter('motionDirection', 'breathing');
+      setLastInterpretation('🫁 Breathing...');
+    } else if (lowerPrompt.includes('flow out') || lowerPrompt.includes('expand') || lowerPrompt.includes('outward')) {
+      updateVisualParameter('motionDirection', 'outward');
+      setLastInterpretation('↗️ Flowing outward');
+    } else if (lowerPrompt.includes('flow in') || lowerPrompt.includes('contract') || lowerPrompt.includes('inward')) {
+      updateVisualParameter('motionDirection', 'inward');
+      setLastInterpretation('↙️ Flowing inward');
+    }
+    // Scale controls
+    else if (lowerPrompt.includes('bigger') || lowerPrompt.includes('larger') || lowerPrompt.includes('grow')) {
+      updateVisualParameter('geometryScale', Math.min(2, (visualState?.geometryScale ?? 1) + 0.3));
+      setLastInterpretation('📈 Scale increased');
+    } else if (lowerPrompt.includes('smaller') || lowerPrompt.includes('shrink')) {
+      updateVisualParameter('geometryScale', Math.max(0.5, (visualState?.geometryScale ?? 1) - 0.3));
+      setLastInterpretation('📉 Scale decreased');
+    }
+    // Star controls
+    else if (lowerPrompt.includes('more star')) {
+      updateVisualParameter('starDensity', Math.min(1, (visualState?.starDensity ?? 0.5) + 0.2));
+      updateVisualParameter('starBrightness', Math.min(1, (visualState?.starBrightness ?? 0.5) + 0.2));
+      setLastInterpretation('✨ More stars');
+    } else if (lowerPrompt.includes('less star') || lowerPrompt.includes('fewer star')) {
+      updateVisualParameter('starDensity', Math.max(0, (visualState?.starDensity ?? 0.5) - 0.3));
+      setLastInterpretation('🌑 Fewer stars');
+    }
+    // Nebula controls
+    else if (lowerPrompt.includes('more nebula') || lowerPrompt.includes('more cloud')) {
+      updateVisualParameter('nebulaPresence', Math.min(1, (visualState?.nebulaPresence ?? 0.3) + 0.3));
+      setLastInterpretation('☁️ More nebula');
+    } else if (lowerPrompt.includes('less nebula') || lowerPrompt.includes('less cloud') || lowerPrompt.includes('clear')) {
+      updateVisualParameter('nebulaPresence', Math.max(0, (visualState?.nebulaPresence ?? 0.3) - 0.3));
+      setLastInterpretation('🌌 Clearing nebula');
+    }
+    // Audio reactivity controls
+    else if (lowerPrompt.includes('more reactive') || lowerPrompt.includes('more bass')) {
+      updateVisualParameter('bassImpactSensitivity', Math.min(1, (visualState?.bassImpactSensitivity ?? 0.5) + 0.2));
+      updateVisualParameter('bassPulseSensitivity', Math.min(1, (visualState?.bassPulseSensitivity ?? 0.5) + 0.2));
+      setLastInterpretation('🎵 More audio reactive');
+    } else if (lowerPrompt.includes('less reactive') || lowerPrompt.includes('no bass')) {
+      updateVisualParameter('bassImpactSensitivity', 0);
+      updateVisualParameter('bassPulseSensitivity', 0);
+      updateVisualParameter('audioReactMotion', 0);
+      updateVisualParameter('audioReactColor', 0);
+      setLastInterpretation('🔇 Audio reactivity off');
     }
     // Preset triggers
     else if (lowerPrompt.includes('dark') || lowerPrompt.includes('void') || lowerPrompt.includes('black')) {
