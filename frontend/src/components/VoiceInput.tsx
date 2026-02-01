@@ -1,10 +1,62 @@
 // DARTHANDER Visual Consciousness Engine
-// Voice Input Component
+// Voice Input Component - Real-time speech recognition using Web Speech API
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Mic, MicOff, Loader } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Web Speech API type declarations
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  onstart: ((this: SpeechRecognitionInstance, ev: Event) => void) | null;
+  onend: ((this: SpeechRecognitionInstance, ev: Event) => void) | null;
+  onresult: ((this: SpeechRecognitionInstance, ev: SpeechRecognitionEvent) => void) | null;
+  onerror: ((this: SpeechRecognitionInstance, ev: SpeechRecognitionErrorEvent) => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognitionInstance;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: SpeechRecognitionConstructor;
+    webkitSpeechRecognition: SpeechRecognitionConstructor;
+  }
+}
 
 interface VoiceInputProps {
   isActive: boolean;
@@ -13,103 +65,184 @@ interface VoiceInputProps {
 }
 
 export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputProps) {
-  const [isRecording, setIsRecording] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  const [isListening, setIsListening] = useState(false);
+  const [interimText, setInterimText] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const restartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (isActive && !isRecording) {
-      startRecording();
-    } else if (!isActive && isRecording) {
-      stopRecording();
+  // Initialize speech recognition
+  const initRecognition = useCallback(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setError('Speech recognition not supported in this browser');
+      return null;
     }
-  }, [isActive]);
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
 
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          chunksRef.current.push(e.data);
+    recognition.onstart = () => {
+      console.log('🎤 Speech recognition started');
+      setIsListening(true);
+      setError(null);
+    };
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let interim = '';
+      let final = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          final += transcript;
+        } else {
+          interim += transcript;
         }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        await processAudio(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-
-      // Auto-stop after 10 seconds
-      setTimeout(() => {
-        if (mediaRecorderRef.current?.state === 'recording') {
-          stopRecording();
-        }
-      }, 10000);
-    } catch (error) {
-      console.error('Failed to start recording:', error);
-      onToggle(); // Turn off if failed
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current?.state === 'recording') {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    }
-  };
-
-  const processAudio = async (audioBlob: Blob) => {
-    setIsProcessing(true);
-
-    try {
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
-
-      const response = await fetch(`${API_URL}/api/prompt/voice`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-      
-      if (data.transcription) {
-        onTranscription(data.transcription);
       }
-    } catch (error) {
-      console.error('Voice processing error:', error);
-    } finally {
-      setIsProcessing(false);
+
+      // Show interim results
+      if (interim) {
+        setInterimText(interim);
+      }
+
+      // Send final results to be processed
+      if (final.trim()) {
+        console.log('🎤 Final transcription:', final.trim());
+        setInterimText('');
+        onTranscription(final.trim());
+      }
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error('Speech recognition error:', event.error);
+
+      if (event.error === 'not-allowed') {
+        setError('Microphone access denied');
+        onToggle(); // Turn off
+      } else if (event.error === 'no-speech') {
+        // This is normal, just restart if still active
+        console.log('No speech detected, continuing...');
+      } else if (event.error === 'network') {
+        setError('Network error - check connection');
+      } else {
+        setError(`Error: ${event.error}`);
+      }
+    };
+
+    recognition.onend = () => {
+      console.log('🎤 Speech recognition ended');
+      setIsListening(false);
+
+      // Auto-restart if still active (continuous listening)
+      if (isActive && recognitionRef.current) {
+        restartTimeoutRef.current = setTimeout(() => {
+          try {
+            recognitionRef.current?.start();
+          } catch (e) {
+            console.log('Could not restart recognition');
+          }
+        }, 100);
+      }
+    };
+
+    return recognition;
+  }, [isActive, onToggle, onTranscription]);
+
+  // Start/stop based on isActive
+  useEffect(() => {
+    if (isActive) {
+      // Start listening
+      if (!recognitionRef.current) {
+        recognitionRef.current = initRecognition();
+      }
+
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+        } catch (e) {
+          // Already started, that's ok
+        }
+      }
+    } else {
+      // Stop listening
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+        restartTimeoutRef.current = null;
+      }
+
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // Already stopped, that's ok
+        }
+      }
+      setInterimText('');
     }
-  };
+
+    return () => {
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+      }
+    };
+  }, [isActive, initRecognition]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // Ignore
+        }
+        recognitionRef.current = null;
+      }
+    };
+  }, []);
 
   return (
-    <button
-      onClick={onToggle}
-      disabled={isProcessing}
-      className={`
-        p-3 rounded-full transition-all
-        ${isActive 
-          ? 'bg-red-500 text-white animate-pulse' 
-          : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}
-        ${isProcessing ? 'opacity-50' : ''}
-      `}
-    >
-      {isProcessing ? (
-        <Loader className="w-5 h-5 animate-spin" />
-      ) : isActive ? (
-        <Mic className="w-5 h-5" />
-      ) : (
-        <MicOff className="w-5 h-5" />
+    <div className="flex items-center gap-2">
+      <button
+        onClick={onToggle}
+        className={`
+          p-3 rounded-full transition-all relative
+          ${isActive
+            ? 'bg-red-500 text-white'
+            : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}
+          ${isListening ? 'animate-pulse' : ''}
+        `}
+        title={isActive ? 'Stop listening' : 'Start voice input'}
+      >
+        {isActive ? (
+          <Mic className="w-5 h-5" />
+        ) : (
+          <MicOff className="w-5 h-5" />
+        )}
+
+        {/* Listening indicator */}
+        {isListening && (
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping" />
+        )}
+      </button>
+
+      {/* Show interim text while speaking */}
+      {interimText && (
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800/80 rounded-lg max-w-xs">
+          <Loader className="w-3 h-3 animate-spin text-zinc-500" />
+          <span className="text-xs text-zinc-400 italic truncate">{interimText}</span>
+        </div>
       )}
-    </button>
+
+      {/* Show error if any */}
+      {error && (
+        <span className="text-xs text-red-400">{error}</span>
+      )}
+    </div>
   );
 }
