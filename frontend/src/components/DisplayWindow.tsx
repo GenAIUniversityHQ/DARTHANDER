@@ -243,6 +243,8 @@ export default function DisplayWindow() {
     const resize = () => {
       canvas.width = window.innerWidth * window.devicePixelRatio;
       canvas.height = window.innerHeight * window.devicePixelRatio;
+      // Reset transform before scaling (scale is cumulative!)
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     };
     resize();
@@ -254,6 +256,18 @@ export default function DisplayWindow() {
         const audio = audioStateRef.current;
         const width = window.innerWidth;
         const height = window.innerHeight;
+
+        // DEBUG: Log draw info periodically
+        if (Math.random() < 0.01) {
+          console.log('[DRAW] Running:', {
+            hasState: !!state,
+            width,
+            height,
+            intensity: state?.overallIntensity,
+            palette: state?.colorPalette,
+            eclipse: state?.eclipsePhase
+          });
+        }
 
       // Calculate viewport for 16:9 aspect ratio mode (YouTube format)
       let viewX = 0, viewY = 0, viewW = width, viewH = height;
@@ -319,6 +333,10 @@ export default function DisplayWindow() {
       // Clear entire screen with black
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, width, height);
+
+      // DEBUG: Draw a visible colored bar to confirm canvas is working
+      ctx.fillStyle = '#ff00ff';
+      ctx.fillRect(0, height - 20, 100, 20);
 
       // Get current palette
       const palette = state?.colorPalette
@@ -739,8 +757,22 @@ export default function DisplayWindow() {
         }
       }
 
+      // DEBUG: Draw state info directly on canvas
+      ctx.save();
+      ctx.fillStyle = 'rgba(255, 255, 0, 0.8)';
+      ctx.font = '14px monospace';
+      ctx.fillText(`State: ${state?.geometryMode || 'NULL'} | Intensity: ${(state?.overallIntensity ?? 0).toFixed(2)}`, 10, 30);
+      ctx.fillText(`Eclipse: ${(state?.eclipsePhase ?? 0).toFixed(2)} | Corona: ${(state?.coronaIntensity ?? 0).toFixed(2)}`, 10, 50);
+      ctx.fillText(`Palette: ${state?.colorPalette || 'NULL'} | Stars: ${(state?.starDensity ?? 0).toFixed(2)}`, 10, 70);
+      ctx.fillText(`Frame: ${Math.floor(timeRef.current)} | LocalStorage: ${localStorage.getItem('darthander_state') ? 'YES' : 'NO'}`, 10, 90);
+      ctx.restore();
+
       } catch (error) {
         console.error('Display draw error (continuing):', error);
+        // Draw error on canvas so we can see it
+        ctx.fillStyle = 'red';
+        ctx.font = '20px monospace';
+        ctx.fillText(`ERROR: ${error}`, 10, 100);
       }
 
       // ALWAYS request next frame, even if draw had an error

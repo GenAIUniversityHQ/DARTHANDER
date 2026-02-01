@@ -150,7 +150,7 @@ function App() {
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   // When true, prevent backend socket from overwriting visual state
   // This ensures manual slider controls stay where the user sets them
-  const [manualControlMode, setManualControlMode] = useState(true);
+  const [manualControlMode, _setManualControlMode] = useState(true);
   const manualControlModeRef = useRef(true);
 
   // Keep ref in sync with state
@@ -161,7 +161,7 @@ function App() {
   const {
     visualState,
     audioState,
-    setVisualState,
+    setVisualState: _setVisualState,
     setAudioState,
     updateVisualParameter,
     presets,
