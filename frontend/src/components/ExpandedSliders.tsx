@@ -10,26 +10,39 @@ interface SliderConfig {
   icon?: string;
 }
 
+// MAIN CONTROLS - These are your base values that you set manually
 const mainSliders: SliderConfig[] = [
   { key: 'overallIntensity', label: 'INTENSITY', color: 'bg-purple-500', icon: '✧' },
   { key: 'geometryComplexity', label: 'COMPLEXITY', color: 'bg-blue-500', icon: '◎' },
+  { key: 'geometryScale', label: 'SCALE', color: 'bg-indigo-500', icon: '⬡' },
   { key: 'chaosFactor', label: 'CHAOS', color: 'bg-red-500', icon: '✦' },
   { key: 'motionSpeed', label: 'SPEED', color: 'bg-cyan-500', icon: '◈' },
+  { key: 'motionTurbulence', label: 'TURBULENCE', color: 'bg-teal-500', icon: '≋' },
 ];
 
-const audioSliders: SliderConfig[] = [
-  { key: 'audioReactGeometry', label: 'AUDIO REACT', color: 'bg-green-500', icon: '♫' },
-  { key: 'audioReactMotion', label: 'MOTION REACT', color: 'bg-cyan-500', icon: '↻' },
-  { key: 'audioReactColor', label: 'COLOR REACT', color: 'bg-purple-500', icon: '◈' },
+// AUDIO SENSITIVITY CONTROLS - These control HOW MUCH audio affects the visuals
+// Higher = more reactive to audio, Lower = less reactive, 0 = no audio reaction
+const audioSensitivitySliders: SliderConfig[] = [
   { key: 'bassImpactSensitivity', label: 'BASS IMPACT', color: 'bg-orange-500', icon: '◉' },
   { key: 'bassPulseSensitivity', label: 'BASS PULSE', color: 'bg-pink-500', icon: '◎' },
-  { key: 'coronaIntensity', label: 'CORONA GLOW', color: 'bg-yellow-500', icon: '☀' },
+  { key: 'audioReactMotion', label: 'MOTION REACT', color: 'bg-green-500', icon: '↻' },
+  { key: 'audioReactColor', label: 'COLOR REACT', color: 'bg-blue-400', icon: '◈' },
+  { key: 'audioReactGeometry', label: 'GEO REACT', color: 'bg-purple-400', icon: '◇' },
 ];
 
+// COLOR CONTROLS - Manual adjustments
 const colorSliders: SliderConfig[] = [
   { key: 'colorHueShift', label: 'HUE SHIFT', color: 'bg-gradient-to-r from-red-500 via-green-500 to-blue-500' },
   { key: 'colorSaturation', label: 'SATURATION', color: 'bg-pink-500' },
   { key: 'colorBrightness', label: 'BRIGHTNESS', color: 'bg-white' },
+];
+
+// COSMIC CONTROLS - Manual adjustments (NOT affected by audio)
+const cosmicSliders: SliderConfig[] = [
+  { key: 'starDensity', label: 'STAR DENSITY', color: 'bg-white/70', icon: '★' },
+  { key: 'starBrightness', label: 'STAR GLOW', color: 'bg-white', icon: '✦' },
+  { key: 'nebulaPresence', label: 'NEBULA', color: 'bg-purple-600', icon: '☁' },
+  { key: 'coronaIntensity', label: 'CORONA', color: 'bg-yellow-500', icon: '☀' },
 ];
 
 interface ExpandedSlidersProps {
@@ -48,16 +61,46 @@ export function ExpandedSliders({ showAudioMeters = true }: ExpandedSlidersProps
     return (visualState as any)[key] ?? 0;
   };
 
-  const getAudioMeterValue = (key: string): number => {
+  // Get live audio values for meters (read-only display)
+  const getAudioMeterValue = (type: string): number => {
     if (!audioState) return 0;
-    if (key === 'bassImpactMeter') return audioState.beatIntensity ?? 0;
-    if (key === 'bassPulseMeter') return ((audioState.subBass ?? 0) + (audioState.bass ?? 0)) / 2;
-    return (audioState as any)[key] ?? 0;
+    switch (type) {
+      case 'bass': return ((audioState.subBass ?? 0) + (audioState.bass ?? 0)) / 2;
+      case 'beat': return audioState.beatIntensity ?? 0;
+      case 'mid': return ((audioState.lowMid ?? 0) + (audioState.mid ?? 0)) / 2;
+      case 'high': return ((audioState.highMid ?? 0) + (audioState.presence ?? 0)) / 2;
+      case 'overall': return audioState.overallAmplitude ?? 0;
+      default: return 0;
+    }
   };
 
-  const renderSlider = (slider: SliderConfig, isAudioMeter = false) => {
-    const value = isAudioMeter ? getAudioMeterValue(slider.key) : getValue(slider.key);
-    const percentage = Math.round(value * 100);
+  const renderSlider = (slider: SliderConfig) => {
+    const value = getValue(slider.key);
+
+    // Special handling for geometryScale (range 0.5-2.0 instead of 0-1)
+    const isScaleSlider = slider.key === 'geometryScale';
+    let percentage: number;
+    let displayValue: string;
+
+    if (isScaleSlider) {
+      // Scale: 0.5-2.0, show as 50%-200%
+      percentage = Math.round(((value - 0.5) / 1.5) * 100);
+      displayValue = `${Math.round(value * 100)}%`;
+    } else {
+      percentage = Math.round(value * 100);
+      displayValue = `${percentage}%`;
+    }
+
+    const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const rawValue = parseInt(e.target.value);
+      if (isScaleSlider) {
+        // Convert 0-100 slider to 0.5-2.0 range
+        const scaleValue = 0.5 + (rawValue / 100) * 1.5;
+        handleChange(slider.key, scaleValue);
+      } else {
+        handleChange(slider.key, rawValue / 100);
+      }
+    };
 
     return (
       <div key={slider.key} className="space-y-1">
@@ -66,25 +109,41 @@ export function ExpandedSliders({ showAudioMeters = true }: ExpandedSlidersProps
             {slider.icon && <span>{slider.icon}</span>}
             {slider.label}
           </span>
-          <span className="text-zinc-400 font-mono">{percentage}%</span>
+          <span className="text-zinc-400 font-mono">{displayValue}</span>
         </div>
         <div className="relative h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-          {/* Fill */}
           <div
             className={`absolute inset-y-0 left-0 ${slider.color} rounded-full transition-all duration-75`}
             style={{ width: `${percentage}%` }}
           />
-          {/* Slider Input (only for non-audio meters) */}
-          {!isAudioMeter && (
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={percentage}
-              onChange={(e) => handleChange(slider.key, parseInt(e.target.value) / 100)}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
-          )}
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={percentage}
+            onChange={handleSliderChange}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const renderAudioMeter = (label: string, type: string, color: string) => {
+    const value = getAudioMeterValue(type);
+    const percentage = Math.round(value * 100);
+
+    return (
+      <div key={type} className="space-y-1">
+        <div className="flex justify-between text-[10px]">
+          <span className="text-zinc-600">{label}</span>
+          <span className="text-zinc-500 font-mono">{percentage}%</span>
+        </div>
+        <div className="relative h-1 bg-zinc-900 rounded-full overflow-hidden">
+          <div
+            className={`absolute inset-y-0 left-0 ${color} rounded-full transition-all duration-75`}
+            style={{ width: `${percentage}%` }}
+          />
         </div>
       </div>
     );
@@ -92,160 +151,74 @@ export function ExpandedSliders({ showAudioMeters = true }: ExpandedSlidersProps
 
   return (
     <div className="space-y-4">
-      {/* Main Controls */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-        {mainSliders.map((slider) => renderSlider(slider))}
+      {/* Main Controls - Your base manual settings */}
+      <div>
+        <div className="text-[9px] text-zinc-600 mb-2 uppercase tracking-wider">Main Controls</div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+          {mainSliders.map((slider) => renderSlider(slider))}
+        </div>
       </div>
 
-      {/* Audio Reactive Controls */}
+      {/* Audio Sensitivity - Control HOW MUCH audio affects visuals */}
       <div className="border-t border-zinc-800 pt-3">
+        <div className="text-[9px] text-zinc-600 mb-2 uppercase tracking-wider">Audio Sensitivity (how much audio affects visuals)</div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-          {audioSliders.map((slider) => renderSlider(slider, false))}
+          {audioSensitivitySliders.map((slider) => renderSlider(slider))}
         </div>
-        {/* Live Audio Meters */}
-        {showAudioMeters && (
-          <div className="mt-3 space-y-1.5 bg-zinc-900/50 p-2 rounded">
-            <div className="text-[9px] text-zinc-500 mb-1">LIVE AUDIO</div>
-            <div className="grid grid-cols-4 gap-2">
-              <div className="space-y-0.5">
-                <div className="text-[8px] text-zinc-600">BASS</div>
-                <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-orange-500 transition-all duration-75"
-                    style={{ width: `${getAudioMeterValue('bassPulseMeter') * 100}%` }}
-                  />
-                </div>
-              </div>
-              <div className="space-y-0.5">
-                <div className="text-[8px] text-zinc-600">BEAT</div>
-                <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-pink-500 transition-all duration-75"
-                    style={{ width: `${getAudioMeterValue('bassImpactMeter') * 100}%` }}
-                  />
-                </div>
-              </div>
-              <div className="space-y-0.5">
-                <div className="text-[8px] text-zinc-600">MID</div>
-                <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-green-500 transition-all duration-75"
-                    style={{ width: `${getAudioMeterValue('mid') * 100}%` }}
-                  />
-                </div>
-              </div>
-              <div className="space-y-0.5">
-                <div className="text-[8px] text-zinc-600">HIGH</div>
-                <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-cyan-500 transition-all duration-75"
-                    style={{ width: `${getAudioMeterValue('brilliance') * 100}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="space-y-0.5">
-              <div className="text-[8px] text-zinc-600">OVERALL</div>
-              <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 transition-all duration-75"
-                  style={{ width: `${getAudioMeterValue('overallAmplitude') * 100}%` }}
-                />
-              </div>
-            </div>
+      </div>
+
+      {/* Live Audio Meters - Read-only display of current audio levels */}
+      {showAudioMeters && (
+        <div className="border-t border-zinc-800 pt-3">
+          <div className="text-[9px] text-zinc-600 mb-2 uppercase tracking-wider">Live Audio (read-only)</div>
+          <div className="grid grid-cols-3 gap-x-3 gap-y-1">
+            {renderAudioMeter('BASS', 'bass', 'bg-orange-500/60')}
+            {renderAudioMeter('BEAT', 'beat', 'bg-red-500/60')}
+            {renderAudioMeter('MID', 'mid', 'bg-green-500/60')}
+            {renderAudioMeter('HIGH', 'high', 'bg-cyan-500/60')}
+            {renderAudioMeter('ALL', 'overall', 'bg-white/40')}
           </div>
-        )}
+        </div>
+      )}
+
+      {/* Cosmic Controls - Manual only, NOT audio reactive */}
+      <div className="border-t border-zinc-800 pt-3">
+        <div className="text-[9px] text-zinc-600 mb-2 uppercase tracking-wider">Cosmic (manual only)</div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+          {cosmicSliders.map((slider) => renderSlider(slider))}
+        </div>
       </div>
 
       {/* Color Controls */}
       <div className="border-t border-zinc-800 pt-3">
+        <div className="text-[9px] text-zinc-600 mb-2 uppercase tracking-wider">Color</div>
         <div className="space-y-2">
           {colorSliders.map((slider) => renderSlider(slider))}
         </div>
       </div>
 
-      {/* Cosmic Controls */}
+      {/* Eclipse Control */}
       <div className="border-t border-zinc-800 pt-3">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-          <div className="space-y-1">
-            <div className="flex justify-between text-[10px]">
-              <span className="text-zinc-500">★ STAR DENSITY</span>
-              <span className="text-zinc-400 font-mono">{Math.round(getValue('starDensity') * 100)}%</span>
-            </div>
-            <div className="relative h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className="absolute inset-y-0 left-0 bg-white/70 rounded-full transition-all duration-75"
-                style={{ width: `${getValue('starDensity') * 100}%` }}
-              />
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={getValue('starDensity') * 100}
-                onChange={(e) => handleChange('starDensity', parseInt(e.target.value) / 100)}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-            </div>
+        <div className="space-y-1">
+          <div className="flex justify-between text-[10px]">
+            <span className="text-zinc-500 flex items-center gap-1">
+              <span>◐</span> ECLIPSE
+            </span>
+            <span className="text-zinc-400 font-mono">{Math.round(getValue('eclipsePhase') * 100)}%</span>
           </div>
-          <div className="space-y-1">
-            <div className="flex justify-between text-[10px]">
-              <span className="text-zinc-500">✦ STAR GLOW</span>
-              <span className="text-zinc-400 font-mono">{Math.round(getValue('starBrightness') * 100)}%</span>
-            </div>
-            <div className="relative h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className="absolute inset-y-0 left-0 bg-white rounded-full transition-all duration-75"
-                style={{ width: `${getValue('starBrightness') * 100}%` }}
-              />
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={getValue('starBrightness') * 100}
-                onChange={(e) => handleChange('starBrightness', parseInt(e.target.value) / 100)}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="flex justify-between text-[10px]">
-              <span className="text-zinc-500">☁ NEBULA</span>
-              <span className="text-zinc-400 font-mono">{Math.round(getValue('nebulaPresence') * 100)}%</span>
-            </div>
-            <div className="relative h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className="absolute inset-y-0 left-0 bg-purple-500 rounded-full transition-all duration-75"
-                style={{ width: `${getValue('nebulaPresence') * 100}%` }}
-              />
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={getValue('nebulaPresence') * 100}
-                onChange={(e) => handleChange('nebulaPresence', parseInt(e.target.value) / 100)}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="flex justify-between text-[10px]">
-              <span className="text-zinc-500">◐ ECLIPSE</span>
-              <span className="text-zinc-400 font-mono">{Math.round(getValue('eclipsePhase') * 100)}%</span>
-            </div>
-            <div className="relative h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-full transition-all duration-75"
-                style={{ width: `${getValue('eclipsePhase') * 100}%` }}
-              />
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={getValue('eclipsePhase') * 100}
-                onChange={(e) => handleChange('eclipsePhase', parseInt(e.target.value) / 100)}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-            </div>
+          <div className="relative h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-full transition-all duration-75"
+              style={{ width: `${getValue('eclipsePhase') * 100}%` }}
+            />
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={getValue('eclipsePhase') * 100}
+              onChange={(e) => handleChange('eclipsePhase', parseInt(e.target.value) / 100)}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
           </div>
         </div>
       </div>

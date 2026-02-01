@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Main Control Surface Application
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useStore } from './store';
 import { PreviewMonitor } from './components/PreviewMonitor';
@@ -27,52 +27,114 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // Gemini prompt interpretation (client-side)
 async function interpretWithGemini(prompt: string, apiKey: string, currentState: any): Promise<any> {
-  const systemPrompt = `You are the interpretive layer for DARTHANDER: ECLIPSE, a live immersive audiovisual experience. Translate natural language prompts into precise parameter changes.
+  const systemPrompt = `You are the AI brain for DARTHANDER: ECLIPSE, a live immersive visual experience for DJs. Interpret spoken/typed prompts and translate them into parameter changes.
 
-Available parameters:
-- geometryMode: stars, mandala, hexagon, fractal, spiral, tunnel, void
-- colorPalette: cosmos, void, fire, ice, earth, neon, sacred
-- motionDirection: outward, inward, clockwise, counter, breathing, still
-- motionSpeed: 0.0 to 1.0
-- geometryComplexity: 0.0 to 1.0
-- overallIntensity: 0.0 to 1.0
-- eclipsePhase: 0.0 to 1.0
-- coronaIntensity: 0.0 to 1.0
-- chaosFactor: 0.0 to 1.0
-- starDensity: 0.0 to 1.0
-- starBrightness: 0.0 to 1.0
+AVAILABLE PARAMETERS:
+
+GEOMETRY (string values):
+- geometryMode: "stars" | "mandala" | "hexagon" | "fractal" | "spiral" | "tunnel" | "void"
+- motionDirection: "outward" | "inward" | "clockwise" | "counter" | "breathing" | "still"
+- colorPalette: "cosmos" | "void" | "fire" | "ice" | "earth" | "neon" | "sacred" | "sunset" | "ocean" | "forest" | "royal" | "blood"
+
+NUMERIC PARAMETERS (0.0-1.0):
+- overallIntensity: master brightness/intensity
+- geometryComplexity: detail level of geometry
+- geometryScale: size of geometry (0.5-2.0, default 1.0)
+- motionSpeed: animation speed
+- motionTurbulence: randomness/drift in motion
+- chaosFactor: visual chaos/wobble
+- starDensity: number of stars
+- starBrightness: star glow intensity
+- nebulaPresence: cosmic cloud intensity
+- eclipsePhase: 0=no eclipse, 1=full eclipse
+- coronaIntensity: eclipse glow beams
+- colorBrightness: color vibrancy
+- colorSaturation: color intensity
+- colorHueShift: shift all colors (0-1 = 0-360 degrees)
+
+AUDIO SENSITIVITY (0.0-1.0, how much audio affects visuals):
+- bassImpactSensitivity: bass hits boost corona
+- bassPulseSensitivity: bass presence boost
+- audioReactMotion: audio affects speed
+- audioReactColor: audio affects brightness
+- audioReactGeometry: audio affects chaos/scale
+
+INTERPRETATION GUIDELINES:
+- "intense/brighter/more" → increase overallIntensity, maybe coronaIntensity
+- "darker/dim/less" → decrease overallIntensity
+- "faster/speed" → increase motionSpeed
+- "slower/calm/peace" → decrease motionSpeed, chaosFactor
+- "chaos/wild/crazy" → increase chaosFactor
+- "bigger/larger" → increase geometryScale
+- "smaller" → decrease geometryScale
+- "stars/cosmic" → geometryMode: stars, high starDensity
+- "mandala/sacred" → geometryMode: mandala
+- "spiral" → geometryMode: spiral, motionDirection: inward or outward
+- "tunnel/portal" → geometryMode: tunnel, motionDirection: inward
+- "void/darkness" → colorPalette: void, low overallIntensity
+- "fire/flames" → colorPalette: fire, high coronaIntensity
+- "ice/cold" → colorPalette: ice
+- "eclipse/totality" → high eclipsePhase and coronaIntensity
+- "nebula/clouds" → high nebulaPresence
+- "spin/rotate" → motionDirection: clockwise or counter
+- "breathe" → motionDirection: breathing
+- "stop/still/freeze" → motionDirection: still, low motionSpeed
+- "flow out" → motionDirection: outward
+- "flow in" → motionDirection: inward
+- "more bass/reactive" → increase bassImpactSensitivity
+- "less reactive" → decrease audio sensitivity parameters
 
 Current state: ${JSON.stringify(currentState)}
 
-Respond ONLY with valid JSON:
-{
-  "interpretation": "Brief description",
-  "parameter_changes": { "parameter_name": value }
-}`;
+Respond with ONLY valid JSON (no markdown, no explanation):
+{"interpretation": "2-5 word description", "parameter_changes": {"param": value}}`;
 
   try {
+    console.log('Calling Gemini API...');
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{
-          parts: [{ text: `${systemPrompt}\n\nPrompt: "${prompt}"` }]
+          parts: [{ text: `${systemPrompt}\n\nUser prompt: "${prompt}"` }]
         }],
         generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 500,
+          temperature: 0.3,
+          maxOutputTokens: 300,
         }
       })
     });
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-    // Extract JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+    if (!response.ok) {
+      console.error('Gemini API error:', response.status, response.statusText);
+      return null;
     }
+
+    const data = await response.json();
+    console.log('Gemini raw response:', data);
+
+    // Check for API errors
+    if (data.error) {
+      console.error('Gemini API error:', data.error);
+      return null;
+    }
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    console.log('Gemini text:', text);
+
+    // Extract JSON from response (handle markdown code blocks)
+    let jsonStr = text;
+    // Remove markdown code blocks if present
+    jsonStr = jsonStr.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    // Find JSON object
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      console.log('Gemini parsed:', parsed);
+      return parsed;
+    }
+
+    console.log('No JSON found in Gemini response');
     return null;
   } catch (error) {
     console.error('Gemini interpretation error:', error);
@@ -86,6 +148,15 @@ function App() {
   const [lastPrompt, setLastPrompt] = useState('');
   const [lastInterpretation, setLastInterpretation] = useState('');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
+  // When true, prevent backend socket from overwriting visual state
+  // This ensures manual slider controls stay where the user sets them
+  const [manualControlMode, setManualControlMode] = useState(true);
+  const manualControlModeRef = useRef(true);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    manualControlModeRef.current = manualControlMode;
+  }, [manualControlMode]);
 
   const {
     visualState,
@@ -101,6 +172,21 @@ function App() {
     setSessionId,
     geminiApiKey,
   } = useStore();
+
+  // CRITICAL: Broadcast state to localStorage whenever it changes
+  // This ensures display window always gets the current state
+  useEffect(() => {
+    if (visualState) {
+      const stateJson = JSON.stringify(visualState);
+      localStorage.setItem('darthander_state', stateJson);
+      localStorage.setItem('darthander_state_timestamp', Date.now().toString());
+      console.log('[APP SYNC] Broadcast to localStorage:', {
+        intensity: visualState.overallIntensity?.toFixed(2),
+        speed: visualState.motionSpeed?.toFixed(2),
+        mode: visualState.geometryMode
+      });
+    }
+  }, [visualState]); // Run whenever visualState changes
 
   // Initialize socket connection
   useEffect(() => {
@@ -122,13 +208,20 @@ function App() {
       setConnected(false);
     });
 
+    // DISABLED: Socket visual state updates are completely disabled
+    // The frontend is the MASTER - sliders stay exactly where user sets them
+    // Backend state updates were causing slider fluctuation during live audio
     newSocket.on('state:current', (data: any) => {
-      if (data.visual) setVisualState(data.visual);
+      // ONLY accept audio state, NEVER visual state from backend
       if (data.audio) setAudioState(data.audio);
+      // Visual state is managed 100% locally
+      console.log('Ignored backend visual state - manual control enabled');
     });
 
-    newSocket.on('state:update', (state: any) => {
-      setVisualState(state);
+    newSocket.on('state:update', (_state: any) => {
+      // COMPLETELY DISABLED - frontend controls are MASTER
+      // Backend can never override slider positions
+      console.log('Ignored backend state:update - manual control enabled');
     });
 
     newSocket.on('audio:update', (state: any) => {
@@ -201,15 +294,42 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [presets, isVoiceActive]);
 
-  // API calls with Gemini fallback
+  // API calls - Gemini preferred for AI interpretation
   const handlePromptSubmit = async (prompt: string) => {
     if (!prompt.trim()) return;
 
     setLastPrompt(prompt);
-    setLastInterpretation('Processing...');
+    setLastInterpretation('🔮 Interpreting...');
 
-    // Try backend first if connected
-    if (connected) {
+    // PREFER Gemini for AI interpretation when API key is available
+    if (geminiApiKey) {
+      console.log('Using Gemini to interpret:', prompt);
+      setLastInterpretation('🔮 Gemini interpreting...');
+
+      try {
+        const result = await interpretWithGemini(prompt, geminiApiKey, visualState);
+        if (result && result.parameter_changes) {
+          // Apply the parameter changes
+          const changes = Object.entries(result.parameter_changes);
+          console.log('Gemini changes:', changes);
+
+          changes.forEach(([key, value]) => {
+            updateVisualParameter(key, value);
+          });
+
+          setLastInterpretation(`✨ ${result.interpretation || 'Applied'}`);
+          return;
+        } else {
+          console.log('Gemini returned no changes, falling back...');
+        }
+      } catch (error) {
+        console.error('Gemini error:', error);
+        setLastInterpretation('⚠️ Gemini error, using keywords...');
+      }
+    }
+
+    // Try backend if connected and no Gemini
+    if (connected && !geminiApiKey) {
       try {
         const response = await fetch(`${API_URL}/api/prompt/text`, {
           method: 'POST',
@@ -224,45 +344,137 @@ function App() {
           return;
         }
       } catch (error) {
-        console.log('Backend unavailable, trying Gemini...');
+        console.log('Backend unavailable');
       }
     }
 
-    // Fall back to Gemini if available
-    if (geminiApiKey) {
-      const result = await interpretWithGemini(prompt, geminiApiKey, visualState);
-      if (result && result.parameter_changes) {
-        // Apply the parameter changes
-        Object.entries(result.parameter_changes).forEach(([key, value]) => {
-          updateVisualParameter(key, value);
-        });
-        setLastInterpretation(result.interpretation || 'Applied via Gemini');
-        return;
-      }
-    }
-
-    // Simple keyword matching fallback
+    // Keyword matching fallback (works without API)
     const lowerPrompt = prompt.toLowerCase();
-    if (lowerPrompt.includes('dark') || lowerPrompt.includes('void')) {
-      loadPreset('VOID');
-      setLastInterpretation('Entering the void...');
-    } else if (lowerPrompt.includes('chaos') || lowerPrompt.includes('intense')) {
-      loadPreset('FRACTAL_BLOOM');
-      setLastInterpretation('Unleashing chaos...');
+
+    // Intensity controls
+    if (lowerPrompt.includes('intense') || lowerPrompt.includes('more') || lowerPrompt.includes('brighter')) {
+      updateVisualParameter('overallIntensity', Math.min(1, (visualState?.overallIntensity ?? 0.5) + 0.2));
+      updateVisualParameter('coronaIntensity', Math.min(1, (visualState?.coronaIntensity ?? 0.5) + 0.2));
+      setLastInterpretation('↑ Intensity increased');
+    } else if (lowerPrompt.includes('less') || lowerPrompt.includes('dim') || lowerPrompt.includes('darker')) {
+      updateVisualParameter('overallIntensity', Math.max(0.1, (visualState?.overallIntensity ?? 0.5) - 0.2));
+      setLastInterpretation('↓ Intensity decreased');
+    }
+    // Speed controls
+    else if (lowerPrompt.includes('faster') || lowerPrompt.includes('speed up')) {
+      updateVisualParameter('motionSpeed', Math.min(1, (visualState?.motionSpeed ?? 0.3) + 0.2));
+      setLastInterpretation('⚡ Speed increased');
+    } else if (lowerPrompt.includes('slower') || lowerPrompt.includes('slow down')) {
+      updateVisualParameter('motionSpeed', Math.max(0, (visualState?.motionSpeed ?? 0.3) - 0.2));
+      setLastInterpretation('🐢 Speed decreased');
+    }
+    // Chaos controls
+    else if (lowerPrompt.includes('chaos') || lowerPrompt.includes('wild') || lowerPrompt.includes('crazy')) {
+      updateVisualParameter('chaosFactor', Math.min(1, (visualState?.chaosFactor ?? 0.2) + 0.3));
+      setLastInterpretation('🌀 Chaos unleashed');
     } else if (lowerPrompt.includes('calm') || lowerPrompt.includes('peace')) {
-      loadPreset('COSMOS');
-      setLastInterpretation('Finding peace in the cosmos...');
+      updateVisualParameter('chaosFactor', 0.05);
+      updateVisualParameter('motionSpeed', 0.1);
+      setLastInterpretation('🧘 Finding peace...');
+    }
+    // Motion direction controls
+    else if (lowerPrompt.includes('stop') || lowerPrompt.includes('freeze') || lowerPrompt.includes('still')) {
+      updateVisualParameter('motionDirection', 'still');
+      updateVisualParameter('motionSpeed', 0);
+      setLastInterpretation('⏸️ Motion stopped');
+    } else if (lowerPrompt.includes('spin') || lowerPrompt.includes('rotate')) {
+      updateVisualParameter('motionDirection', lowerPrompt.includes('counter') || lowerPrompt.includes('left') ? 'counter' : 'clockwise');
+      setLastInterpretation('🔄 Spinning...');
+    } else if (lowerPrompt.includes('breathe') || lowerPrompt.includes('pulse')) {
+      updateVisualParameter('motionDirection', 'breathing');
+      setLastInterpretation('🫁 Breathing...');
+    } else if (lowerPrompt.includes('flow out') || lowerPrompt.includes('expand') || lowerPrompt.includes('outward')) {
+      updateVisualParameter('motionDirection', 'outward');
+      setLastInterpretation('↗️ Flowing outward');
+    } else if (lowerPrompt.includes('flow in') || lowerPrompt.includes('contract') || lowerPrompt.includes('inward')) {
+      updateVisualParameter('motionDirection', 'inward');
+      setLastInterpretation('↙️ Flowing inward');
+    }
+    // Scale controls
+    else if (lowerPrompt.includes('bigger') || lowerPrompt.includes('larger') || lowerPrompt.includes('grow')) {
+      updateVisualParameter('geometryScale', Math.min(2, (visualState?.geometryScale ?? 1) + 0.3));
+      setLastInterpretation('📈 Scale increased');
+    } else if (lowerPrompt.includes('smaller') || lowerPrompt.includes('shrink')) {
+      updateVisualParameter('geometryScale', Math.max(0.5, (visualState?.geometryScale ?? 1) - 0.3));
+      setLastInterpretation('📉 Scale decreased');
+    }
+    // Star controls
+    else if (lowerPrompt.includes('more star')) {
+      updateVisualParameter('starDensity', Math.min(1, (visualState?.starDensity ?? 0.5) + 0.2));
+      updateVisualParameter('starBrightness', Math.min(1, (visualState?.starBrightness ?? 0.5) + 0.2));
+      setLastInterpretation('✨ More stars');
+    } else if (lowerPrompt.includes('less star') || lowerPrompt.includes('fewer star')) {
+      updateVisualParameter('starDensity', Math.max(0, (visualState?.starDensity ?? 0.5) - 0.3));
+      setLastInterpretation('🌑 Fewer stars');
+    }
+    // Nebula controls
+    else if (lowerPrompt.includes('more nebula') || lowerPrompt.includes('more cloud')) {
+      updateVisualParameter('nebulaPresence', Math.min(1, (visualState?.nebulaPresence ?? 0.3) + 0.3));
+      setLastInterpretation('☁️ More nebula');
+    } else if (lowerPrompt.includes('less nebula') || lowerPrompt.includes('less cloud') || lowerPrompt.includes('clear')) {
+      updateVisualParameter('nebulaPresence', Math.max(0, (visualState?.nebulaPresence ?? 0.3) - 0.3));
+      setLastInterpretation('🌌 Clearing nebula');
+    }
+    // Audio reactivity controls
+    else if (lowerPrompt.includes('more reactive') || lowerPrompt.includes('more bass')) {
+      updateVisualParameter('bassImpactSensitivity', Math.min(1, (visualState?.bassImpactSensitivity ?? 0.5) + 0.2));
+      updateVisualParameter('bassPulseSensitivity', Math.min(1, (visualState?.bassPulseSensitivity ?? 0.5) + 0.2));
+      setLastInterpretation('🎵 More audio reactive');
+    } else if (lowerPrompt.includes('less reactive') || lowerPrompt.includes('no bass')) {
+      updateVisualParameter('bassImpactSensitivity', 0);
+      updateVisualParameter('bassPulseSensitivity', 0);
+      updateVisualParameter('audioReactMotion', 0);
+      updateVisualParameter('audioReactColor', 0);
+      setLastInterpretation('🔇 Audio reactivity off');
+    }
+    // Preset triggers
+    else if (lowerPrompt.includes('dark') || lowerPrompt.includes('void') || lowerPrompt.includes('black')) {
+      loadPreset('VOID');
+      setLastInterpretation('🌑 Entering the void...');
     } else if (lowerPrompt.includes('eclipse') || lowerPrompt.includes('total')) {
       loadPreset('TOTALITY');
-      setLastInterpretation('Entering totality...');
-    } else if (lowerPrompt.includes('portal') || lowerPrompt.includes('tunnel')) {
+      setLastInterpretation('🌒 Totality achieved');
+    } else if (lowerPrompt.includes('portal') || lowerPrompt.includes('tunnel') || lowerPrompt.includes('warp')) {
       loadPreset('PORTAL');
-      setLastInterpretation('Opening the portal...');
-    } else if (lowerPrompt.includes('spiral') || lowerPrompt.includes('descend')) {
-      loadPreset('DESCENT');
-      setLastInterpretation('Beginning descent...');
+      setLastInterpretation('🌀 Portal opening...');
+    } else if (lowerPrompt.includes('cosmic') || lowerPrompt.includes('galaxy') || lowerPrompt.includes('universe')) {
+      loadPreset('COSMIC_AWE');
+      setLastInterpretation('🌌 Cosmic expansion...');
+    } else if (lowerPrompt.includes('fire') || lowerPrompt.includes('flame') || lowerPrompt.includes('burn')) {
+      loadPreset('GENESIS');
+      setLastInterpretation('🔥 Igniting...');
+    } else if (lowerPrompt.includes('star') || lowerPrompt.includes('supernova') || lowerPrompt.includes('explode')) {
+      loadPreset('SUPERNOVA');
+      setLastInterpretation('💥 Supernova!');
+    } else if (lowerPrompt.includes('sacred') || lowerPrompt.includes('spiritual') || lowerPrompt.includes('ancient')) {
+      loadPreset('SACRED');
+      setLastInterpretation('🕉️ Sacred geometry...');
+    } else if (lowerPrompt.includes('nebula') || lowerPrompt.includes('cloud')) {
+      loadPreset('NEBULA');
+      setLastInterpretation('☁️ Nebula forming...');
+    } else if (lowerPrompt.includes('meditat') || lowerPrompt.includes('zen')) {
+      loadPreset('MEDITATION');
+      setLastInterpretation('🧘 Deep meditation...');
+    } else if (lowerPrompt.includes('ocean') || lowerPrompt.includes('water') || lowerPrompt.includes('sea')) {
+      loadPreset('OCEAN');
+      setLastInterpretation('🌊 Ocean depths...');
+    } else if (lowerPrompt.includes('desert') || lowerPrompt.includes('sand')) {
+      loadPreset('DESERT');
+      setLastInterpretation('🏜️ Desert eclipse...');
+    } else if (lowerPrompt.includes('matrix') || lowerPrompt.includes('digital') || lowerPrompt.includes('code')) {
+      loadPreset('MATRIX');
+      setLastInterpretation('💚 Entering the Matrix...');
+    } else if (lowerPrompt.includes('hyperdrive') || lowerPrompt.includes('warp') || lowerPrompt.includes('jump')) {
+      loadPreset('HYPERDRIVE');
+      setLastInterpretation('🚀 Engaging hyperdrive!');
     } else {
-      setLastInterpretation('Try: dark, chaos, calm, eclipse, portal, spiral');
+      // No match - show hint
+      setLastInterpretation(geminiApiKey ? '🤔 Try being more specific' : '💡 Add Gemini API key for AI interpretation');
     }
   };
 
@@ -338,7 +550,8 @@ function App() {
           <SessionStatus sessionId={sessionId} onSessionChange={setSessionId} />
           <button
             onClick={() => {
-              const displayUrl = `${window.location.origin}/display`;
+              // IMPORTANT: Use ?display=true query param - main.tsx checks for this
+              const displayUrl = `${window.location.origin}?display=true`;
               window.open(displayUrl, 'darthander_display', 'width=1920,height=1080');
             }}
             className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors"
@@ -382,8 +595,8 @@ function App() {
           </div>
         </div>
 
-        {/* Right Panel - Controls */}
-        <div className="w-1/2 flex flex-col overflow-hidden">
+        {/* Right Panel - Controls (scrollable) */}
+        <div className="w-1/2 flex flex-col overflow-y-auto">
           {/* Presets & Quick Actions */}
           <div className="p-4 border-b border-zinc-800">
             <div className="flex items-center justify-between mb-3">
@@ -432,7 +645,8 @@ function App() {
           </div>
 
           {/* Vibe Layers Panel */}
-          <div className="p-4 flex-1 overflow-y-auto">
+          <div className="p-4 border-b border-zinc-800">
+            <h2 className="text-sm text-zinc-500 mb-3">VIBE LAYERS</h2>
             <VibeLayerPanel />
           </div>
 

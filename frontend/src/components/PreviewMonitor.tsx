@@ -1,5 +1,5 @@
 // DARTHANDER Visual Consciousness Engine
-// Preview Monitor Component - IDENTICAL to DisplayWindow rendering
+// Preview Monitor Component - Visual representation of current state
 
 import { useEffect, useRef, useState } from 'react';
 import { Monitor, ExternalLink } from 'lucide-react';
@@ -11,94 +11,44 @@ interface VisualState {
   geometryScale: number;
   colorPalette: string;
   colorBrightness: number;
+  colorHueShift: number;
   colorSaturation: number;
   motionSpeed: number;
   motionDirection: string;
+  motionTurbulence: number;
   starDensity: number;
   starBrightness: number;
   eclipsePhase: number;
   coronaIntensity: number;
+  nebulaPresence: number;
   overallIntensity: number;
   depthMode: string;
   chaosFactor: number;
-  nebulaPresence: number;
 }
 
 interface PreviewMonitorProps {
   state: VisualState | null;
 }
 
-// Theme color configurations - SAME as DisplayWindow
-const themes: Record<string, { bg: string[]; accent: string; glow: string; particles: string }> = {
-  cosmos: {
-    bg: ['#000011', '#0a0a2e', '#1a1a4e'],
-    accent: '#6366f1',
-    glow: '#818cf8',
-    particles: '#c4b5fd',
-  },
-  sacred: {
-    bg: ['#0a0008', '#1a0020', '#2a0040'],
-    accent: '#fbbf24',
-    glow: '#f59e0b',
-    particles: '#fcd34d',
-  },
-  void: {
-    bg: ['#000000', '#050505', '#0a0a0a'],
-    accent: '#374151',
-    glow: '#1f2937',
-    particles: '#4b5563',
-  },
-  fire: {
-    bg: ['#0a0000', '#1a0500', '#2a0a00'],
-    accent: '#ef4444',
-    glow: '#f97316',
-    particles: '#fbbf24',
-  },
-  ice: {
-    bg: ['#000a10', '#001020', '#002040'],
-    accent: '#06b6d4',
-    glow: '#22d3ee',
-    particles: '#a5f3fc',
-  },
-  neon: {
-    bg: ['#05000a', '#0a0015', '#150025'],
-    accent: '#f0abfc',
-    glow: '#e879f9',
-    particles: '#c084fc',
-  },
-  earth: {
-    bg: ['#0a0800', '#151005', '#201810'],
-    accent: '#84cc16',
-    glow: '#a3e635',
-    particles: '#bef264',
-  },
-  desert: {
-    bg: ['#1a1408', '#2a2010', '#3a2c18'],
-    accent: '#f59e0b',
-    glow: '#fbbf24',
-    particles: '#fcd34d',
-  },
-  ocean: {
-    bg: ['#001015', '#002030', '#003050'],
-    accent: '#0891b2',
-    glow: '#06b6d4',
-    particles: '#22d3ee',
-  },
-  matrix: {
-    bg: ['#000500', '#000a00', '#001500'],
-    accent: '#22c55e',
-    glow: '#4ade80',
-    particles: '#86efac',
-  },
+// Color palette definitions
+const palettes: Record<string, { bg: string; primary: string; secondary: string }> = {
+  cosmos: { bg: '#0a0a1a', primary: '#4a4aff', secondary: '#8a4aff' },
+  void: { bg: '#000000', primary: '#1a1a1a', secondary: '#2a2a2a' },
+  fire: { bg: '#1a0a00', primary: '#ff4a00', secondary: '#ffaa00' },
+  ice: { bg: '#001a2a', primary: '#00aaff', secondary: '#aaffff' },
+  earth: { bg: '#0a1a0a', primary: '#4a8a4a', secondary: '#8a6a4a' },
+  neon: { bg: '#0a001a', primary: '#ff00ff', secondary: '#00ffff' },
+  sacred: { bg: '#1a0a1a', primary: '#ffd700', secondary: '#8a4aff' },
 };
 
 export function PreviewMonitor({ state }: PreviewMonitorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const timeRef = useRef(0);
+  const motionOffsetRef = useRef({ x: 0, y: 0 });
   const bgImageRef = useRef<HTMLImageElement | null>(null);
   const [displayWindow, setDisplayWindow] = useState<Window | null>(null);
-  const { backgroundImage, vibeLayers } = useStore();
+  const { backgroundImage, vibeLayers, audioState, visualState } = useStore();
 
   // Load background image when it changes
   useEffect(() => {
@@ -115,11 +65,15 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
 
   // Open display window for external monitor
   const openDisplayWindow = () => {
+    // Build URL from current location, preserving path but setting display=true
     const url = new URL(window.location.href);
-    url.search = '';
+    url.search = ''; // Clear existing query params
     url.searchParams.set('display', 'true');
     const displayUrl = url.toString();
 
+    console.log('Opening display window at:', displayUrl);
+
+    // Open in new window optimized for fullscreen
     const newWindow = window.open(
       displayUrl,
       'DARTHANDER_DISPLAY',
@@ -128,6 +82,8 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
 
     if (newWindow) {
       setDisplayWindow(newWindow);
+
+      // Check if window is closed
       const checkWindow = setInterval(() => {
         if (newWindow.closed) {
           setDisplayWindow(null);
@@ -137,6 +93,7 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
     }
   };
 
+  // Close display window when component unmounts
   useEffect(() => {
     return () => {
       if (displayWindow && !displayWindow.closed) {
@@ -165,32 +122,62 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
       const height = canvas.offsetHeight;
       const centerX = width / 2;
       const centerY = height / 2;
-      const minDim = Math.min(width, height);
 
-      // Clear screen
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, width, height);
+      // ============================================
+      // AUDIO-REACTIVE VISUAL BOOSTS
+      // These add to user's base values for DISPLAY ONLY
+      // ============================================
+      const vs = visualState || state;
+      const bassImpactSens = (vs as any)?.bassImpactSensitivity ?? 0;
+      const bassPulseSens = (vs as any)?.bassPulseSensitivity ?? 0;
+      const audioReactMotion = (vs as any)?.audioReactMotion ?? 0;
+      const audioReactColor = (vs as any)?.audioReactColor ?? 0;
+      const audioReactGeo = (vs as any)?.audioReactGeometry ?? 0;
 
-      // Get theme - SAME as DisplayWindow
-      const themeName = state?.colorPalette || 'cosmos';
-      const theme = themes[themeName] || themes.cosmos;
-      const intensity = state?.overallIntensity ?? 0.7;
-      const brightness = state?.colorBrightness ?? 0.6;
+      // Calculate audio boosts
+      let coronaBoost = 0;
+      let motionBoost = 0;
+      let brightnessBoost = 0;
+      let chaosBoost = 0;
+      let scaleBoost = 0;
 
-      // Draw gradient background - SAME as DisplayWindow
-      const bgGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, minDim);
-      bgGradient.addColorStop(0, theme.bg[2]);
-      bgGradient.addColorStop(0.5, theme.bg[1]);
-      bgGradient.addColorStop(1, theme.bg[0]);
-      ctx.fillStyle = bgGradient;
+      if (audioState) {
+        const bassImpact = audioState.bassImpact ?? 0;
+        const bassPulse = audioState.bassPulse ?? 0;
+        const beatIntensity = audioState.beatIntensity ?? 0;
+        const overallAmp = audioState.overallAmplitude ?? 0;
+        const mid = audioState.mid ?? 0;
+        const highMid = audioState.highMid ?? 0;
+
+        coronaBoost = (bassImpact * bassImpactSens * 0.5 + bassPulse * bassPulseSens * 0.3) * 0.6;
+        motionBoost = (overallAmp * 0.4 + beatIntensity * 0.4) * audioReactMotion * 0.5;
+        brightnessBoost = (mid * 0.3 + overallAmp * 0.2) * audioReactColor * 0.4;
+        chaosBoost = (beatIntensity * 0.3 + highMid * 0.3 + bassImpact * 0.2) * audioReactGeo * 0.5;
+        if (bassImpactSens > 0.5 && bassImpact > 0.4) {
+          scaleBoost = bassImpact * bassImpactSens * 0.08;
+        }
+      }
+
+      // Get current palette
+      const palette = state?.colorPalette
+        ? palettes[state.colorPalette] || palettes.cosmos
+        : palettes.cosmos;
+
+      // Apply audio boost to brightness (VISUAL ONLY)
+      const baseBrightness = state?.colorBrightness ?? 0.6;
+      const brightness = Math.min(1, baseBrightness + brightnessBoost);
+      const intensity = state?.overallIntensity ?? 0.4;
+      ctx.fillStyle = palette.bg;
       ctx.fillRect(0, 0, width, height);
 
       // Draw background image if set
       if (bgImageRef.current) {
         const img = bgImageRef.current;
+        // Cover the canvas while maintaining aspect ratio
         const imgRatio = img.width / img.height;
         const canvasRatio = width / height;
         let drawWidth, drawHeight, drawX, drawY;
+
         if (imgRatio > canvasRatio) {
           drawHeight = height;
           drawWidth = height * imgRatio;
@@ -202,320 +189,255 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
           drawX = 0;
           drawY = (height - drawHeight) / 2;
         }
-        ctx.globalAlpha = 0.5;
+
+        ctx.globalAlpha = 0.7; // Slight transparency so effects show through
         ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
         ctx.globalAlpha = 1.0;
       }
 
-      // Update time
-      const motionSpeed = state?.motionSpeed ?? 0.15;
-      timeRef.current += 0.016 * motionSpeed * 60;
-      const time = timeRef.current;
+      // Eclipse overlay
+      const eclipsePhase = state?.eclipsePhase ?? 0;
+      if (eclipsePhase > 0) {
+        ctx.fillStyle = `rgba(0, 0, 0, ${eclipsePhase * 0.9})`;
+        ctx.fillRect(0, 0, width, height);
+      }
 
-      // Eclipse parameters
-      const eclipsePhase = state?.eclipsePhase ?? 0.8;
-      const coronaIntensity = state?.coronaIntensity ?? 0.7;
-      const eclipseRadius = minDim * 0.1;
+      // Update time and motion (with audio boost for VISUAL ONLY)
+      const baseMotionSpeed = state?.motionSpeed ?? 0.1;
+      const motionSpeed = Math.min(1, baseMotionSpeed + motionBoost);
+      const motionTurbulence = state?.motionTurbulence ?? 0.1;
+      const motionDir = state?.motionDirection ?? 'clockwise';
 
-      // ===== COSMIC BACKDROP - SAME as DisplayWindow =====
-      const starDensity = state?.starDensity ?? 0.7;
-      const starBrightness = state?.starBrightness ?? 0.6;
-      const nebulaPresence = state?.nebulaPresence ?? 0.5;
+      // Only update time if not "still" - this controls all animation
+      if (motionDir !== 'still') {
+        timeRef.current += 0.016 * motionSpeed * 60;
+      }
 
-      // Soft nebula clouds
+      // Update motion offset for outward/inward effects
+      if (motionDir === 'outward') {
+        motionOffsetRef.current.x += motionSpeed * 0.5;
+        if (motionOffsetRef.current.x > 1) motionOffsetRef.current.x = 0;
+      } else if (motionDir === 'inward') {
+        motionOffsetRef.current.x -= motionSpeed * 0.5;
+        if (motionOffsetRef.current.x < 0) motionOffsetRef.current.x = 1;
+      }
+
+      // Draw nebula clouds (BEFORE stars)
+      const nebulaPresence = state?.nebulaPresence ?? 0;
       if (nebulaPresence > 0) {
-        for (let i = 0; i < 5; i++) {
-          const seed = i * 7919;
-          const angle = (seed % 1000) / 1000 * Math.PI * 2;
-          const dist = minDim * 0.2 + (seed % 500) / 500 * minDim * 0.25;
-          const nx = centerX + Math.cos(angle + time * 0.0001) * dist;
-          const ny = centerY + Math.sin(angle + time * 0.0001) * dist;
-          const size = minDim * 0.15 + (seed % 300) / 300 * minDim * 0.15;
+        const numClouds = Math.floor(nebulaPresence * 5 + 1);
+        for (let i = 0; i < numClouds; i++) {
+          const seed = i * 7654.321;
+          const cloudX = ((Math.sin(seed) + 1) / 2) * width;
+          const cloudY = ((Math.cos(seed * 1.5) + 1) / 2) * height;
+          const cloudSize = 40 + ((Math.sin(seed * 2) + 1) / 2) * 80;
+          const pulse = Math.sin(timeRef.current * 0.001 + seed) * 0.2 + 0.8;
 
-          const nebulaGrad = ctx.createRadialGradient(nx, ny, 0, nx, ny, size);
-          nebulaGrad.addColorStop(0, `${theme.accent}${Math.floor(nebulaPresence * 15).toString(16).padStart(2, '0')}`);
-          nebulaGrad.addColorStop(0.4, `${theme.glow}${Math.floor(nebulaPresence * 8).toString(16).padStart(2, '0')}`);
-          nebulaGrad.addColorStop(1, 'transparent');
-          ctx.fillStyle = nebulaGrad;
-          ctx.fillRect(0, 0, width, height);
+          const nebulaGradient = ctx.createRadialGradient(cloudX, cloudY, 0, cloudX, cloudY, cloudSize);
+          const hueShift = state?.colorHueShift ?? 0;
+          const baseHue = (i * 60 + hueShift * 360) % 360;
+          nebulaGradient.addColorStop(0, `hsla(${baseHue}, 80%, 50%, ${nebulaPresence * 0.3 * pulse * (1 - eclipsePhase)})`);
+          nebulaGradient.addColorStop(0.5, `hsla(${baseHue + 30}, 70%, 40%, ${nebulaPresence * 0.15 * pulse * (1 - eclipsePhase)})`);
+          nebulaGradient.addColorStop(1, 'transparent');
+
+          ctx.fillStyle = nebulaGradient;
+          ctx.beginPath();
+          ctx.arc(cloudX, cloudY, cloudSize, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
 
-      // Stars field - SAME clean distribution as DisplayWindow
-      const numStars = Math.floor(starDensity * 400);
+      // Draw stars with motion effects
+      const starDensity = state?.starDensity ?? 0.8;
+      const starBrightness = state?.starBrightness ?? 0.7;
+      const numStars = Math.floor(starDensity * 200);
+
       for (let i = 0; i < numStars; i++) {
-        const seed1 = Math.sin(i * 12345.6789) * 43758.5453;
-        const seed2 = Math.sin(i * 78901.2345) * 23421.6312;
-        const seed3 = Math.sin(i * 45678.9012) * 84756.2341;
+        const seed = i * 12345.6789;
+        let x = ((Math.sin(seed) + 1) / 2) * width;
+        let y = ((Math.cos(seed * 2) + 1) / 2) * height;
 
-        const x = (seed1 - Math.floor(seed1)) * width;
-        const y = (seed2 - Math.floor(seed2)) * height;
+        // Apply motion based on direction
+        if (motionDir === 'outward') {
+          const dx = x - centerX;
+          const dy = y - centerY;
+          const expandFactor = (motionOffsetRef.current.x + (seed % 1)) % 1;
+          x = centerX + dx * (0.5 + expandFactor * 0.8);
+          y = centerY + dy * (0.5 + expandFactor * 0.8);
+        } else if (motionDir === 'inward') {
+          const dx = x - centerX;
+          const dy = y - centerY;
+          const contractFactor = (1 - motionOffsetRef.current.x + (seed % 1)) % 1;
+          x = centerX + dx * (0.2 + contractFactor * 0.8);
+          y = centerY + dy * (0.2 + contractFactor * 0.8);
+        }
 
-        // Skip stars too close to eclipse center
-        const distToCenter = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
-        if (distToCenter < eclipseRadius * 2.5) continue;
+        // Add turbulence
+        if (motionTurbulence > 0) {
+          x += Math.sin(timeRef.current * 0.002 + seed) * motionTurbulence * 10;
+          y += Math.cos(timeRef.current * 0.002 + seed * 1.5) * motionTurbulence * 10;
+        }
 
-        const sizeSeed = seed3 - Math.floor(seed3);
-        const size = sizeSeed < 0.7 ? 0.5 + sizeSeed : 1 + sizeSeed * 1.5;
-        const twinkle = Math.sin(time * 0.008 + i * 0.5) * 0.2 + 0.8;
+        const size = ((Math.sin(seed * 3) + 1) / 2) * 2 + 0.5;
+        const twinkle = Math.sin(timeRef.current * 0.01 + seed) * 0.3 + 0.7;
 
-        const colorSeed = (i * 17) % 10;
-        let starColor = '255, 255, 255';
-        if (colorSeed < 2) starColor = '255, 250, 240';
-        else if (colorSeed < 4) starColor = '240, 248, 255';
-        else if (colorSeed === 4) starColor = '255, 220, 180';
-        else if (colorSeed === 5) starColor = '200, 220, 255';
-
-        ctx.fillStyle = `rgba(${starColor}, ${starBrightness * twinkle * intensity})`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${starBrightness * twinkle * intensity * (1 - eclipsePhase)})`;
         ctx.beginPath();
         ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // ===== ECLIPSE - SAME as DisplayWindow =====
-      if (eclipsePhase > 0) {
-        ctx.save();
-        ctx.translate(centerX, centerY);
+      // Draw geometry based on mode (with audio boosts for VISUAL ONLY)
+      const geometryMode = state?.geometryMode ?? 'stars';
+      const complexity = state?.geometryComplexity ?? 0.2;
+      const baseGeometryScale = state?.geometryScale ?? 1.0;
+      const baseChaos = state?.chaosFactor ?? 0;
 
-        // Soft outer glow - effervescent aura
-        if (coronaIntensity > 0) {
-          // Very soft outer ambient glow
-          const ambientGlow = ctx.createRadialGradient(0, 0, eclipseRadius * 0.8, 0, 0, eclipseRadius * 6);
-          ambientGlow.addColorStop(0, `rgba(255, 180, 100, ${coronaIntensity * 0.15 * intensity})`);
-          ambientGlow.addColorStop(0.2, `rgba(255, 150, 80, ${coronaIntensity * 0.08 * intensity})`);
-          ambientGlow.addColorStop(0.5, `rgba(255, 120, 60, ${coronaIntensity * 0.03 * intensity})`);
-          ambientGlow.addColorStop(1, 'transparent');
-          ctx.fillStyle = ambientGlow;
-          ctx.beginPath();
-          ctx.arc(0, 0, eclipseRadius * 6, 0, Math.PI * 2);
-          ctx.fill();
+      // Apply audio boosts
+      const geometryScale = Math.min(2, baseGeometryScale + scaleBoost);
+      const chaosFactor = Math.min(1, baseChaos + chaosBoost);
 
-          // Mid-range effervescent glow with animation
-          const pulse = Math.sin(time * 0.002) * 0.1 + 1;
-          const midGlow = ctx.createRadialGradient(0, 0, eclipseRadius * 0.9, 0, 0, eclipseRadius * 3 * pulse);
-          midGlow.addColorStop(0, `rgba(255, 200, 120, ${coronaIntensity * 0.25 * intensity})`);
-          midGlow.addColorStop(0.3, `rgba(255, 170, 90, ${coronaIntensity * 0.15 * intensity})`);
-          midGlow.addColorStop(0.6, `rgba(255, 140, 70, ${coronaIntensity * 0.06 * intensity})`);
-          midGlow.addColorStop(1, 'transparent');
-          ctx.fillStyle = midGlow;
-          ctx.beginPath();
-          ctx.arc(0, 0, eclipseRadius * 3 * pulse, 0, Math.PI * 2);
-          ctx.fill();
+      // Rotation based on direction
+      let rotation = 0;
+      if (motionDir === 'clockwise') rotation = timeRef.current * 0.001;
+      else if (motionDir === 'counter') rotation = -timeRef.current * 0.001;
 
-          // Inner corona glow
-          const innerGlow = ctx.createRadialGradient(0, 0, eclipseRadius * 0.95, 0, 0, eclipseRadius * 1.5);
-          innerGlow.addColorStop(0, `rgba(255, 220, 150, ${coronaIntensity * 0.4 * intensity})`);
-          innerGlow.addColorStop(0.2, `rgba(255, 200, 120, ${coronaIntensity * 0.3 * intensity})`);
-          innerGlow.addColorStop(0.5, `rgba(255, 160, 80, ${coronaIntensity * 0.15 * intensity})`);
-          innerGlow.addColorStop(1, 'transparent');
-          ctx.fillStyle = innerGlow;
-          ctx.beginPath();
-          ctx.arc(0, 0, eclipseRadius * 1.5, 0, Math.PI * 2);
-          ctx.fill();
+      // Base scale from geometryScale setting
+      let scale = geometryScale;
 
-          // Subtle bright rim
-          const rimGlow = ctx.createRadialGradient(0, 0, eclipseRadius * 0.97, 0, 0, eclipseRadius * 1.08);
-          rimGlow.addColorStop(0, 'transparent');
-          rimGlow.addColorStop(0.4, `rgba(255, 240, 200, ${coronaIntensity * 0.5 * intensity})`);
-          rimGlow.addColorStop(0.6, `rgba(255, 255, 240, ${coronaIntensity * 0.7 * intensity})`);
-          rimGlow.addColorStop(0.8, `rgba(255, 240, 200, ${coronaIntensity * 0.4 * intensity})`);
-          rimGlow.addColorStop(1, 'transparent');
-          ctx.fillStyle = rimGlow;
-          ctx.beginPath();
-          ctx.arc(0, 0, eclipseRadius * 1.08, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // The Moon (dark circle) - perfectly dark center
-        const moonGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, eclipseRadius);
-        moonGrad.addColorStop(0, '#000000');
-        moonGrad.addColorStop(0.7, '#000000');
-        moonGrad.addColorStop(0.9, '#020202');
-        moonGrad.addColorStop(1, '#050505');
-        ctx.fillStyle = moonGrad;
-        ctx.beginPath();
-        ctx.arc(0, 0, eclipseRadius * eclipsePhase, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
+      // Breathing motion adds to scale
+      if (motionDir === 'breathing') {
+        scale *= 1 + Math.sin(timeRef.current * 0.002) * 0.15;
       }
 
-      // ===== GEOMETRY OVERLAYS - SAME as DisplayWindow =====
-      const geometryMode = state?.geometryMode ?? 'mandala';
-      const complexity = state?.geometryComplexity ?? 0.5;
-      const chaosFactor = state?.chaosFactor ?? 0.15;
-      const motionDir = state?.motionDirection ?? 'breathing';
-
-      let rotation = 0;
-      if (motionDir === 'clockwise') rotation = time * 0.001;
-      else if (motionDir === 'counter' || motionDir === 'ccw') rotation = -time * 0.001;
-
-      let scale = 1;
-      if (motionDir === 'breathing') scale = 1 + Math.sin(time * 0.002) * 0.08;
+      // Chaos adds random wobble
+      if (chaosFactor > 0) {
+        rotation += Math.sin(timeRef.current * 0.005) * chaosFactor * 0.3;
+        scale *= 1 + Math.sin(timeRef.current * 0.003) * chaosFactor * 0.1;
+      }
 
       ctx.save();
       ctx.translate(centerX, centerY);
       ctx.rotate(rotation);
       ctx.scale(scale, scale);
-      ctx.globalAlpha = intensity * brightness * 0.6;
 
-      // Draw sacred geometry
+      // Draw based on geometry mode
       if (geometryMode === 'mandala' || geometryMode === 'hexagon') {
-        const sides = geometryMode === 'hexagon' ? 6 : Math.floor(complexity * 12 + 6);
-        const layers = Math.floor(complexity * 6 + 3);
+        const sides = geometryMode === 'hexagon' ? 6 : Math.floor(complexity * 16 + 4);
+        const layers = Math.floor(complexity * 5 + 2);
 
         for (let layer = 0; layer < layers; layer++) {
-          const radius = eclipseRadius * 1.5 + (layer + 1) * (minDim / 8 / layers);
-          const alpha = (1 - layer / layers) * 0.4;
+          const radius = (layer + 1) * (Math.min(width, height) / 3 / layers);
+          const alpha = intensity * brightness * (1 - layer / layers) * 0.5 * (1 - eclipsePhase);
 
-          ctx.strokeStyle = `${theme.accent}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`;
-          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = layer % 2 === 0 
+            ? `${palette.primary}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`
+            : `${palette.secondary}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`;
+          ctx.lineWidth = 1;
+
           ctx.beginPath();
           for (let i = 0; i <= sides; i++) {
             const angle = (i / sides) * Math.PI * 2;
-            const wobble = chaosFactor > 0 ? Math.sin(time * 0.003 + i + layer) * chaosFactor * 10 : 0;
-            const x = Math.cos(angle) * (radius + wobble);
-            const y = Math.sin(angle) * (radius + wobble);
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
             if (i === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
           }
           ctx.stroke();
         }
       } else if (geometryMode === 'spiral') {
-        const turns = complexity * 6 + 2;
-        const maxRadius = minDim * 0.4;
-        ctx.strokeStyle = theme.accent;
+        const turns = complexity * 5 + 2;
+        const maxRadius = Math.min(width, height) / 2.5;
+        const alpha = intensity * brightness * 0.6 * (1 - eclipsePhase);
+
+        ctx.strokeStyle = `${palette.primary}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`;
         ctx.lineWidth = 2;
         ctx.beginPath();
+
         for (let i = 0; i < 360 * turns; i++) {
           const angle = (i / 180) * Math.PI;
-          const r = eclipseRadius * 1.3 + (i / (360 * turns)) * (maxRadius - eclipseRadius * 1.3);
-          const x = Math.cos(angle) * r;
-          const y = Math.sin(angle) * r;
+          const r = (i / (360 * turns)) * maxRadius;
+          const x = Math.cos(angle + timeRef.current * 0.001) * r;
+          const y = Math.sin(angle + timeRef.current * 0.001) * r;
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
         ctx.stroke();
       } else if (geometryMode === 'tunnel') {
-        const rings = Math.floor(complexity * 12 + 6);
+        const rings = Math.floor(complexity * 10 + 5);
+        
         for (let i = 0; i < rings; i++) {
-          const t = (i / rings + time * 0.001) % 1;
-          const radius = eclipseRadius * 1.5 + t * minDim * 0.35;
-          const alpha = (1 - t) * 0.5;
-          ctx.strokeStyle = `${theme.accent}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`;
-          ctx.lineWidth = 2;
+          const t = (i + timeRef.current * 0.002) % 1;
+          const radius = t * Math.min(width, height) / 2;
+          const alpha = (1 - t) * intensity * brightness * 0.5 * (1 - eclipsePhase);
+
+          ctx.strokeStyle = `${palette.primary}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`;
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(0, 0, radius, 0, Math.PI * 2);
           ctx.stroke();
         }
       } else if (geometryMode === 'fractal') {
-        ctx.strokeStyle = theme.accent;
-        ctx.lineWidth = 1.5;
+        // Simple recursive pattern
+        const alpha = intensity * brightness * 0.4 * (1 - eclipsePhase);
+        ctx.strokeStyle = `${palette.primary}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`;
+        ctx.lineWidth = 1;
+
         const drawBranch = (x: number, y: number, len: number, angle: number, depth: number) => {
-          if (depth === 0 || len < 3) return;
+          if (depth === 0 || len < 5) return;
+          
           const endX = x + Math.cos(angle) * len;
           const endY = y + Math.sin(angle) * len;
+          
           ctx.beginPath();
           ctx.moveTo(x, y);
           ctx.lineTo(endX, endY);
           ctx.stroke();
+          
           const branchAngle = 0.4 + complexity * 0.3;
           drawBranch(endX, endY, len * 0.7, angle + branchAngle, depth - 1);
           drawBranch(endX, endY, len * 0.7, angle - branchAngle, depth - 1);
         };
+
         const depth = Math.floor(complexity * 6 + 3);
-        for (let i = 0; i < 6; i++) {
-          const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
-          drawBranch(0, 0, eclipseRadius * 1.5, angle, depth);
-        }
+        drawBranch(0, 50, 80, -Math.PI / 2, depth);
       }
 
       ctx.restore();
 
-      // ===== VIBE LAYER EFFECTS - SAME as DisplayWindow =====
-      const vibes = vibeLayers || {};
-      const activeVibes = Object.entries(vibes).filter(([_, v]) => v && v !== 'OFF');
-
-      for (const [category, value] of activeVibes) {
-        if (!value || value === 'OFF') continue;
-
+      // Draw vibe layer effects (simplified for preview)
+      if (vibeLayers && Object.keys(vibeLayers).length > 0) {
         ctx.save();
-        ctx.globalAlpha = intensity * 0.3;
+        ctx.translate(centerX, centerY);
 
-        if (category === 'SACRED' && value) {
-          if (value === 'FLOWER') {
+        // SACRED geometry overlays
+        if (vibeLayers.SACRED && vibeLayers.SACRED !== 'OFF') {
+          const sacredAlpha = intensity * 0.4 * (1 - eclipsePhase);
+          ctx.strokeStyle = `rgba(255, 215, 0, ${sacredAlpha})`;
+          ctx.lineWidth = 1;
+
+          if (vibeLayers.SACRED === 'FLOWER' || vibeLayers.SACRED === 'SEED') {
+            const radius = Math.min(width, height) * 0.12;
             for (let i = 0; i < 6; i++) {
               const angle = (i / 6) * Math.PI * 2;
-              const cx = centerX + Math.cos(angle) * eclipseRadius * 1.5;
-              const cy = centerY + Math.sin(angle) * eclipseRadius * 1.5;
-              ctx.strokeStyle = `${theme.glow}80`;
-              ctx.lineWidth = 1;
               ctx.beginPath();
-              ctx.arc(cx, cy, eclipseRadius * 1.5, 0, Math.PI * 2);
+              ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, radius, 0, Math.PI * 2);
               ctx.stroke();
             }
-          } else if (value === 'METATRON') {
-            ctx.strokeStyle = `${theme.glow}60`;
-            ctx.lineWidth = 1;
-            const points: [number, number][] = [];
-            for (let i = 0; i < 13; i++) {
-              const angle = (i / 6) * Math.PI;
-              const r = i < 7 ? eclipseRadius * 2 : eclipseRadius * 3.5;
-              points.push([centerX + Math.cos(angle) * r, centerY + Math.sin(angle) * r]);
-            }
-            for (let i = 0; i < points.length; i++) {
-              for (let j = i + 1; j < points.length; j++) {
-                ctx.beginPath();
-                ctx.moveTo(points[i][0], points[i][1]);
-                ctx.lineTo(points[j][0], points[j][1]);
-                ctx.stroke();
-              }
-            }
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.stroke();
           }
         }
 
-        if (category === 'ELEMENT') {
-          if (value === 'FIRE') {
-            for (let i = 0; i < 30; i++) {
-              const angle = Math.random() * Math.PI * 2;
-              const dist = eclipseRadius * 1.5 + Math.random() * minDim * 0.2;
-              const x = centerX + Math.cos(angle) * dist;
-              const y = centerY + Math.sin(angle) * dist - Math.sin(time * 0.01 + i) * 20;
-              ctx.fillStyle = `rgba(255, ${100 + Math.random() * 100}, 0, ${0.3 + Math.random() * 0.3})`;
-              ctx.beginPath();
-              ctx.arc(x, y, 2 + Math.random() * 3, 0, Math.PI * 2);
-              ctx.fill();
-            }
-          } else if (value === 'WATER') {
-            ctx.strokeStyle = `${themes.ocean.accent}40`;
-            for (let i = 0; i < 5; i++) {
-              const waveY = centerY + minDim * 0.2 + i * 15;
-              ctx.beginPath();
-              for (let x = 0; x < width; x += 5) {
-                const y = waveY + Math.sin((x + time * 2) * 0.02) * 10;
-                if (x === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-              }
-              ctx.stroke();
-            }
-          }
-        }
-
-        if (category === 'COSMIC') {
-          if (value === 'GALAXY') {
-            ctx.strokeStyle = `${theme.particles}30`;
-            ctx.lineWidth = 3;
-            for (let arm = 0; arm < 2; arm++) {
-              ctx.beginPath();
-              for (let i = 0; i < 200; i++) {
-                const angle = (i / 30) + arm * Math.PI + time * 0.0005;
-                const r = eclipseRadius * 1.5 + i * 1.5;
-                const x = centerX + Math.cos(angle) * r;
-                const y = centerY + Math.sin(angle) * r;
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-              }
-              ctx.stroke();
+        // COSMIC effects
+        if (vibeLayers.COSMIC && vibeLayers.COSMIC !== 'OFF') {
+          const cosmicAlpha = intensity * 0.3;
+          if (vibeLayers.COSMIC === 'AURORA') {
+            for (let i = 0; i < 3; i++) {
+              const waveY = Math.sin(timeRef.current * 0.001 + i) * 20;
+              ctx.fillStyle = `rgba(0, 255, 128, ${cosmicAlpha * 0.3})`;
+              ctx.fillRect(-width / 2, waveY - 10 - height * 0.2, width, 20);
             }
           }
         }
@@ -523,20 +445,60 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
         ctx.restore();
       }
 
-      // Theme overlays
-      if (themeName === 'matrix' || vibes['ALTERED'] === 'MATRIX') {
-        ctx.fillStyle = '#22c55e';
-        ctx.font = '14px monospace';
-        for (let i = 0; i < 20; i++) {
-          const x = (i / 20) * width + ((time * 0.1) % 50);
-          for (let j = 0; j < 15; j++) {
-            const y = (j / 15) * height + ((time * (0.5 + i * 0.1)) % height);
-            const char = String.fromCharCode(0x30A0 + Math.floor(Math.random() * 96));
-            ctx.globalAlpha = 0.1 + Math.random() * 0.2;
-            ctx.fillText(char, x, y);
-          }
+      // Corona beams effect - ONLY appears during eclipse AND when corona is enabled
+      // Apply audio boost for VISUAL ONLY
+      const baseCoronaIntensity = state?.coronaIntensity ?? 0;
+      const coronaIntensity = Math.min(1, baseCoronaIntensity + coronaBoost);
+      if (eclipsePhase > 0.5 && coronaIntensity > 0) {
+        const coronaStrength = (eclipsePhase - 0.5) * 2 * coronaIntensity;
+        const numBeams = 12;
+        const maxBeamLength = Math.min(width, height) * 0.4;
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+
+        // Draw radiating beams
+        for (let i = 0; i < numBeams; i++) {
+          const angle = (i / numBeams) * Math.PI * 2 + timeRef.current * 0.0002;
+          const beamLength = maxBeamLength * (0.6 + Math.sin(timeRef.current * 0.003 + i) * 0.4);
+
+          const gradient = ctx.createLinearGradient(
+            0, 0,
+            Math.cos(angle) * beamLength,
+            Math.sin(angle) * beamLength
+          );
+
+          gradient.addColorStop(0, `rgba(255, 220, 150, ${coronaStrength * 0.6})`);
+          gradient.addColorStop(0.3, `rgba(255, 180, 80, ${coronaStrength * 0.4})`);
+          gradient.addColorStop(1, 'rgba(255, 150, 50, 0)');
+
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          const beamWidth = 0.08 + coronaIntensity * 0.05;
+          ctx.lineTo(
+            Math.cos(angle - beamWidth) * beamLength,
+            Math.sin(angle - beamWidth) * beamLength
+          );
+          ctx.lineTo(
+            Math.cos(angle + beamWidth) * beamLength,
+            Math.sin(angle + beamWidth) * beamLength
+          );
+          ctx.closePath();
+          ctx.fillStyle = gradient;
+          ctx.fill();
         }
-        ctx.globalAlpha = 1;
+
+        // Inner glow around eclipse center
+        const glowGradient = ctx.createRadialGradient(0, 0, 5, 0, 0, 60);
+        glowGradient.addColorStop(0, `rgba(255, 240, 200, ${coronaStrength * 0.5})`);
+        glowGradient.addColorStop(0.5, `rgba(255, 200, 100, ${coronaStrength * 0.3})`);
+        glowGradient.addColorStop(1, 'rgba(255, 150, 50, 0)');
+        ctx.fillStyle = glowGradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, 60, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
       }
 
       animationRef.current = requestAnimationFrame(draw);
@@ -548,7 +510,7 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
       window.removeEventListener('resize', resize);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [state, vibeLayers]);
+  }, [state]);
 
   return (
     <div className="relative w-full h-full rounded-lg overflow-hidden border border-zinc-800">
@@ -584,8 +546,8 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
 
       {/* Overlay info */}
       <div className="absolute bottom-2 left-2 text-[10px] text-zinc-500 font-mono space-y-1">
-        <div>MODE: {state?.geometryMode || 'mandala'}</div>
-        <div>THEME: {state?.colorPalette || 'cosmos'}</div>
+        <div>MODE: {state?.geometryMode || 'stars'}</div>
+        <div>DEPTH: {state?.depthMode || 'deep'}</div>
       </div>
 
       <div className="absolute bottom-2 right-2 text-[10px] text-zinc-500 font-mono">

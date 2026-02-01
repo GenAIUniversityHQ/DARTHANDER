@@ -1,11 +1,10 @@
 // DARTHANDER Visual Consciousness Engine
-// Display Window Component - Immersive Eclipse Visualization
+// Display Window Component - Standalone visualization for external display
 
 import { useEffect, useRef, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { defaultVisualState } from '../store';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Socket connection disabled - display syncs only from localStorage
 
 interface VisualState {
   geometryMode: string;
@@ -13,115 +12,92 @@ interface VisualState {
   geometryScale: number;
   colorPalette: string;
   colorBrightness: number;
-  colorSaturation: number;
   colorHueShift: number;
+  colorSaturation: number;
   motionSpeed: number;
   motionDirection: string;
+  motionTurbulence: number;
   starDensity: number;
   starBrightness: number;
   eclipsePhase: number;
   coronaIntensity: number;
+  nebulaPresence: number;
   overallIntensity: number;
   depthMode: string;
   chaosFactor: number;
-  nebulaPresence: number;
-  bassImpactSensitivity: number;
-  bassPulseSensitivity: number;
 }
 
 interface VibeLayers {
   [category: string]: string | null;
 }
 
-// Theme color configurations
-const themes: Record<string, { bg: string[]; accent: string; glow: string; particles: string }> = {
-  cosmos: {
-    bg: ['#000011', '#0a0a2e', '#1a1a4e'],
-    accent: '#6366f1',
-    glow: '#818cf8',
-    particles: '#c4b5fd',
-  },
-  sacred: {
-    bg: ['#0a0008', '#1a0020', '#2a0040'],
-    accent: '#fbbf24',
-    glow: '#f59e0b',
-    particles: '#fcd34d',
-  },
-  void: {
-    bg: ['#000000', '#050505', '#0a0a0a'],
-    accent: '#374151',
-    glow: '#1f2937',
-    particles: '#4b5563',
-  },
-  fire: {
-    bg: ['#0a0000', '#1a0500', '#2a0a00'],
-    accent: '#ef4444',
-    glow: '#f97316',
-    particles: '#fbbf24',
-  },
-  ice: {
-    bg: ['#000a10', '#001020', '#002040'],
-    accent: '#06b6d4',
-    glow: '#22d3ee',
-    particles: '#a5f3fc',
-  },
-  neon: {
-    bg: ['#05000a', '#0a0015', '#150025'],
-    accent: '#f0abfc',
-    glow: '#e879f9',
-    particles: '#c084fc',
-  },
-  earth: {
-    bg: ['#0a0800', '#151005', '#201810'],
-    accent: '#84cc16',
-    glow: '#a3e635',
-    particles: '#bef264',
-  },
-  desert: {
-    bg: ['#1a1408', '#2a2010', '#3a2c18'],
-    accent: '#f59e0b',
-    glow: '#fbbf24',
-    particles: '#fcd34d',
-  },
-  ocean: {
-    bg: ['#001015', '#002030', '#003050'],
-    accent: '#0891b2',
-    glow: '#06b6d4',
-    particles: '#22d3ee',
-  },
-  matrix: {
-    bg: ['#000500', '#000a00', '#001500'],
-    accent: '#22c55e',
-    glow: '#4ade80',
-    particles: '#86efac',
-  },
+interface AudioState {
+  subBass: number;
+  bass: number;
+  lowMid: number;
+  mid: number;
+  highMid: number;
+  presence: number;
+  brilliance: number;
+  overallAmplitude: number;
+  peakAmplitude: number;
+  beatIntensity: number;
+  bassImpact: number;
+  bassPulse: number;
+}
+
+// Audio sensitivity settings (read from visualState)
+interface AudioSensitivity {
+  bassImpactSensitivity: number;
+  bassPulseSensitivity: number;
+  audioReactMotion: number;
+  audioReactColor: number;
+  audioReactGeometry: number;
+}
+
+// Color palette definitions
+const palettes: Record<string, { bg: string; primary: string; secondary: string }> = {
+  cosmos: { bg: '#0a0a1a', primary: '#4a4aff', secondary: '#8a4aff' },
+  void: { bg: '#000000', primary: '#1a1a1a', secondary: '#2a2a2a' },
+  fire: { bg: '#1a0a00', primary: '#ff4a00', secondary: '#ffaa00' },
+  ice: { bg: '#001a2a', primary: '#00aaff', secondary: '#aaffff' },
+  earth: { bg: '#0a1a0a', primary: '#4a8a4a', secondary: '#8a6a4a' },
+  neon: { bg: '#0a001a', primary: '#ff00ff', secondary: '#00ffff' },
+  sacred: { bg: '#1a0a1a', primary: '#ffd700', secondary: '#8a4aff' },
 };
 
-// Get initial state from localStorage immediately (before component renders)
-function getInitialState(): VisualState {
+// Read initial state from localStorage BEFORE component mounts
+// This ensures the display shows current state immediately, not defaults
+function getInitialState(): VisualState & AudioSensitivity {
   if (typeof window !== 'undefined') {
-    const stateData = localStorage.getItem('darthander_state');
-    if (stateData) {
-      try {
-        return JSON.parse(stateData);
-      } catch (e) {
-        // Fall through to default
+    try {
+      const stored = localStorage.getItem('darthander_state');
+      console.log('[DISPLAY] Reading localStorage:', stored ? 'HAS DATA' : 'EMPTY');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        console.log('[DISPLAY] Parsed state:', {
+          intensity: parsed.overallIntensity,
+          speed: parsed.motionSpeed,
+          mode: parsed.geometryMode
+        });
+        return parsed;
       }
+    } catch (e) {
+      console.error('[DISPLAY] Failed to parse state:', e);
     }
   }
-  return defaultVisualState as VisualState;
+  console.log('[DISPLAY] Using DEFAULT state - localStorage was empty!');
+  return defaultVisualState as VisualState & AudioSensitivity;
 }
 
 function getInitialVibes(): VibeLayers {
   if (typeof window !== 'undefined') {
-    const vibeData = localStorage.getItem('darthander_vibes');
-    if (vibeData) {
-      try {
-        return JSON.parse(vibeData);
-      } catch (e) {
-        // Fall through to default
+    try {
+      const stored = localStorage.getItem('darthander_vibes');
+      if (stored) {
+        return JSON.parse(stored);
       }
-    }
+    } catch (e) { }
   }
   return {};
 }
@@ -130,15 +106,24 @@ export default function DisplayWindow() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const timeRef = useRef(0);
-  // Initialize with localStorage state immediately
-  const stateRef = useRef<VisualState>(getInitialState());
+  const motionOffsetRef = useRef({ x: 0, y: 0 }); // For outward/inward motion
+  // Initialize from localStorage IMMEDIATELY (not in useEffect)
+  const stateRef = useRef<VisualState & AudioSensitivity>(getInitialState());
   const vibeLayersRef = useRef<VibeLayers>(getInitialVibes());
-  const socketRef = useRef<Socket | null>(null);
+  const audioStateRef = useRef<AudioState | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
-  const [aspectRatio, setAspectRatio] = useState<'fill' | '16:9'>('16:9');
+  const [aspectRatio, setAspectRatio] = useState<'fill' | '16:9'>('fill');
   const [showControls, setShowControls] = useState(true);
+  // Initialize debug state from the initial read
+  const initialState = stateRef.current;
+  const [debugState, setDebugState] = useState({
+    intensity: initialState?.overallIntensity ?? 0,
+    speed: initialState?.motionSpeed ?? 0,
+    mode: initialState?.geometryMode ?? '',
+    hasData: !!localStorage.getItem('darthander_state')
+  });
 
-  // Load background image from localStorage
+  // Load background image from localStorage (shared with main window)
   useEffect(() => {
     const loadBgImage = () => {
       const bgData = localStorage.getItem('darthander_bg');
@@ -154,41 +139,83 @@ export default function DisplayWindow() {
     };
 
     loadBgImage();
+
+    // Listen for storage changes from main window
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'darthander_bg') loadBgImage();
+      if (e.key === 'darthander_bg') {
+        loadBgImage();
+      }
     };
+
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Sync visual state and vibe layers from localStorage - HIGH FREQUENCY for audio reactivity
+  // Sync visual state, vibe layers, and audio state from localStorage
   useEffect(() => {
+    let syncCount = 0;
     const syncFromLocalStorage = () => {
-      // Always read and apply the latest state for seamless sync
+      // Sync visual state
       const stateData = localStorage.getItem('darthander_state');
       if (stateData) {
         try {
-          stateRef.current = JSON.parse(stateData);
+          const parsed = JSON.parse(stateData);
+          stateRef.current = parsed;
+          // Log every 60 syncs (~1 second at 60fps)
+          syncCount++;
+          if (syncCount % 60 === 0) {
+            console.log('[DISPLAY SYNC] Current state:', {
+              intensity: parsed.overallIntensity,
+              speed: parsed.motionSpeed
+            });
+            // Update debug display
+            setDebugState({
+              intensity: parsed.overallIntensity,
+              speed: parsed.motionSpeed,
+              mode: parsed.geometryMode,
+              hasData: true
+            });
+          }
         } catch (e) {
-          // Silent fail - keep current state
+          console.error('Failed to parse state from localStorage');
         }
+      } else {
+        console.warn('[DISPLAY SYNC] localStorage is EMPTY!');
+        setDebugState(prev => ({ ...prev, hasData: false }));
       }
+      // Sync vibe layers
       const vibeData = localStorage.getItem('darthander_vibes');
       if (vibeData) {
         try {
           vibeLayersRef.current = JSON.parse(vibeData);
         } catch (e) {
-          // Silent fail - keep current vibes
+          console.error('Failed to parse vibes from localStorage');
+        }
+      }
+      // Sync audio state (for audio-reactive visuals)
+      const audioData = localStorage.getItem('darthander_audio');
+      if (audioData) {
+        try {
+          audioStateRef.current = JSON.parse(audioData);
+        } catch (e) {
+          // Audio data might not exist, that's OK
         }
       }
     };
 
+    // Initial sync
     syncFromLocalStorage();
-    // Poll at 60fps for seamless real-time audio reactivity
+
+    // Poll for changes at 60fps for smooth audio-reactive visuals
     const pollInterval = setInterval(syncFromLocalStorage, 16);
+
+    // Also listen for storage events from same origin but different tab
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key?.startsWith('darthander_')) syncFromLocalStorage();
+      if (e.key?.startsWith('darthander_')) {
+        syncFromLocalStorage();
+      }
     };
+
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
@@ -197,29 +224,15 @@ export default function DisplayWindow() {
     };
   }, []);
 
-  // WebSocket connection (secondary to localStorage - only use if localStorage is empty)
+  // DISABLED: Socket connection removed to prevent state conflicts
+  // Display window now syncs ONLY from localStorage (written by control panel)
+  // This ensures the control panel is the single source of truth
   useEffect(() => {
-    const socket = io(API_URL, { transports: ['websocket', 'polling'] });
-    socket.on('connect', () => {
-      // Only request state if localStorage is empty
-      if (!localStorage.getItem('darthander_state')) {
-        socket.emit('state:get');
-      }
-    });
-    // Only apply socket updates if localStorage sync is not active
-    socket.on('state:current', (data: any) => {
-      if (data.visual && !localStorage.getItem('darthander_state')) {
-        stateRef.current = data.visual;
-      }
-    });
-    socket.on('state:update', (_state: any) => {
-      // Ignore - localStorage is the source of truth
-    });
-    socketRef.current = socket;
-    return () => { socket.close(); };
+    console.log('Display window: Using localStorage sync only (socket disabled)');
+    // Socket is intentionally not connected
+    // All state comes from localStorage polling at 60fps above
   }, []);
 
-  // Main rendering
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -236,12 +249,13 @@ export default function DisplayWindow() {
     window.addEventListener('resize', resize);
 
     const draw = () => {
-      const state = stateRef.current;
-      const vibes = vibeLayersRef.current;
-      const width = window.innerWidth;
-      const height = window.innerHeight;
+      try {
+        const state = stateRef.current || defaultVisualState;
+        const audio = audioStateRef.current;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
 
-      // Calculate 16:9 viewport
+      // Calculate viewport for 16:9 aspect ratio mode (YouTube format)
       let viewX = 0, viewY = 0, viewW = width, viewH = height;
       if (aspectRatio === '16:9') {
         const targetRatio = 16 / 9;
@@ -257,32 +271,75 @@ export default function DisplayWindow() {
 
       const centerX = viewX + viewW / 2;
       const centerY = viewY + viewH / 2;
-      const minDim = Math.min(viewW, viewH);
 
-      // Clear screen
+      // ============================================
+      // AUDIO-REACTIVE VISUAL BOOSTS
+      // These add to user's base values for DISPLAY ONLY
+      // They do NOT modify the stored slider values
+      // ============================================
+      const bassImpactSens = (state as any)?.bassImpactSensitivity ?? 0;
+      const bassPulseSens = (state as any)?.bassPulseSensitivity ?? 0;
+      const audioReactMotion = (state as any)?.audioReactMotion ?? 0;
+      const audioReactColor = (state as any)?.audioReactColor ?? 0;
+      const audioReactGeo = (state as any)?.audioReactGeometry ?? 0;
+
+      // Calculate audio boosts (only if audio is active)
+      let coronaBoost = 0;
+      let motionBoost = 0;
+      let brightnessBoost = 0;
+      let chaosBoost = 0;
+      let scaleBoost = 0;
+
+      if (audio) {
+        const bassImpact = audio.bassImpact ?? 0;
+        const bassPulse = audio.bassPulse ?? 0;
+        const beatIntensity = audio.beatIntensity ?? 0;
+        const overallAmp = audio.overallAmplitude ?? 0;
+        const mid = audio.mid ?? 0;
+        const highMid = audio.highMid ?? 0;
+
+        // Corona pulses with bass
+        coronaBoost = (bassImpact * bassImpactSens * 0.5 + bassPulse * bassPulseSens * 0.3) * 0.6;
+
+        // Motion responds to energy
+        motionBoost = (overallAmp * 0.4 + beatIntensity * 0.4) * audioReactMotion * 0.5;
+
+        // Brightness pulses with mids
+        brightnessBoost = (mid * 0.3 + overallAmp * 0.2) * audioReactColor * 0.4;
+
+        // Chaos responds to beats and highs
+        chaosBoost = (beatIntensity * 0.3 + highMid * 0.3 + bassImpact * 0.2) * audioReactGeo * 0.5;
+
+        // Scale pulse on heavy bass
+        if (bassImpactSens > 0.5 && bassImpact > 0.4) {
+          scaleBoost = bassImpact * bassImpactSens * 0.08;
+        }
+      }
+
+      // Clear entire screen with black
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, width, height);
 
-      // Get theme
-      const themeName = state?.colorPalette || 'cosmos';
-      const theme = themes[themeName] || themes.cosmos;
-      const intensity = state?.overallIntensity ?? 0.7;
-      const brightness = state?.colorBrightness ?? 0.6;
+      // Get current palette
+      const palette = state?.colorPalette
+        ? palettes[state.colorPalette] || palettes.cosmos
+        : palettes.cosmos;
 
-      // Draw gradient background
-      const bgGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, minDim);
-      bgGradient.addColorStop(0, theme.bg[2]);
-      bgGradient.addColorStop(0.5, theme.bg[1]);
-      bgGradient.addColorStop(1, theme.bg[0]);
-      ctx.fillStyle = bgGradient;
+      // Apply audio boost to brightness (VISUAL ONLY)
+      const baseBrightness = state?.colorBrightness ?? 0.6;
+      const brightness = Math.min(1, baseBrightness + brightnessBoost);
+      const intensity = state?.overallIntensity ?? 0.4;
+      ctx.fillStyle = palette.bg;
       ctx.fillRect(viewX, viewY, viewW, viewH);
 
       // Draw background image if set
       if (bgImageRef.current) {
         const img = bgImageRef.current;
+        // Cover the viewport while maintaining aspect ratio
         const imgRatio = img.width / img.height;
         const canvasRatio = viewW / viewH;
         let drawWidth, drawHeight, drawX, drawY;
+
         if (imgRatio > canvasRatio) {
           drawHeight = viewH;
           drawWidth = viewH * imgRatio;
@@ -294,330 +351,284 @@ export default function DisplayWindow() {
           drawX = viewX;
           drawY = viewY + (viewH - drawHeight) / 2;
         }
-        ctx.globalAlpha = 0.5;
+
+        ctx.globalAlpha = 0.7; // Slight transparency so effects show through
         ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
         ctx.globalAlpha = 1.0;
       }
 
-      // Update time
-      const motionSpeed = state?.motionSpeed ?? 0.15;
-      timeRef.current += 0.016 * motionSpeed * 60;
-      const time = timeRef.current;
+      // Eclipse overlay
+      const eclipsePhase = state?.eclipsePhase ?? 0;
+      if (eclipsePhase > 0) {
+        ctx.fillStyle = `rgba(0, 0, 0, ${eclipsePhase * 0.9})`;
+        ctx.fillRect(viewX, viewY, viewW, viewH);
+      }
 
-      // Eclipse parameters (needed for star exclusion zone)
-      const eclipsePhase = state?.eclipsePhase ?? 0.8;
-      const coronaIntensity = state?.coronaIntensity ?? 0.7;
-      const eclipseRadius = minDim * 0.1;
+      // Update time and motion (with audio boost for VISUAL ONLY)
+      const baseMotionSpeed = state?.motionSpeed ?? 0.1;
+      const motionSpeed = Math.min(1, baseMotionSpeed + motionBoost);
+      const motionTurbulence = state?.motionTurbulence ?? 0.1;
+      const motionDir = state?.motionDirection ?? 'clockwise';
 
-      // ===== COSMIC BACKDROP - CLEAN & PROFESSIONAL =====
-      const starDensity = state?.starDensity ?? 0.7;
-      const starBrightness = state?.starBrightness ?? 0.6;
-      const nebulaPresence = state?.nebulaPresence ?? 0.5;
+      // Only update time if not "still" - this controls all animation
+      if (motionDir !== 'still') {
+        timeRef.current += 0.016 * motionSpeed * 60;
+      }
 
-      // Soft nebula clouds (ambient background glow - no dots or belts)
+      // Update motion offset for outward/inward effects
+      if (motionDir === 'outward') {
+        motionOffsetRef.current.x += motionSpeed * 0.5;
+        if (motionOffsetRef.current.x > 1) motionOffsetRef.current.x = 0;
+      } else if (motionDir === 'inward') {
+        motionOffsetRef.current.x -= motionSpeed * 0.5;
+        if (motionOffsetRef.current.x < 0) motionOffsetRef.current.x = 1;
+      }
+
+      // Draw nebula clouds (BEFORE stars so stars appear in front)
+      const nebulaPresence = state?.nebulaPresence ?? 0;
       if (nebulaPresence > 0) {
-        // Large soft nebula patches
-        for (let i = 0; i < 5; i++) {
-          const seed = i * 7919; // Prime number for pseudo-random
-          const angle = (seed % 1000) / 1000 * Math.PI * 2;
-          const dist = minDim * 0.2 + (seed % 500) / 500 * minDim * 0.25;
-          const nx = centerX + Math.cos(angle + time * 0.0001) * dist;
-          const ny = centerY + Math.sin(angle + time * 0.0001) * dist;
-          const size = minDim * 0.15 + (seed % 300) / 300 * minDim * 0.15;
+        const numClouds = Math.floor(nebulaPresence * 8 + 2);
+        for (let i = 0; i < numClouds; i++) {
+          const seed = i * 7654.321;
+          const cloudX = viewX + ((Math.sin(seed) + 1) / 2) * viewW;
+          const cloudY = viewY + ((Math.cos(seed * 1.5) + 1) / 2) * viewH;
+          const cloudSize = 100 + ((Math.sin(seed * 2) + 1) / 2) * 200;
+          const pulse = Math.sin(timeRef.current * 0.001 + seed) * 0.2 + 0.8;
 
-          const nebulaGrad = ctx.createRadialGradient(nx, ny, 0, nx, ny, size);
-          nebulaGrad.addColorStop(0, `${theme.accent}${Math.floor(nebulaPresence * 15).toString(16).padStart(2, '0')}`);
-          nebulaGrad.addColorStop(0.4, `${theme.glow}${Math.floor(nebulaPresence * 8).toString(16).padStart(2, '0')}`);
-          nebulaGrad.addColorStop(1, 'transparent');
-          ctx.fillStyle = nebulaGrad;
-          ctx.fillRect(viewX, viewY, viewW, viewH);
+          const nebulaGradient = ctx.createRadialGradient(cloudX, cloudY, 0, cloudX, cloudY, cloudSize);
+          const hueShift = state?.colorHueShift ?? 0;
+          const baseHue = (i * 60 + hueShift * 360) % 360;
+          nebulaGradient.addColorStop(0, `hsla(${baseHue}, 80%, 50%, ${nebulaPresence * 0.3 * pulse * (1 - eclipsePhase)})`);
+          nebulaGradient.addColorStop(0.5, `hsla(${baseHue + 30}, 70%, 40%, ${nebulaPresence * 0.15 * pulse * (1 - eclipsePhase)})`);
+          nebulaGradient.addColorStop(1, 'transparent');
+
+          ctx.fillStyle = nebulaGradient;
+          ctx.beginPath();
+          ctx.arc(cloudX, cloudY, cloudSize, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
 
-      // Stars field - CLEAN uniform random distribution (no belts or patterns)
-      // Use seeded random for consistent positions across frames
-      const numStars = Math.floor(starDensity * 400);
+      // Draw stars with motion effects
+      const starDensity = state?.starDensity ?? 0.8;
+      const starBrightness = state?.starBrightness ?? 0.7;
+      const numStars = Math.floor(starDensity * 400); // More stars for fullscreen
+
       for (let i = 0; i < numStars; i++) {
-        // Deterministic pseudo-random positioning based on index
-        const seed1 = Math.sin(i * 12345.6789) * 43758.5453;
-        const seed2 = Math.sin(i * 78901.2345) * 23421.6312;
-        const seed3 = Math.sin(i * 45678.9012) * 84756.2341;
+        const seed = i * 12345.6789;
+        let x = viewX + ((Math.sin(seed) + 1) / 2) * viewW;
+        let y = viewY + ((Math.cos(seed * 2) + 1) / 2) * viewH;
 
-        // Uniform distribution across viewport
-        const x = viewX + (seed1 - Math.floor(seed1)) * viewW;
-        const y = viewY + (seed2 - Math.floor(seed2)) * viewH;
+        // Apply motion based on direction
+        if (motionDir === 'outward') {
+          // Stars drift outward from center
+          const dx = x - centerX;
+          const dy = y - centerY;
+          const expandFactor = (motionOffsetRef.current.x + (seed % 1)) % 1;
+          x = centerX + dx * (0.5 + expandFactor * 0.8);
+          y = centerY + dy * (0.5 + expandFactor * 0.8);
+        } else if (motionDir === 'inward') {
+          // Stars drift inward toward center
+          const dx = x - centerX;
+          const dy = y - centerY;
+          const contractFactor = (1 - motionOffsetRef.current.x + (seed % 1)) % 1;
+          x = centerX + dx * (0.2 + contractFactor * 0.8);
+          y = centerY + dy * (0.2 + contractFactor * 0.8);
+        }
 
-        // Skip stars too close to eclipse center
-        const distToCenter = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
-        if (distToCenter < eclipseRadius * 2.5) continue;
+        // Add turbulence
+        if (motionTurbulence > 0) {
+          x += Math.sin(timeRef.current * 0.002 + seed) * motionTurbulence * 20;
+          y += Math.cos(timeRef.current * 0.002 + seed * 1.5) * motionTurbulence * 20;
+        }
 
-        // Vary star sizes
-        const sizeSeed = seed3 - Math.floor(seed3);
-        const size = sizeSeed < 0.7 ? 0.5 + sizeSeed : 1 + sizeSeed * 1.5;
+        const size = ((Math.sin(seed * 3) + 1) / 2) * 2 + 0.5;
+        const twinkle = Math.sin(timeRef.current * 0.01 + seed) * 0.3 + 0.7;
 
-        // Gentle twinkle
-        const twinkle = Math.sin(time * 0.008 + i * 0.5) * 0.2 + 0.8;
-
-        // Vary star colors naturally
-        const colorSeed = (i * 17) % 10;
-        let starColor = '255, 255, 255';
-        if (colorSeed < 2) starColor = '255, 250, 240'; // warm white
-        else if (colorSeed < 4) starColor = '240, 248, 255'; // cool white
-        else if (colorSeed === 4) starColor = '255, 220, 180'; // orange tint
-        else if (colorSeed === 5) starColor = '200, 220, 255'; // blue tint
-
-        ctx.fillStyle = `rgba(${starColor}, ${starBrightness * twinkle * intensity})`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${starBrightness * twinkle * intensity * (1 - eclipsePhase)})`;
         ctx.beginPath();
         ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // ===== ECLIPSE - DARK CENTER WITH EFFERVESCENT GLOW =====
-      if (eclipsePhase > 0) {
-        ctx.save();
-        ctx.translate(centerX, centerY);
+      // Draw geometry based on mode (with audio boosts for VISUAL ONLY)
+      const geometryMode = state?.geometryMode ?? 'stars';
+      const complexity = state?.geometryComplexity ?? 0.2;
+      const baseGeometryScale = state?.geometryScale ?? 1.0;
+      const baseChaos = state?.chaosFactor ?? 0;
 
-        // Soft outer glow - effervescent aura (multiple soft layers)
-        if (coronaIntensity > 0) {
-          // Very soft outer ambient glow
-          const ambientGlow = ctx.createRadialGradient(0, 0, eclipseRadius * 0.8, 0, 0, eclipseRadius * 6);
-          ambientGlow.addColorStop(0, `rgba(255, 180, 100, ${coronaIntensity * 0.15 * intensity})`);
-          ambientGlow.addColorStop(0.2, `rgba(255, 150, 80, ${coronaIntensity * 0.08 * intensity})`);
-          ambientGlow.addColorStop(0.5, `rgba(255, 120, 60, ${coronaIntensity * 0.03 * intensity})`);
-          ambientGlow.addColorStop(1, 'transparent');
-          ctx.fillStyle = ambientGlow;
-          ctx.beginPath();
-          ctx.arc(0, 0, eclipseRadius * 6, 0, Math.PI * 2);
-          ctx.fill();
+      // Apply audio boosts (VISUAL ONLY - does not affect stored values)
+      const geometryScale = Math.min(2, baseGeometryScale + scaleBoost);
+      const chaosFactor = Math.min(1, baseChaos + chaosBoost);
 
-          // Mid-range effervescent glow with slight animation
-          const pulse = Math.sin(time * 0.002) * 0.1 + 1;
-          const midGlow = ctx.createRadialGradient(0, 0, eclipseRadius * 0.9, 0, 0, eclipseRadius * 3 * pulse);
-          midGlow.addColorStop(0, `rgba(255, 200, 120, ${coronaIntensity * 0.25 * intensity})`);
-          midGlow.addColorStop(0.3, `rgba(255, 170, 90, ${coronaIntensity * 0.15 * intensity})`);
-          midGlow.addColorStop(0.6, `rgba(255, 140, 70, ${coronaIntensity * 0.06 * intensity})`);
-          midGlow.addColorStop(1, 'transparent');
-          ctx.fillStyle = midGlow;
-          ctx.beginPath();
-          ctx.arc(0, 0, eclipseRadius * 3 * pulse, 0, Math.PI * 2);
-          ctx.fill();
+      // Rotation based on direction
+      let rotation = 0;
+      if (motionDir === 'clockwise') rotation = timeRef.current * 0.001;
+      else if (motionDir === 'counter') rotation = -timeRef.current * 0.001;
 
-          // Inner corona glow - bright edge around the dark moon
-          const innerGlow = ctx.createRadialGradient(0, 0, eclipseRadius * 0.95, 0, 0, eclipseRadius * 1.5);
-          innerGlow.addColorStop(0, `rgba(255, 220, 150, ${coronaIntensity * 0.4 * intensity})`);
-          innerGlow.addColorStop(0.2, `rgba(255, 200, 120, ${coronaIntensity * 0.3 * intensity})`);
-          innerGlow.addColorStop(0.5, `rgba(255, 160, 80, ${coronaIntensity * 0.15 * intensity})`);
-          innerGlow.addColorStop(1, 'transparent');
-          ctx.fillStyle = innerGlow;
-          ctx.beginPath();
-          ctx.arc(0, 0, eclipseRadius * 1.5, 0, Math.PI * 2);
-          ctx.fill();
+      // Base scale from geometryScale setting
+      let scale = geometryScale;
 
-          // Subtle bright rim at the edge of the moon
-          const rimGlow = ctx.createRadialGradient(0, 0, eclipseRadius * 0.97, 0, 0, eclipseRadius * 1.08);
-          rimGlow.addColorStop(0, 'transparent');
-          rimGlow.addColorStop(0.4, `rgba(255, 240, 200, ${coronaIntensity * 0.5 * intensity})`);
-          rimGlow.addColorStop(0.6, `rgba(255, 255, 240, ${coronaIntensity * 0.7 * intensity})`);
-          rimGlow.addColorStop(0.8, `rgba(255, 240, 200, ${coronaIntensity * 0.4 * intensity})`);
-          rimGlow.addColorStop(1, 'transparent');
-          ctx.fillStyle = rimGlow;
-          ctx.beginPath();
-          ctx.arc(0, 0, eclipseRadius * 1.08, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // The Moon (dark circle) - perfectly dark center
-        const moonGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, eclipseRadius);
-        moonGrad.addColorStop(0, '#000000');
-        moonGrad.addColorStop(0.7, '#000000');
-        moonGrad.addColorStop(0.9, '#020202');
-        moonGrad.addColorStop(1, '#050505');
-        ctx.fillStyle = moonGrad;
-        ctx.beginPath();
-        ctx.arc(0, 0, eclipseRadius * eclipsePhase, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
+      // Breathing motion adds to scale
+      if (motionDir === 'breathing') {
+        scale *= 1 + Math.sin(timeRef.current * 0.002) * 0.15;
       }
 
-      // ===== GEOMETRY OVERLAYS =====
-      const geometryMode = state?.geometryMode ?? 'mandala';
-      const complexity = state?.geometryComplexity ?? 0.5;
-      const chaosFactor = state?.chaosFactor ?? 0.15;
-      const motionDir = state?.motionDirection ?? 'breathing';
-
-      let rotation = 0;
-      if (motionDir === 'clockwise') rotation = time * 0.001;
-      else if (motionDir === 'counter' || motionDir === 'ccw') rotation = -time * 0.001;
-
-      let scale = 1;
-      if (motionDir === 'breathing') scale = 1 + Math.sin(time * 0.002) * 0.08;
+      // Chaos adds random wobble
+      if (chaosFactor > 0) {
+        rotation += Math.sin(timeRef.current * 0.005) * chaosFactor * 0.3;
+        scale *= 1 + Math.sin(timeRef.current * 0.003) * chaosFactor * 0.1;
+      }
 
       ctx.save();
       ctx.translate(centerX, centerY);
       ctx.rotate(rotation);
       ctx.scale(scale, scale);
-      ctx.globalAlpha = intensity * brightness * 0.6;
 
-      // Draw sacred geometry around the eclipse
+      // Draw based on geometry mode
       if (geometryMode === 'mandala' || geometryMode === 'hexagon') {
-        const sides = geometryMode === 'hexagon' ? 6 : Math.floor(complexity * 12 + 6);
-        const layers = Math.floor(complexity * 6 + 3);
+        const sides = geometryMode === 'hexagon' ? 6 : Math.floor(complexity * 16 + 4);
+        const layers = Math.floor(complexity * 8 + 3); // More layers for fullscreen
 
         for (let layer = 0; layer < layers; layer++) {
-          const radius = eclipseRadius * 1.5 + (layer + 1) * (minDim / 8 / layers);
-          const alpha = (1 - layer / layers) * 0.4;
+          const radius = (layer + 1) * (Math.min(viewW, viewH) / 2.5 / layers);
+          const alpha = intensity * brightness * (1 - layer / layers) * 0.5 * (1 - eclipsePhase);
 
-          ctx.strokeStyle = `${theme.accent}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`;
-          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = layer % 2 === 0
+            ? `${palette.primary}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`
+            : `${palette.secondary}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`;
+          ctx.lineWidth = 2;
+
           ctx.beginPath();
           for (let i = 0; i <= sides; i++) {
             const angle = (i / sides) * Math.PI * 2;
-            const wobble = chaosFactor > 0 ? Math.sin(time * 0.003 + i + layer) * chaosFactor * 10 : 0;
-            const x = Math.cos(angle) * (radius + wobble);
-            const y = Math.sin(angle) * (radius + wobble);
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
             if (i === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
           }
           ctx.stroke();
         }
       } else if (geometryMode === 'spiral') {
-        const turns = complexity * 6 + 2;
-        const maxRadius = minDim * 0.4;
-        ctx.strokeStyle = theme.accent;
-        ctx.lineWidth = 2;
+        const turns = complexity * 8 + 3;
+        const maxRadius = Math.min(viewW, viewH) / 2.2;
+        const alpha = intensity * brightness * 0.6 * (1 - eclipsePhase);
+
+        ctx.strokeStyle = `${palette.primary}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`;
+        ctx.lineWidth = 3;
         ctx.beginPath();
+
         for (let i = 0; i < 360 * turns; i++) {
           const angle = (i / 180) * Math.PI;
-          const r = eclipseRadius * 1.3 + (i / (360 * turns)) * (maxRadius - eclipseRadius * 1.3);
-          const x = Math.cos(angle) * r;
-          const y = Math.sin(angle) * r;
+          const r = (i / (360 * turns)) * maxRadius;
+          const x = Math.cos(angle + timeRef.current * 0.001) * r;
+          const y = Math.sin(angle + timeRef.current * 0.001) * r;
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
         ctx.stroke();
       } else if (geometryMode === 'tunnel') {
-        const rings = Math.floor(complexity * 12 + 6);
+        const rings = Math.floor(complexity * 15 + 8);
+
         for (let i = 0; i < rings; i++) {
-          const t = (i / rings + time * 0.001) % 1;
-          const radius = eclipseRadius * 1.5 + t * minDim * 0.35;
-          const alpha = (1 - t) * 0.5;
-          ctx.strokeStyle = `${theme.accent}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`;
+          const t = (i + timeRef.current * 0.002) % 1;
+          const radius = t * Math.min(viewW, viewH) / 2;
+          const alpha = (1 - t) * intensity * brightness * 0.5 * (1 - eclipsePhase);
+
+          ctx.strokeStyle = `${palette.primary}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`;
           ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.arc(0, 0, radius, 0, Math.PI * 2);
           ctx.stroke();
         }
       } else if (geometryMode === 'fractal') {
-        ctx.strokeStyle = theme.accent;
-        ctx.lineWidth = 1.5;
+        const alpha = intensity * brightness * 0.4 * (1 - eclipsePhase);
+        ctx.strokeStyle = `${palette.primary}${Math.floor(alpha * 255).toString(16).padStart(2, '0')}`;
+        ctx.lineWidth = 2;
+
         const drawBranch = (x: number, y: number, len: number, angle: number, depth: number) => {
-          if (depth === 0 || len < 3) return;
+          if (depth === 0 || len < 5) return;
+
           const endX = x + Math.cos(angle) * len;
           const endY = y + Math.sin(angle) * len;
+
           ctx.beginPath();
           ctx.moveTo(x, y);
           ctx.lineTo(endX, endY);
           ctx.stroke();
+
           const branchAngle = 0.4 + complexity * 0.3;
           drawBranch(endX, endY, len * 0.7, angle + branchAngle, depth - 1);
           drawBranch(endX, endY, len * 0.7, angle - branchAngle, depth - 1);
         };
-        const depth = Math.floor(complexity * 6 + 3);
-        for (let i = 0; i < 6; i++) {
-          const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
-          drawBranch(0, 0, eclipseRadius * 1.5, angle, depth);
-        }
+
+        const depth = Math.floor(complexity * 8 + 4);
+        drawBranch(0, 100, 120, -Math.PI / 2, depth);
       }
 
       ctx.restore();
 
-      // ===== VIBE LAYER EFFECTS =====
-      const activeVibes = Object.entries(vibes).filter(([_, v]) => v && v !== 'OFF');
-
-      for (const [category, value] of activeVibes) {
-        if (!value || value === 'OFF') continue;
-
+      // Draw vibe layer effects
+      const vibes = vibeLayersRef.current;
+      if (vibes && Object.keys(vibes).length > 0) {
         ctx.save();
-        ctx.globalAlpha = intensity * 0.3;
+        ctx.translate(centerX, centerY);
 
-        if (category === 'SACRED' && value) {
-          // Sacred geometry overlays
-          const sacredPatterns: Record<string, () => void> = {
-            'FLOWER': () => {
-              for (let i = 0; i < 6; i++) {
-                const angle = (i / 6) * Math.PI * 2;
-                const cx = centerX + Math.cos(angle) * eclipseRadius * 1.5;
-                const cy = centerY + Math.sin(angle) * eclipseRadius * 1.5;
-                ctx.strokeStyle = `${theme.glow}80`;
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.arc(cx, cy, eclipseRadius * 1.5, 0, Math.PI * 2);
-                ctx.stroke();
-              }
-            },
-            'METATRON': () => {
-              ctx.strokeStyle = `${theme.glow}60`;
-              ctx.lineWidth = 1;
-              const points: [number, number][] = [];
-              for (let i = 0; i < 13; i++) {
-                const angle = (i / 6) * Math.PI;
-                const r = i < 7 ? eclipseRadius * 2 : eclipseRadius * 3.5;
-                points.push([centerX + Math.cos(angle) * r, centerY + Math.sin(angle) * r]);
-              }
-              for (let i = 0; i < points.length; i++) {
-                for (let j = i + 1; j < points.length; j++) {
-                  ctx.beginPath();
-                  ctx.moveTo(points[i][0], points[i][1]);
-                  ctx.lineTo(points[j][0], points[j][1]);
-                  ctx.stroke();
-                }
-              }
-            },
-          };
-          if (sacredPatterns[value]) sacredPatterns[value]();
-        }
+        // SACRED geometry overlays
+        if (vibes.SACRED && vibes.SACRED !== 'OFF') {
+          const sacredAlpha = intensity * 0.4 * (1 - eclipsePhase);
+          ctx.strokeStyle = `rgba(255, 215, 0, ${sacredAlpha})`;
+          ctx.lineWidth = 1.5;
 
-        if (category === 'ELEMENT') {
-          // Element-based particle effects
-          if (value === 'FIRE') {
-            for (let i = 0; i < 30; i++) {
-              const angle = Math.random() * Math.PI * 2;
-              const dist = eclipseRadius * 1.5 + Math.random() * minDim * 0.2;
-              const x = centerX + Math.cos(angle) * dist;
-              const y = centerY + Math.sin(angle) * dist - Math.sin(time * 0.01 + i) * 20;
-              ctx.fillStyle = `rgba(255, ${100 + Math.random() * 100}, 0, ${0.3 + Math.random() * 0.3})`;
+          if (vibes.SACRED === 'FLOWER' || vibes.SACRED === 'SEED') {
+            // Flower/Seed of Life pattern
+            const radius = Math.min(viewW, viewH) * 0.15;
+            for (let i = 0; i < 6; i++) {
+              const angle = (i / 6) * Math.PI * 2;
               ctx.beginPath();
-              ctx.arc(x, y, 2 + Math.random() * 3, 0, Math.PI * 2);
-              ctx.fill();
+              ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, radius, 0, Math.PI * 2);
+              ctx.stroke();
             }
-          } else if (value === 'WATER') {
-            ctx.strokeStyle = `${themes.ocean.accent}40`;
-            for (let i = 0; i < 5; i++) {
-              const waveY = centerY + minDim * 0.2 + i * 15;
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.stroke();
+          } else if (vibes.SACRED === 'METATRON') {
+            // Metatron's cube - interconnected circles
+            const r = Math.min(viewW, viewH) * 0.12;
+            for (let i = 0; i < 13; i++) {
+              const angle = i < 6 ? (i / 6) * Math.PI * 2 : ((i - 6) / 6) * Math.PI * 2;
+              const dist = i < 6 ? r * 2 : i === 12 ? 0 : r;
               ctx.beginPath();
-              for (let x = viewX; x < viewX + viewW; x += 5) {
-                const y = waveY + Math.sin((x + time * 2) * 0.02) * 10;
-                if (x === viewX) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-              }
+              ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist, r * 0.5, 0, Math.PI * 2);
               ctx.stroke();
             }
           }
         }
 
-        if (category === 'COSMIC') {
-          if (value === 'GALAXY') {
-            // Spiral galaxy arms
-            ctx.strokeStyle = `${theme.particles}30`;
-            ctx.lineWidth = 3;
-            for (let arm = 0; arm < 2; arm++) {
+        // COSMIC effects
+        if (vibes.COSMIC && vibes.COSMIC !== 'OFF') {
+          const cosmicAlpha = intensity * 0.3;
+          if (vibes.COSMIC === 'AURORA') {
+            for (let i = 0; i < 5; i++) {
+              const waveY = Math.sin(timeRef.current * 0.001 + i) * 50;
+              const gradient = ctx.createLinearGradient(-viewW / 2, waveY - 30, -viewW / 2, waveY + 30);
+              gradient.addColorStop(0, 'transparent');
+              gradient.addColorStop(0.5, `rgba(0, 255, 128, ${cosmicAlpha * 0.5})`);
+              gradient.addColorStop(1, 'transparent');
+              ctx.fillStyle = gradient;
+              ctx.fillRect(-viewW / 2, waveY - 30 - viewH * 0.3, viewW, 60);
+            }
+          } else if (vibes.COSMIC === 'GALAXY') {
+            ctx.strokeStyle = `rgba(180, 160, 255, ${cosmicAlpha})`;
+            ctx.lineWidth = 2;
+            const arms = 4;
+            for (let arm = 0; arm < arms; arm++) {
               ctx.beginPath();
               for (let i = 0; i < 200; i++) {
-                const angle = (i / 30) + arm * Math.PI + time * 0.0005;
-                const r = eclipseRadius * 1.5 + i * 1.5;
-                const x = centerX + Math.cos(angle) * r;
-                const y = centerY + Math.sin(angle) * r;
+                const angle = (arm / arms) * Math.PI * 2 + (i / 30) + timeRef.current * 0.0003;
+                const r = i * 1.5;
+                const x = Math.cos(angle) * r;
+                const y = Math.sin(angle) * r * 0.6;
                 if (i === 0) ctx.moveTo(x, y);
                 else ctx.lineTo(x, y);
               }
@@ -626,63 +637,113 @@ export default function DisplayWindow() {
           }
         }
 
+        // ELEMENT effects
+        if (vibes.ELEMENT && vibes.ELEMENT !== 'OFF') {
+          const elemAlpha = intensity * 0.25;
+          if (vibes.ELEMENT === 'FIRE') {
+            for (let i = 0; i < 20; i++) {
+              const flameX = (Math.random() - 0.5) * viewW * 0.3;
+              const flameY = viewH * 0.3 - Math.random() * 100;
+              const flameSize = 20 + Math.random() * 40;
+              const gradient = ctx.createRadialGradient(flameX, flameY, 0, flameX, flameY, flameSize);
+              gradient.addColorStop(0, `rgba(255, 200, 50, ${elemAlpha})`);
+              gradient.addColorStop(0.5, `rgba(255, 100, 0, ${elemAlpha * 0.5})`);
+              gradient.addColorStop(1, 'transparent');
+              ctx.fillStyle = gradient;
+              ctx.fillRect(flameX - flameSize, flameY - flameSize, flameSize * 2, flameSize * 2);
+            }
+          } else if (vibes.ELEMENT === 'WATER') {
+            ctx.strokeStyle = `rgba(0, 150, 255, ${elemAlpha})`;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 5; i++) {
+              ctx.beginPath();
+              for (let x = -viewW / 2; x < viewW / 2; x += 10) {
+                const waveY = Math.sin(x * 0.02 + timeRef.current * 0.002 + i) * 20 + i * 30;
+                if (x === -viewW / 2) ctx.moveTo(x, waveY);
+                else ctx.lineTo(x, waveY);
+              }
+              ctx.stroke();
+            }
+          }
+        }
+
         ctx.restore();
       }
 
-      // ===== THEME OVERLAYS =====
-      // Matrix effect
-      if (themeName === 'matrix' || vibes['ALTERED'] === 'MATRIX') {
-        ctx.fillStyle = '#22c55e';
-        ctx.font = '14px monospace';
-        for (let i = 0; i < 20; i++) {
-          const x = viewX + (i / 20) * viewW + ((time * 0.1) % 50);
-          for (let j = 0; j < 15; j++) {
-            const y = viewY + (j / 15) * viewH + ((time * (0.5 + i * 0.1)) % viewH);
-            const char = String.fromCharCode(0x30A0 + Math.floor(Math.random() * 96));
-            ctx.globalAlpha = 0.1 + Math.random() * 0.2;
-            ctx.fillText(char, x, y);
-          }
-        }
-        ctx.globalAlpha = 1;
-      }
+      // Corona beams effect - ONLY appears during eclipse AND when corona is enabled
+      // Apply audio boost for VISUAL ONLY
+      const baseCoronaIntensity = state?.coronaIntensity ?? 0;
+      const coronaIntensity = Math.min(1, baseCoronaIntensity + coronaBoost);
+      if (eclipsePhase > 0.5 && coronaIntensity > 0) {
+        const coronaStrength = (eclipsePhase - 0.5) * 2 * coronaIntensity;
+        const numBeams = 16; // More beams for fullscreen
+        const maxBeamLength = Math.min(viewW, viewH) * 0.45;
 
-      // Desert heat shimmer
-      if (themeName === 'desert') {
-        ctx.fillStyle = `rgba(255, 200, 100, 0.05)`;
-        for (let i = 0; i < 10; i++) {
-          const shimmerY = viewY + viewH * 0.7 + Math.sin(time * 0.005 + i) * 20;
-          ctx.fillRect(viewX, shimmerY, viewW, 30);
-        }
-      }
+        ctx.save();
+        ctx.translate(centerX, centerY);
 
-      // Ocean waves
-      if (themeName === 'ocean') {
-        ctx.strokeStyle = 'rgba(6, 182, 212, 0.2)';
-        ctx.lineWidth = 2;
-        for (let wave = 0; wave < 3; wave++) {
+        // Draw radiating beams
+        for (let i = 0; i < numBeams; i++) {
+          const angle = (i / numBeams) * Math.PI * 2 + timeRef.current * 0.0002;
+          const beamLength = maxBeamLength * (0.6 + Math.sin(timeRef.current * 0.003 + i) * 0.4);
+
+          const gradient = ctx.createLinearGradient(
+            0, 0,
+            Math.cos(angle) * beamLength,
+            Math.sin(angle) * beamLength
+          );
+
+          gradient.addColorStop(0, `rgba(255, 220, 150, ${coronaStrength * 0.6})`);
+          gradient.addColorStop(0.3, `rgba(255, 180, 80, ${coronaStrength * 0.4})`);
+          gradient.addColorStop(1, 'rgba(255, 150, 50, 0)');
+
           ctx.beginPath();
-          for (let x = viewX; x <= viewX + viewW; x += 3) {
-            const y = viewY + viewH * 0.85 + Math.sin((x + time * 3 + wave * 50) * 0.015) * (15 + wave * 5);
-            if (x === viewX) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-          }
-          ctx.stroke();
+          ctx.moveTo(0, 0);
+          const beamWidth = 0.08 + coronaIntensity * 0.05;
+          ctx.lineTo(
+            Math.cos(angle - beamWidth) * beamLength,
+            Math.sin(angle - beamWidth) * beamLength
+          );
+          ctx.lineTo(
+            Math.cos(angle + beamWidth) * beamLength,
+            Math.sin(angle + beamWidth) * beamLength
+          );
+          ctx.closePath();
+          ctx.fillStyle = gradient;
+          ctx.fill();
         }
+
+        // Inner glow around eclipse center
+        const glowGradient = ctx.createRadialGradient(0, 0, 10, 0, 0, 120);
+        glowGradient.addColorStop(0, `rgba(255, 240, 200, ${coronaStrength * 0.5})`);
+        glowGradient.addColorStop(0.5, `rgba(255, 200, 100, ${coronaStrength * 0.3})`);
+        glowGradient.addColorStop(1, 'rgba(255, 150, 50, 0)');
+        ctx.fillStyle = glowGradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, 120, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
       }
 
-      // Letterbox bars for 16:9
+      // Draw letterbox bars for 16:9 mode
       if (aspectRatio === '16:9') {
         ctx.fillStyle = '#000000';
         if (viewX > 0) {
           ctx.fillRect(0, 0, viewX, height);
-          ctx.fillRect(viewX + viewW, 0, viewX + 1, height);
+          ctx.fillRect(viewX + viewW, 0, viewX, height);
         }
         if (viewY > 0) {
           ctx.fillRect(0, 0, width, viewY);
-          ctx.fillRect(0, viewY + viewH, width, viewY + 1);
+          ctx.fillRect(0, viewY + viewH, width, viewY);
         }
       }
 
+      } catch (error) {
+        console.error('Display draw error (continuing):', error);
+      }
+
+      // ALWAYS request next frame, even if draw had an error
       animationRef.current = requestAnimationFrame(draw);
     };
 
@@ -694,31 +755,44 @@ export default function DisplayWindow() {
     };
   }, [aspectRatio]);
 
-  // Keyboard shortcuts
+  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'f' || e.key === 'F') {
-        if (document.fullscreenElement) document.exitFullscreen();
-        else document.documentElement.requestFullscreen();
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else {
+          document.documentElement.requestFullscreen();
+        }
       }
-      if (e.key === 'Escape' && document.fullscreenElement) document.exitFullscreen();
-      if (e.key === 'a' || e.key === 'A') setAspectRatio(prev => prev === 'fill' ? '16:9' : 'fill');
-      if (e.key === 'h' || e.key === 'H') setShowControls(prev => !prev);
+      if (e.key === 'Escape' && document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+      if (e.key === 'a' || e.key === 'A') {
+        setAspectRatio(prev => prev === 'fill' ? '16:9' : 'fill');
+      }
+      if (e.key === 'h' || e.key === 'H') {
+        setShowControls(prev => !prev);
+      }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Auto-hide controls
+  // Auto-hide controls after inactivity
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
+
     const handleMouseMove = () => {
       setShowControls(true);
       clearTimeout(timeout);
       timeout = setTimeout(() => setShowControls(false), 3000);
     };
+
     window.addEventListener('mousemove', handleMouseMove);
     timeout = setTimeout(() => setShowControls(false), 3000);
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       clearTimeout(timeout);
@@ -735,21 +809,28 @@ export default function DisplayWindow() {
     }}>
       <canvas
         ref={canvasRef}
-        style={{ width: '100%', height: '100%', display: 'block' }}
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'block',
+        }}
       />
 
-      <div style={{
-        position: 'fixed',
-        bottom: '10px',
-        right: '10px',
-        color: 'rgba(255,255,255,0.5)',
-        fontSize: '11px',
-        fontFamily: 'monospace',
-        pointerEvents: 'none',
-        opacity: showControls ? 1 : 0,
-        transition: 'opacity 0.3s',
-        textAlign: 'right',
-      }}>
+      {/* Controls overlay */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '10px',
+          right: '10px',
+          color: 'rgba(255,255,255,0.5)',
+          fontSize: '11px',
+          fontFamily: 'monospace',
+          pointerEvents: 'none',
+          opacity: showControls ? 1 : 0,
+          transition: 'opacity 0.3s',
+          textAlign: 'right',
+        }}
+      >
         <div style={{ marginBottom: '4px', color: aspectRatio === '16:9' ? '#a855f7' : 'inherit' }}>
           [A] Aspect: {aspectRatio}
         </div>
@@ -757,18 +838,32 @@ export default function DisplayWindow() {
         <div>[H] Hide controls</div>
       </div>
 
-      <div style={{
-        position: 'fixed',
-        top: '10px',
-        left: '10px',
-        color: 'rgba(255,255,255,0.3)',
-        fontSize: '10px',
-        fontFamily: 'monospace',
-        pointerEvents: 'none',
-        opacity: showControls ? 1 : 0,
-        transition: 'opacity 0.3s',
-      }}>
-        DARTHANDER ECLIPSE
+      {/* Status indicator with DEBUG info */}
+      <div
+        style={{
+          position: 'fixed',
+          top: '10px',
+          left: '10px',
+          color: 'rgba(255,255,255,0.5)',
+          fontSize: '10px',
+          fontFamily: 'monospace',
+          pointerEvents: 'none',
+          opacity: showControls ? 1 : 0,
+          transition: 'opacity 0.3s',
+          background: 'rgba(0,0,0,0.7)',
+          padding: '8px',
+          borderRadius: '4px',
+        }}
+      >
+        <div style={{ marginBottom: '4px', color: debugState.hasData ? '#4ade80' : '#f87171' }}>
+          DARTHANDER DISPLAY {debugState.hasData ? '(SYNCED)' : '(NO DATA!)'}
+        </div>
+        <div>Intensity: {(debugState.intensity * 100).toFixed(0)}%</div>
+        <div>Speed: {(debugState.speed * 100).toFixed(0)}%</div>
+        <div>Mode: {debugState.mode || 'unknown'}</div>
+        <div style={{ marginTop: '4px', fontSize: '9px', color: '#888' }}>
+          [D] Toggle debug
+        </div>
       </div>
     </div>
   );
