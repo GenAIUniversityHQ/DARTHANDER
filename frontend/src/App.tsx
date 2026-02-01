@@ -176,10 +176,16 @@ function App() {
   // CRITICAL: Broadcast current state to localStorage immediately on mount
   // This ensures display window always gets the current state, not stale data
   useEffect(() => {
+    console.log('[APP MOUNT] useEffect running, visualState:', visualState ? 'EXISTS' : 'NULL');
     if (visualState) {
-      localStorage.setItem('darthander_state', JSON.stringify(visualState));
+      const stateJson = JSON.stringify(visualState);
+      localStorage.setItem('darthander_state', stateJson);
       localStorage.setItem('darthander_state_timestamp', Date.now().toString());
-      console.log('Control panel: Broadcast initial state to localStorage');
+      console.log('[APP MOUNT] Broadcast to localStorage:', {
+        intensity: visualState.overallIntensity,
+        speed: visualState.motionSpeed,
+        mode: visualState.geometryMode
+      });
     }
   }, []); // Only on mount
 

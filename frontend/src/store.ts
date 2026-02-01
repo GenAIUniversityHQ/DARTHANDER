@@ -443,10 +443,17 @@ const broadcastVibes = (vibes: VibeLayers) => {
 // Initialize by broadcasting initial state ONLY if localStorage is empty
 // This prevents the display window from overwriting the control panel's state
 if (typeof window !== 'undefined') {
+  console.log('[STORE INIT] Module loaded, checking localStorage in 100ms...');
+  console.log('[STORE INIT] Current localStorage state:', localStorage.getItem('darthander_state') ? 'EXISTS' : 'EMPTY');
   setTimeout(() => {
     // Only broadcast if no state exists yet (first load of control panel)
-    if (!localStorage.getItem('darthander_state')) {
+    const existingState = localStorage.getItem('darthander_state');
+    console.log('[STORE INIT] setTimeout fired, localStorage:', existingState ? 'EXISTS' : 'EMPTY');
+    if (!existingState) {
+      console.log('[STORE INIT] Writing defaults to localStorage');
       broadcastState(defaultVisualState);
+    } else {
+      console.log('[STORE INIT] Keeping existing localStorage data');
     }
     if (!localStorage.getItem('darthander_vibes')) {
       broadcastVibes({});
