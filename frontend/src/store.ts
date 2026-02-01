@@ -419,8 +419,16 @@ const defaultPresets: Preset[] = [
 // Broadcast state changes to other windows (for display sync)
 const broadcastState = (state: VisualState) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('darthander_state', JSON.stringify(state));
+    const stateJson = JSON.stringify(state);
+    localStorage.setItem('darthander_state', stateJson);
     localStorage.setItem('darthander_state_timestamp', Date.now().toString());
+    // DEBUG: Log every broadcast
+    console.log('[SYNC] Broadcasting state:', {
+      intensity: state.overallIntensity,
+      speed: state.motionSpeed,
+      mode: state.geometryMode,
+      timestamp: Date.now()
+    });
   }
 };
 

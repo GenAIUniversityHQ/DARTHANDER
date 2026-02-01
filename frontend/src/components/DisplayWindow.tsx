@@ -72,16 +72,21 @@ function getInitialState(): VisualState & AudioSensitivity {
   if (typeof window !== 'undefined') {
     try {
       const stored = localStorage.getItem('darthander_state');
+      console.log('[DISPLAY] Reading localStorage:', stored ? 'HAS DATA' : 'EMPTY');
       if (stored) {
         const parsed = JSON.parse(stored);
-        console.log('DisplayWindow: Loaded initial state from localStorage');
+        console.log('[DISPLAY] Parsed state:', {
+          intensity: parsed.overallIntensity,
+          speed: parsed.motionSpeed,
+          mode: parsed.geometryMode
+        });
         return parsed;
       }
     } catch (e) {
-      console.error('DisplayWindow: Failed to load initial state');
+      console.error('[DISPLAY] Failed to parse state:', e);
     }
   }
-  console.log('DisplayWindow: Using default state (localStorage empty)');
+  console.log('[DISPLAY] Using DEFAULT state - localStorage was empty!');
   return defaultVisualState as VisualState & AudioSensitivity;
 }
 
@@ -109,6 +114,14 @@ export default function DisplayWindow() {
   const bgImageRef = useRef<HTMLImageElement | null>(null);
   const [aspectRatio, setAspectRatio] = useState<'fill' | '16:9'>('fill');
   const [showControls, setShowControls] = useState(true);
+  // Initialize debug state from the initial read
+  const initialState = stateRef.current;
+  const [debugState, setDebugState] = useState({
+    intensity: initialState?.overallIntensity ?? 0,
+    speed: initialState?.motionSpeed ?? 0,
+    mode: initialState?.geometryMode ?? '',
+    hasData: !!localStorage.getItem('darthander_state')
+  });
 
   // Load background image from localStorage (shared with main window)
   useEffect(() => {
@@ -140,15 +153,35 @@ export default function DisplayWindow() {
 
   // Sync visual state, vibe layers, and audio state from localStorage
   useEffect(() => {
+    let syncCount = 0;
     const syncFromLocalStorage = () => {
       // Sync visual state
       const stateData = localStorage.getItem('darthander_state');
       if (stateData) {
         try {
-          stateRef.current = JSON.parse(stateData);
+          const parsed = JSON.parse(stateData);
+          stateRef.current = parsed;
+          // Log every 60 syncs (~1 second at 60fps)
+          syncCount++;
+          if (syncCount % 60 === 0) {
+            console.log('[DISPLAY SYNC] Current state:', {
+              intensity: parsed.overallIntensity,
+              speed: parsed.motionSpeed
+            });
+            // Update debug display
+            setDebugState({
+              intensity: parsed.overallIntensity,
+              speed: parsed.motionSpeed,
+              mode: parsed.geometryMode,
+              hasData: true
+            });
+          }
         } catch (e) {
           console.error('Failed to parse state from localStorage');
         }
+      } else {
+        console.warn('[DISPLAY SYNC] localStorage is EMPTY!');
+        setDebugState(prev => ({ ...prev, hasData: false }));
       }
       // Sync vibe layers
       const vibeData = localStorage.getItem('darthander_vibes');
@@ -805,21 +838,32 @@ export default function DisplayWindow() {
         <div>[H] Hide controls</div>
       </div>
 
-      {/* Status indicator */}
+      {/* Status indicator with DEBUG info */}
       <div
         style={{
           position: 'fixed',
           top: '10px',
           left: '10px',
-          color: 'rgba(255,255,255,0.3)',
+          color: 'rgba(255,255,255,0.5)',
           fontSize: '10px',
           fontFamily: 'monospace',
           pointerEvents: 'none',
           opacity: showControls ? 1 : 0,
           transition: 'opacity 0.3s',
+          background: 'rgba(0,0,0,0.7)',
+          padding: '8px',
+          borderRadius: '4px',
         }}
       >
-        DARTHANDER DISPLAY
+        <div style={{ marginBottom: '4px', color: debugState.hasData ? '#4ade80' : '#f87171' }}>
+          DARTHANDER DISPLAY {debugState.hasData ? '(SYNCED)' : '(NO DATA!)'}
+        </div>
+        <div>Intensity: {(debugState.intensity * 100).toFixed(0)}%</div>
+        <div>Speed: {(debugState.speed * 100).toFixed(0)}%</div>
+        <div>Mode: {debugState.mode || 'unknown'}</div>
+        <div style={{ marginTop: '4px', fontSize: '9px', color: '#888' }}>
+          [D] Toggle debug
+        </div>
       </div>
     </div>
   );
