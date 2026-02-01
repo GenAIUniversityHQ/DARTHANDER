@@ -62,6 +62,19 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const restartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // CRITICAL: Refs to avoid stale closure issues in event handlers
+  // Event handlers capture values at creation time - refs always have current values
+  const isActiveRef = useRef(isActive);
+  const onToggleRef = useRef(onToggle);
+  const onTranscriptionRef = useRef(onTranscription);
+
+  // Keep refs in sync with props
+  useEffect(() => {
+    isActiveRef.current = isActive;
+    onToggleRef.current = onToggle;
+    onTranscriptionRef.current = onTranscription;
+  }, [isActive, onToggle, onTranscription]);
+
   // Initialize speech recognition
   const initRecognition = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -106,8 +119,8 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
         setIsProcessing(true);
         setInterimTranscript('');
 
-        // Send to parent for Gemini processing
-        onTranscription(finalTranscript.trim());
+        // Send to parent for Gemini processing - USE REF for current callback
+        onTranscriptionRef.current(finalTranscript.trim());
 
         // Brief delay to show processing state
         setTimeout(() => setIsProcessing(false), 500);
@@ -119,7 +132,7 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
 
       if (event.error === 'not-allowed') {
         setError('Microphone access denied');
-        onToggle(); // Turn off
+        onToggleRef.current(); // USE REF for current callback
       } else if (event.error === 'no-speech') {
         // No speech detected, will auto-restart
         setError(null);
@@ -134,8 +147,8 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
       setIsListening(false);
       console.log('🎤 Voice recognition ended');
 
-      // Auto-restart if still active (handles browser auto-stop)
-      if (isActive && recognitionRef.current) {
+      // Auto-restart if still active - USE REF for current isActive value
+      if (isActiveRef.current && recognitionRef.current) {
         restartTimeoutRef.current = setTimeout(() => {
           try {
             recognitionRef.current?.start();
@@ -147,7 +160,7 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
     };
 
     return recognition;
-  }, [isActive, onToggle, onTranscription]);
+  }, []); // Empty deps - handlers use refs for current values
 
   // Start/stop based on isActive prop
   useEffect(() => {
@@ -189,7 +202,7 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
         clearTimeout(restartTimeoutRef.current);
       }
     };
-  }, [isActive, initRecognition, isListening]);
+  }, [isActive, initRecognition]);
 
   // Cleanup on unmount
   useEffect(() => {

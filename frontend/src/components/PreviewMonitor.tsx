@@ -50,6 +50,9 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
   const [displayWindow, setDisplayWindow] = useState<Window | null>(null);
   const { backgroundImage, vibeLayers, audioState, visualState } = useStore();
 
+  // Merged state: prefer store visualState, fall back to prop state
+  const vs = visualState || state;
+
   // Load background image when it changes
   useEffect(() => {
     if (backgroundImage) {
@@ -127,7 +130,6 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
       // AUDIO-REACTIVE VISUAL BOOSTS
       // These add to user's base values for DISPLAY ONLY
       // ============================================
-      const vs = visualState || state;
       const bassImpactSens = (vs as any)?.bassImpactSensitivity ?? 0;
       const bassPulseSens = (vs as any)?.bassPulseSensitivity ?? 0;
       const audioReactMotion = (vs as any)?.audioReactMotion ?? 0;
@@ -158,15 +160,15 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
         }
       }
 
-      // Get current palette
-      const palette = state?.colorPalette
-        ? palettes[state.colorPalette] || palettes.cosmos
+      // Get current palette - USE vs (store state) for consistency
+      const palette = vs?.colorPalette
+        ? palettes[vs.colorPalette] || palettes.cosmos
         : palettes.cosmos;
 
-      // Apply audio boost to brightness (VISUAL ONLY)
-      const baseBrightness = state?.colorBrightness ?? 0.6;
+      // Apply audio boost to brightness (VISUAL ONLY) - USE vs for consistency
+      const baseBrightness = vs?.colorBrightness ?? 0.6;
       const brightness = Math.min(1, baseBrightness + brightnessBoost);
-      const intensity = state?.overallIntensity ?? 0.4;
+      const intensity = vs?.overallIntensity ?? 0.4;
       ctx.fillStyle = palette.bg;
       ctx.fillRect(0, 0, width, height);
 
@@ -195,18 +197,18 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
         ctx.globalAlpha = 1.0;
       }
 
-      // Eclipse overlay
-      const eclipsePhase = state?.eclipsePhase ?? 0;
+      // Eclipse overlay - USE vs (store state) for consistency
+      const eclipsePhase = vs?.eclipsePhase ?? 0;
       if (eclipsePhase > 0) {
         ctx.fillStyle = `rgba(0, 0, 0, ${eclipsePhase * 0.9})`;
         ctx.fillRect(0, 0, width, height);
       }
 
-      // Update time and motion (with audio boost for VISUAL ONLY)
-      const baseMotionSpeed = state?.motionSpeed ?? 0.1;
+      // Update time and motion (with audio boost for VISUAL ONLY) - USE vs for consistency
+      const baseMotionSpeed = vs?.motionSpeed ?? 0.1;
       const motionSpeed = Math.min(1, baseMotionSpeed + motionBoost);
-      const motionTurbulence = state?.motionTurbulence ?? 0.1;
-      const motionDir = state?.motionDirection ?? 'clockwise';
+      const motionTurbulence = vs?.motionTurbulence ?? 0.1;
+      const motionDir = vs?.motionDirection ?? 'clockwise';
 
       // Only update time if not "still" - this controls all animation
       if (motionDir !== 'still') {
@@ -223,7 +225,7 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
       }
 
       // Draw nebula clouds (BEFORE stars)
-      const nebulaPresence = state?.nebulaPresence ?? 0;
+      const nebulaPresence = vs?.nebulaPresence ?? 0;
       if (nebulaPresence > 0) {
         const numClouds = Math.floor(nebulaPresence * 5 + 1);
         for (let i = 0; i < numClouds; i++) {
@@ -234,7 +236,7 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
           const pulse = Math.sin(timeRef.current * 0.001 + seed) * 0.2 + 0.8;
 
           const nebulaGradient = ctx.createRadialGradient(cloudX, cloudY, 0, cloudX, cloudY, cloudSize);
-          const hueShift = state?.colorHueShift ?? 0;
+          const hueShift = vs?.colorHueShift ?? 0;
           const baseHue = (i * 60 + hueShift * 360) % 360;
           nebulaGradient.addColorStop(0, `hsla(${baseHue}, 80%, 50%, ${nebulaPresence * 0.3 * pulse * (1 - eclipsePhase)})`);
           nebulaGradient.addColorStop(0.5, `hsla(${baseHue + 30}, 70%, 40%, ${nebulaPresence * 0.15 * pulse * (1 - eclipsePhase)})`);
@@ -248,8 +250,8 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
       }
 
       // Draw stars with motion effects
-      const starDensity = state?.starDensity ?? 0.8;
-      const starBrightness = state?.starBrightness ?? 0.7;
+      const starDensity = vs?.starDensity ?? 0.8;
+      const starBrightness = vs?.starBrightness ?? 0.7;
       const numStars = Math.floor(starDensity * 200);
 
       for (let i = 0; i < numStars; i++) {
@@ -288,10 +290,10 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
       }
 
       // Draw geometry based on mode (with audio boosts for VISUAL ONLY)
-      const geometryMode = state?.geometryMode ?? 'stars';
-      const complexity = state?.geometryComplexity ?? 0.2;
-      const baseGeometryScale = state?.geometryScale ?? 1.0;
-      const baseChaos = state?.chaosFactor ?? 0;
+      const geometryMode = vs?.geometryMode ?? 'stars';
+      const complexity = vs?.geometryComplexity ?? 0.2;
+      const baseGeometryScale = vs?.geometryScale ?? 1.0;
+      const baseChaos = vs?.chaosFactor ?? 0;
 
       // Apply audio boosts
       const geometryScale = Math.min(2, baseGeometryScale + scaleBoost);
@@ -447,7 +449,7 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
 
       // Corona beams effect - ONLY appears during eclipse AND when corona is enabled
       // Apply audio boost for VISUAL ONLY
-      const baseCoronaIntensity = state?.coronaIntensity ?? 0;
+      const baseCoronaIntensity = vs?.coronaIntensity ?? 0;
       const coronaIntensity = Math.min(1, baseCoronaIntensity + coronaBoost);
       if (eclipsePhase > 0.5 && coronaIntensity > 0) {
         const coronaStrength = (eclipsePhase - 0.5) * 2 * coronaIntensity;
@@ -546,8 +548,8 @@ export function PreviewMonitor({ state }: PreviewMonitorProps) {
 
       {/* Overlay info */}
       <div className="absolute bottom-2 left-2 text-[10px] text-zinc-500 font-mono space-y-1">
-        <div>MODE: {state?.geometryMode || 'stars'}</div>
-        <div>DEPTH: {state?.depthMode || 'deep'}</div>
+        <div>MODE: {vs?.geometryMode || 'stars'}</div>
+        <div>DEPTH: {vs?.depthMode || 'deep'}</div>
       </div>
 
       <div className="absolute bottom-2 right-2 text-[10px] text-zinc-500 font-mono">
