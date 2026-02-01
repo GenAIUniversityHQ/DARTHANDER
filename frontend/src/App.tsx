@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Main Control Surface Application
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useStore } from './store';
 import { PreviewMonitor } from './components/PreviewMonitor';
@@ -148,20 +148,10 @@ function App() {
   const [lastPrompt, setLastPrompt] = useState('');
   const [lastInterpretation, setLastInterpretation] = useState('');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
-  // When true, prevent backend socket from overwriting visual state
-  // This ensures manual slider controls stay where the user sets them
-  const [manualControlMode, setManualControlMode] = useState(true);
-  const manualControlModeRef = useRef(true);
-
-  // Keep ref in sync with state
-  useEffect(() => {
-    manualControlModeRef.current = manualControlMode;
-  }, [manualControlMode]);
 
   const {
     visualState,
     audioState,
-    setVisualState,
     setAudioState,
     updateVisualParameter,
     presets,
