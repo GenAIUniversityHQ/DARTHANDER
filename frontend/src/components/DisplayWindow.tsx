@@ -114,6 +114,7 @@ export default function DisplayWindow() {
   const bgImageRef = useRef<HTMLImageElement | null>(null);
   const [aspectRatio, setAspectRatio] = useState<'fill' | '16:9'>('fill');
   const [showControls, setShowControls] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
   // Initialize debug state from the initial read
   const initialState = stateRef.current;
   const [debugState, setDebugState] = useState({
@@ -260,6 +261,7 @@ export default function DisplayWindow() {
         // DEBUG: Confirm draw is running (check browser console)
         if (timeRef.current === 0) {
           console.log('[DISPLAY] First draw frame!', { width, height, canvasW: canvas.width, canvasH: canvas.height });
+          setIsLoaded(true);
         }
 
       // Calculate viewport for 16:9 aspect ratio mode (YouTube format)
@@ -1233,6 +1235,23 @@ export default function DisplayWindow() {
       background: '#000',
       cursor: showControls ? 'default' : 'none'
     }}>
+      {/* Loading indicator - shows until first frame draws */}
+      {!isLoaded && (
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          color: '#a855f7',
+          fontSize: '24px',
+          fontFamily: 'monospace',
+          textAlign: 'center',
+          zIndex: 100,
+        }}>
+          <div style={{ marginBottom: '10px' }}>DARTHANDER</div>
+          <div style={{ fontSize: '14px', color: '#666' }}>Loading display...</div>
+        </div>
+      )}
       <canvas
         ref={canvasRef}
         style={{
