@@ -705,21 +705,27 @@ export default function DisplayWindow() {
 
       ctx.restore();
 
-      // Draw vibe layer effects
+      // Draw vibe layer effects (fullscreen enhanced)
       const vibes = vibeLayersRef.current;
       if (vibes && Object.keys(vibes).length > 0) {
         ctx.save();
         ctx.translate(centerX, centerY);
+        const time = timeRef.current;
 
-        // SACRED geometry overlays
+        // ============================================
+        // SACRED GEOMETRY OVERLAYS
+        // ============================================
         if (vibes.SACRED && vibes.SACRED !== 'OFF') {
-          const sacredAlpha = intensity * 0.4 * (1 - eclipsePhase);
+          const sacredAlpha = intensity * 0.5 * Math.max(0.3, 1 - eclipsePhase);
           ctx.strokeStyle = `rgba(255, 215, 0, ${sacredAlpha})`;
-          ctx.lineWidth = 1.5;
+          ctx.lineWidth = 2;
 
           if (vibes.SACRED === 'FLOWER' || vibes.SACRED === 'SEED') {
-            // Flower/Seed of Life pattern
-            const radius = Math.min(viewW, viewH) * 0.15;
+            // Flower of Life - animated breathing
+            const breathe = 1 + Math.sin(time * 0.001) * 0.05;
+            const radius = Math.min(viewW, viewH) * 0.12 * breathe;
+            ctx.save();
+            ctx.rotate(time * 0.0001);
             for (let i = 0; i < 6; i++) {
               const angle = (i / 6) * Math.PI * 2;
               ctx.beginPath();
@@ -729,78 +735,378 @@ export default function DisplayWindow() {
             ctx.beginPath();
             ctx.arc(0, 0, radius, 0, Math.PI * 2);
             ctx.stroke();
-          } else if (vibes.SACRED === 'METATRON') {
-            // Metatron's cube - interconnected circles
-            const r = Math.min(viewW, viewH) * 0.12;
-            for (let i = 0; i < 13; i++) {
-              const angle = i < 6 ? (i / 6) * Math.PI * 2 : ((i - 6) / 6) * Math.PI * 2;
-              const dist = i < 6 ? r * 2 : i === 12 ? 0 : r;
+            // Outer ring for fullscreen
+            for (let i = 0; i < 12; i++) {
+              const angle = (i / 12) * Math.PI * 2 + Math.PI / 12;
               ctx.beginPath();
-              ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist, r * 0.5, 0, Math.PI * 2);
+              ctx.arc(Math.cos(angle) * radius * 2, Math.sin(angle) * radius * 2, radius, 0, Math.PI * 2);
               ctx.stroke();
             }
+            ctx.restore();
+          } else if (vibes.SACRED === 'METATRON') {
+            // Metatron's Cube - rotating interconnected circles
+            const r = Math.min(viewW, viewH) * 0.1;
+            ctx.save();
+            ctx.rotate(time * 0.0002);
+            // Inner hexagon of circles
+            for (let i = 0; i < 6; i++) {
+              const angle = (i / 6) * Math.PI * 2;
+              ctx.beginPath();
+              ctx.arc(Math.cos(angle) * r, Math.sin(angle) * r, r * 0.4, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+            // Outer hexagon
+            for (let i = 0; i < 6; i++) {
+              const angle = (i / 6) * Math.PI * 2;
+              ctx.beginPath();
+              ctx.arc(Math.cos(angle) * r * 2, Math.sin(angle) * r * 2, r * 0.4, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+            // Center circle
+            ctx.beginPath();
+            ctx.arc(0, 0, r * 0.4, 0, Math.PI * 2);
+            ctx.stroke();
+            // Connecting lines
+            ctx.globalAlpha = sacredAlpha * 0.5;
+            for (let i = 0; i < 6; i++) {
+              const a1 = (i / 6) * Math.PI * 2;
+              const a2 = ((i + 1) % 6 / 6) * Math.PI * 2;
+              ctx.beginPath();
+              ctx.moveTo(Math.cos(a1) * r * 2, Math.sin(a1) * r * 2);
+              ctx.lineTo(Math.cos(a2) * r * 2, Math.sin(a2) * r * 2);
+              ctx.lineTo(0, 0);
+              ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+            ctx.restore();
+          } else if (vibes.SACRED === 'SRI') {
+            // Sri Yantra - interlocking triangles
+            const size = Math.min(viewW, viewH) * 0.18;
+            ctx.save();
+            ctx.rotate(time * 0.00015);
+            for (let i = 0; i < 9; i++) {
+              const scale = 1 - i * 0.08;
+              const rotation = i % 2 === 0 ? 0 : Math.PI;
+              ctx.save();
+              ctx.rotate(rotation);
+              ctx.beginPath();
+              ctx.moveTo(0, -size * scale);
+              ctx.lineTo(size * scale * 0.866, size * scale * 0.5);
+              ctx.lineTo(-size * scale * 0.866, size * scale * 0.5);
+              ctx.closePath();
+              ctx.stroke();
+              ctx.restore();
+            }
+            ctx.restore();
+          } else if (vibes.SACRED === 'TORUS') {
+            // Torus energy field - flowing rings
+            const torusRadius = Math.min(viewW, viewH) * 0.15;
+            ctx.save();
+            for (let ring = 0; ring < 16; ring++) {
+              const ringPhase = (ring / 16) * Math.PI * 2 + time * 0.001;
+              const y = Math.sin(ringPhase) * torusRadius * 0.7;
+              const ringRadius = Math.cos(ringPhase) * torusRadius * 0.35 + torusRadius * 0.55;
+              ctx.globalAlpha = sacredAlpha * (0.3 + Math.cos(ringPhase) * 0.35);
+              ctx.beginPath();
+              ctx.ellipse(0, y, ringRadius, ringRadius * 0.25, 0, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+            ctx.restore();
+          } else if (vibes.SACRED === 'MERKABA') {
+            // Merkaba - 3D star tetrahedron
+            const merkSize = Math.min(viewW, viewH) * 0.15;
+            ctx.save();
+            ctx.rotate(time * 0.0003);
+            // Upward triangle
+            ctx.beginPath();
+            ctx.moveTo(0, -merkSize);
+            ctx.lineTo(merkSize * 0.866, merkSize * 0.5);
+            ctx.lineTo(-merkSize * 0.866, merkSize * 0.5);
+            ctx.closePath();
+            ctx.stroke();
+            // Downward triangle
+            ctx.rotate(Math.PI);
+            ctx.beginPath();
+            ctx.moveTo(0, -merkSize * 0.9);
+            ctx.lineTo(merkSize * 0.78, merkSize * 0.45);
+            ctx.lineTo(-merkSize * 0.78, merkSize * 0.45);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.restore();
           }
         }
 
-        // COSMIC effects
+        // ============================================
+        // COSMIC EFFECTS
+        // ============================================
         if (vibes.COSMIC && vibes.COSMIC !== 'OFF') {
-          const cosmicAlpha = intensity * 0.3;
+          const cosmicAlpha = intensity * 0.45;
+
           if (vibes.COSMIC === 'AURORA') {
-            for (let i = 0; i < 5; i++) {
-              const waveY = Math.sin(timeRef.current * 0.001 + i) * 50;
-              const gradient = ctx.createLinearGradient(-viewW / 2, waveY - 30, -viewW / 2, waveY + 30);
+            // Northern lights - flowing ribbons (fullscreen enhanced)
+            for (let i = 0; i < 7; i++) {
+              const waveY = Math.sin(time * 0.0008 + i * 0.7) * 60 - viewH * 0.2;
+              const gradient = ctx.createLinearGradient(-viewW / 2, waveY - 40, -viewW / 2, waveY + 40);
               gradient.addColorStop(0, 'transparent');
-              gradient.addColorStop(0.5, `rgba(0, 255, 128, ${cosmicAlpha * 0.5})`);
+              gradient.addColorStop(0.2, `rgba(0, 255, 150, ${cosmicAlpha * 0.3})`);
+              gradient.addColorStop(0.5, `rgba(100, 255, 200, ${cosmicAlpha * 0.6})`);
+              gradient.addColorStop(0.8, `rgba(0, 200, 255, ${cosmicAlpha * 0.3})`);
               gradient.addColorStop(1, 'transparent');
               ctx.fillStyle = gradient;
-              ctx.fillRect(-viewW / 2, waveY - 30 - viewH * 0.3, viewW, 60);
+              ctx.fillRect(-viewW / 2, waveY - 40, viewW, 80);
             }
           } else if (vibes.COSMIC === 'GALAXY') {
+            // Spiral galaxy arms (fullscreen)
             ctx.strokeStyle = `rgba(180, 160, 255, ${cosmicAlpha})`;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 2.5;
             const arms = 4;
             for (let arm = 0; arm < arms; arm++) {
               ctx.beginPath();
-              for (let i = 0; i < 200; i++) {
-                const angle = (arm / arms) * Math.PI * 2 + (i / 30) + timeRef.current * 0.0003;
-                const r = i * 1.5;
+              for (let i = 0; i < 250; i++) {
+                const angle = (arm / arms) * Math.PI * 2 + (i / 30) + time * 0.0002;
+                const r = i * 1.8;
                 const x = Math.cos(angle) * r;
-                const y = Math.sin(angle) * r * 0.6;
+                const y = Math.sin(angle) * r * 0.55;
                 if (i === 0) ctx.moveTo(x, y);
                 else ctx.lineTo(x, y);
               }
               ctx.stroke();
             }
+          } else if (vibes.COSMIC === 'NEBULA') {
+            // Nebula clouds overlay
+            for (let i = 0; i < 6; i++) {
+              const cloudX = Math.sin(i * 2.5 + time * 0.0003) * viewW * 0.25;
+              const cloudY = Math.cos(i * 1.7 + time * 0.0002) * viewH * 0.2;
+              const cloudSize = 80 + Math.sin(time * 0.001 + i) * 20;
+              const gradient = ctx.createRadialGradient(cloudX, cloudY, 0, cloudX, cloudY, cloudSize);
+              const hue = (i * 60 + time * 0.01) % 360;
+              gradient.addColorStop(0, `hsla(${hue}, 80%, 60%, ${cosmicAlpha * 0.5})`);
+              gradient.addColorStop(0.5, `hsla(${hue + 30}, 70%, 50%, ${cosmicAlpha * 0.25})`);
+              gradient.addColorStop(1, 'transparent');
+              ctx.fillStyle = gradient;
+              ctx.beginPath();
+              ctx.arc(cloudX, cloudY, cloudSize, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else if (vibes.COSMIC === 'WORMHOLE') {
+            // Wormhole tunnel effect
+            ctx.strokeStyle = `rgba(150, 100, 255, ${cosmicAlpha})`;
+            for (let ring = 0; ring < 15; ring++) {
+              const ringPhase = (ring / 15 + time * 0.001) % 1;
+              const ringRadius = ringPhase * Math.min(viewW, viewH) * 0.25;
+              ctx.globalAlpha = cosmicAlpha * (1 - ringPhase);
+              ctx.lineWidth = 2 + ringPhase * 3;
+              ctx.beginPath();
+              ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
           }
         }
 
-        // ELEMENT effects
+        // ============================================
+        // ELEMENT EFFECTS
+        // ============================================
         if (vibes.ELEMENT && vibes.ELEMENT !== 'OFF') {
-          const elemAlpha = intensity * 0.25;
+          const elemAlpha = intensity * 0.4;
+
           if (vibes.ELEMENT === 'FIRE') {
-            for (let i = 0; i < 20; i++) {
-              const flameX = (Math.random() - 0.5) * viewW * 0.3;
-              const flameY = viewH * 0.3 - Math.random() * 100;
-              const flameSize = 20 + Math.random() * 40;
+            // Fire particles rising (fullscreen)
+            for (let i = 0; i < 25; i++) {
+              const seed = i * 123.456;
+              const flameX = Math.sin(seed) * viewW * 0.25;
+              const flamePhase = ((time * 0.002 + seed) % 1);
+              const flameY = viewH * 0.3 - flamePhase * viewH * 0.4;
+              const flameSize = 25 + Math.sin(seed * 2) * 15;
               const gradient = ctx.createRadialGradient(flameX, flameY, 0, flameX, flameY, flameSize);
-              gradient.addColorStop(0, `rgba(255, 200, 50, ${elemAlpha})`);
-              gradient.addColorStop(0.5, `rgba(255, 100, 0, ${elemAlpha * 0.5})`);
+              gradient.addColorStop(0, `rgba(255, 220, 100, ${elemAlpha * (1 - flamePhase)})`);
+              gradient.addColorStop(0.4, `rgba(255, 120, 20, ${elemAlpha * 0.6 * (1 - flamePhase)})`);
               gradient.addColorStop(1, 'transparent');
               ctx.fillStyle = gradient;
-              ctx.fillRect(flameX - flameSize, flameY - flameSize, flameSize * 2, flameSize * 2);
+              ctx.beginPath();
+              ctx.arc(flameX, flameY, flameSize, 0, Math.PI * 2);
+              ctx.fill();
             }
           } else if (vibes.ELEMENT === 'WATER') {
+            // Water waves
             ctx.strokeStyle = `rgba(0, 150, 255, ${elemAlpha})`;
             ctx.lineWidth = 2;
-            for (let i = 0; i < 5; i++) {
+            for (let wave = 0; wave < 6; wave++) {
               ctx.beginPath();
-              for (let x = -viewW / 2; x < viewW / 2; x += 10) {
-                const waveY = Math.sin(x * 0.02 + timeRef.current * 0.002 + i) * 20 + i * 30;
+              for (let x = -viewW / 2; x < viewW / 2; x += 8) {
+                const waveY = Math.sin(x * 0.02 + time * 0.002 + wave * 0.8) * 25 + wave * 30;
                 if (x === -viewW / 2) ctx.moveTo(x, waveY);
                 else ctx.lineTo(x, waveY);
               }
               ctx.stroke();
             }
+          } else if (vibes.ELEMENT === 'LIGHTNING') {
+            // Lightning bolts
+            if (Math.random() < 0.04) {
+              ctx.strokeStyle = `rgba(200, 220, 255, ${elemAlpha * 2})`;
+              ctx.lineWidth = 3;
+              ctx.shadowColor = 'rgba(150, 180, 255, 0.8)';
+              ctx.shadowBlur = 15;
+              ctx.beginPath();
+              let lx = (Math.random() - 0.5) * viewW * 0.4;
+              let ly = -viewH * 0.35;
+              ctx.moveTo(lx, ly);
+              for (let seg = 0; seg < 10; seg++) {
+                lx += (Math.random() - 0.5) * 50;
+                ly += viewH * 0.08;
+                ctx.lineTo(lx, ly);
+              }
+              ctx.stroke();
+              ctx.shadowBlur = 0;
+            }
+          } else if (vibes.ELEMENT === 'PLASMA') {
+            // Plasma energy field
+            for (let i = 0; i < 8; i++) {
+              const angle = (i / 8) * Math.PI * 2 + time * 0.001;
+              const dist = 50 + Math.sin(time * 0.002 + i) * 25;
+              const px = Math.cos(angle) * dist;
+              const py = Math.sin(angle) * dist;
+              const gradient = ctx.createRadialGradient(px, py, 0, px, py, 40);
+              gradient.addColorStop(0, `rgba(255, 100, 255, ${elemAlpha})`);
+              gradient.addColorStop(0.5, `rgba(100, 150, 255, ${elemAlpha * 0.5})`);
+              gradient.addColorStop(1, 'transparent');
+              ctx.fillStyle = gradient;
+              ctx.beginPath();
+              ctx.arc(px, py, 40, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+
+        // ============================================
+        // CELESTIAL EFFECTS
+        // ============================================
+        if (vibes.CELESTIAL && vibes.CELESTIAL !== 'OFF') {
+          const celestAlpha = intensity * 0.45;
+
+          if (vibes.CELESTIAL === 'ECLIPSE') {
+            // Additional eclipse ring overlay
+            const ringRadius = Math.min(viewW, viewH) * 0.1;
+            const gradient = ctx.createRadialGradient(0, 0, ringRadius * 0.8, 0, 0, ringRadius * 1.8);
+            gradient.addColorStop(0, 'transparent');
+            gradient.addColorStop(0.3, `rgba(255, 200, 100, ${celestAlpha * 0.9})`);
+            gradient.addColorStop(0.5, `rgba(255, 180, 80, ${celestAlpha * 0.6})`);
+            gradient.addColorStop(0.7, `rgba(255, 150, 50, ${celestAlpha * 0.3})`);
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, ringRadius * 1.8, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (vibes.CELESTIAL === 'SUN') {
+            // Sun rays
+            const rayCount = 16;
+            for (let i = 0; i < rayCount; i++) {
+              const angle = (i / rayCount) * Math.PI * 2 + time * 0.0002;
+              const rayLen = 70 + Math.sin(time * 0.003 + i) * 25;
+              const gradient = ctx.createLinearGradient(0, 0, Math.cos(angle) * rayLen, Math.sin(angle) * rayLen);
+              gradient.addColorStop(0, `rgba(255, 220, 100, ${celestAlpha})`);
+              gradient.addColorStop(1, 'transparent');
+              ctx.strokeStyle = gradient;
+              ctx.lineWidth = 4;
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.lineTo(Math.cos(angle) * rayLen, Math.sin(angle) * rayLen);
+              ctx.stroke();
+            }
+          } else if (vibes.CELESTIAL === 'MOON') {
+            // Moon phases glow
+            const moonRadius = Math.min(viewW, viewH) * 0.08;
+            const gradient = ctx.createRadialGradient(-moonRadius * 0.3, 0, 0, 0, 0, moonRadius);
+            gradient.addColorStop(0, `rgba(220, 220, 240, ${celestAlpha})`);
+            gradient.addColorStop(0.7, `rgba(180, 180, 200, ${celestAlpha * 0.5})`);
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, moonRadius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // ============================================
+        // QUANTUM EFFECTS
+        // ============================================
+        if (vibes.QUANTUM && vibes.QUANTUM !== 'OFF') {
+          const quantumAlpha = intensity * 0.35;
+
+          if (vibes.QUANTUM === 'FIELD') {
+            // Quantum field grid
+            ctx.strokeStyle = `rgba(100, 200, 255, ${quantumAlpha * 0.5})`;
+            ctx.lineWidth = 0.8;
+            const gridSize = 30;
+            for (let x = -viewW / 2; x < viewW / 2; x += gridSize) {
+              for (let y = -viewH / 2; y < viewH / 2; y += gridSize) {
+                const distort = Math.sin(x * 0.008 + y * 0.008 + time * 0.001) * 5;
+                ctx.beginPath();
+                ctx.arc(x + distort, y + distort, 3, 0, Math.PI * 2);
+                ctx.stroke();
+              }
+            }
+          } else if (vibes.QUANTUM === 'WAVE') {
+            // Wave function visualization
+            ctx.strokeStyle = `rgba(150, 100, 255, ${quantumAlpha})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let x = -viewW / 2; x < viewW / 2; x += 4) {
+              const wave1 = Math.sin(x * 0.04 + time * 0.002) * 35;
+              const wave2 = Math.sin(x * 0.025 - time * 0.001) * 25;
+              const y = wave1 + wave2;
+              if (x === -viewW / 2) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+          } else if (vibes.QUANTUM === 'PARTICLE') {
+            // Particle trails
+            for (let i = 0; i < 30; i++) {
+              const seed = i * 987.654;
+              const px = Math.sin(seed + time * 0.001) * viewW * 0.35;
+              const py = Math.cos(seed * 1.3 + time * 0.0012) * viewH * 0.3;
+              ctx.fillStyle = `rgba(200, 150, 255, ${quantumAlpha})`;
+              ctx.beginPath();
+              ctx.arc(px, py, 3, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+
+        // ============================================
+        // EMOTION EFFECTS
+        // ============================================
+        if (vibes.EMOTION && vibes.EMOTION !== 'OFF') {
+          const emotionAlpha = intensity * 0.4;
+
+          if (vibes.EMOTION === 'AWE' || vibes.EMOTION === 'WONDER') {
+            // Radiant light burst
+            const rayCount = 32;
+            for (let i = 0; i < rayCount; i++) {
+              const angle = (i / rayCount) * Math.PI * 2;
+              const rayLen = 100 + Math.sin(time * 0.002 + i * 0.5) * 35;
+              const gradient = ctx.createLinearGradient(0, 0, Math.cos(angle) * rayLen, Math.sin(angle) * rayLen);
+              gradient.addColorStop(0, `rgba(255, 255, 255, ${emotionAlpha * 0.8})`);
+              gradient.addColorStop(0.3, `rgba(255, 240, 200, ${emotionAlpha * 0.4})`);
+              gradient.addColorStop(1, 'transparent');
+              ctx.strokeStyle = gradient;
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.lineTo(Math.cos(angle) * rayLen, Math.sin(angle) * rayLen);
+              ctx.stroke();
+            }
+          } else if (vibes.EMOTION === 'LOVE') {
+            // Heart pulse
+            const pulse = 1 + Math.sin(time * 0.003) * 0.12;
+            const heartSize = 40 * pulse;
+            ctx.fillStyle = `rgba(255, 100, 150, ${emotionAlpha})`;
+            ctx.beginPath();
+            ctx.moveTo(0, heartSize * 0.3);
+            ctx.bezierCurveTo(-heartSize, -heartSize * 0.3, -heartSize, heartSize * 0.5, 0, heartSize);
+            ctx.bezierCurveTo(heartSize, heartSize * 0.5, heartSize, -heartSize * 0.3, 0, heartSize * 0.3);
+            ctx.fill();
           }
         }
 
