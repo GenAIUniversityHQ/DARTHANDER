@@ -173,6 +173,16 @@ function App() {
     geminiApiKey,
   } = useStore();
 
+  // CRITICAL: Broadcast current state to localStorage immediately on mount
+  // This ensures display window always gets the current state, not stale data
+  useEffect(() => {
+    if (visualState) {
+      localStorage.setItem('darthander_state', JSON.stringify(visualState));
+      localStorage.setItem('darthander_state_timestamp', Date.now().toString());
+      console.log('Control panel: Broadcast initial state to localStorage');
+    }
+  }, []); // Only on mount
+
   // Initialize socket connection
   useEffect(() => {
     const newSocket = io(API_URL, {
@@ -531,7 +541,8 @@ function App() {
           <SessionStatus sessionId={sessionId} onSessionChange={setSessionId} />
           <button
             onClick={() => {
-              const displayUrl = `${window.location.origin}/display`;
+              // IMPORTANT: Use ?display=true query param - main.tsx checks for this
+              const displayUrl = `${window.location.origin}?display=true`;
               window.open(displayUrl, 'darthander_display', 'width=1920,height=1080');
             }}
             className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors"

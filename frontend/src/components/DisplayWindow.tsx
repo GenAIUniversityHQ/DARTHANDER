@@ -66,13 +66,45 @@ const palettes: Record<string, { bg: string; primary: string; secondary: string 
   sacred: { bg: '#1a0a1a', primary: '#ffd700', secondary: '#8a4aff' },
 };
 
+// Read initial state from localStorage BEFORE component mounts
+// This ensures the display shows current state immediately, not defaults
+function getInitialState(): VisualState & AudioSensitivity {
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('darthander_state');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        console.log('DisplayWindow: Loaded initial state from localStorage');
+        return parsed;
+      }
+    } catch (e) {
+      console.error('DisplayWindow: Failed to load initial state');
+    }
+  }
+  console.log('DisplayWindow: Using default state (localStorage empty)');
+  return defaultVisualState as VisualState & AudioSensitivity;
+}
+
+function getInitialVibes(): VibeLayers {
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('darthander_vibes');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) { }
+  }
+  return {};
+}
+
 export default function DisplayWindow() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const timeRef = useRef(0);
   const motionOffsetRef = useRef({ x: 0, y: 0 }); // For outward/inward motion
-  const stateRef = useRef<VisualState & AudioSensitivity>(defaultVisualState as VisualState & AudioSensitivity);
-  const vibeLayersRef = useRef<VibeLayers>({});
+  // Initialize from localStorage IMMEDIATELY (not in useEffect)
+  const stateRef = useRef<VisualState & AudioSensitivity>(getInitialState());
+  const vibeLayersRef = useRef<VibeLayers>(getInitialVibes());
   const audioStateRef = useRef<AudioState | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
   const [aspectRatio, setAspectRatio] = useState<'fill' | '16:9'>('fill');
