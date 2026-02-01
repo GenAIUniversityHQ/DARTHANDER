@@ -71,7 +71,22 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const restartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // CRITICAL: Use refs for callbacks to avoid stale closure issues
+  // The speech recognition event handlers capture closure values when created,
+  // so we use refs that always point to the latest callback functions
+  const isActiveRef = useRef(isActive);
+  const onToggleRef = useRef(onToggle);
+  const onTranscriptionRef = useRef(onTranscription);
+
+  // Keep refs in sync with props
+  useEffect(() => {
+    isActiveRef.current = isActive;
+    onToggleRef.current = onToggle;
+    onTranscriptionRef.current = onTranscription;
+  }, [isActive, onToggle, onTranscription]);
+
   // Initialize speech recognition
+  // IMPORTANT: Uses refs for callbacks to avoid stale closures
   const initRecognition = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -111,10 +126,12 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
       }
 
       // Send final results to be processed
+      // CRITICAL: Use ref to get latest callback to avoid stale closure
       if (final.trim()) {
         console.log('🎤 Final transcription:', final.trim());
         setInterimText('');
-        onTranscription(final.trim());
+        // Use ref to always call the latest callback
+        onTranscriptionRef.current(final.trim());
       }
     };
 
@@ -123,12 +140,16 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
 
       if (event.error === 'not-allowed') {
         setError('Microphone access denied');
-        onToggle(); // Turn off
+        // Use ref to get latest toggle callback
+        onToggleRef.current();
       } else if (event.error === 'no-speech') {
         // This is normal, just restart if still active
         console.log('No speech detected, continuing...');
       } else if (event.error === 'network') {
         setError('Network error - check connection');
+      } else if (event.error === 'aborted') {
+        // Recognition was aborted, this is normal when stopping
+        console.log('Recognition aborted');
       } else {
         setError(`Error: ${event.error}`);
       }
@@ -139,7 +160,8 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
       setIsListening(false);
 
       // Auto-restart if still active (continuous listening)
-      if (isActive && recognitionRef.current) {
+      // CRITICAL: Use ref to get latest isActive value
+      if (isActiveRef.current && recognitionRef.current) {
         restartTimeoutRef.current = setTimeout(() => {
           try {
             recognitionRef.current?.start();
@@ -151,21 +173,30 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
     };
 
     return recognition;
-  }, [isActive, onToggle, onTranscription]);
+  }, []); // Empty deps - handlers use refs for latest values
 
   // Start/stop based on isActive
   useEffect(() => {
     if (isActive) {
-      // Start listening
-      if (!recognitionRef.current) {
-        recognitionRef.current = initRecognition();
+      // Start listening - always create fresh recognition for reliable operation
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // Ignore
+        }
+        recognitionRef.current = null;
       }
+
+      // Create new recognition instance
+      recognitionRef.current = initRecognition();
 
       if (recognitionRef.current) {
         try {
+          console.log('🎤 Starting speech recognition...');
           recognitionRef.current.start();
         } catch (e) {
-          // Already started, that's ok
+          console.error('Failed to start recognition:', e);
         }
       }
     } else {
@@ -181,8 +212,10 @@ export function VoiceInput({ isActive, onToggle, onTranscription }: VoiceInputPr
         } catch (e) {
           // Already stopped, that's ok
         }
+        recognitionRef.current = null;
       }
       setInterimText('');
+      setIsListening(false);
     }
 
     return () => {

@@ -1,7 +1,7 @@
 // DARTHANDER Visual Consciousness Engine
 // Main Control Surface Application
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useStore } from './store';
 import { PreviewMonitor } from './components/PreviewMonitor';
@@ -148,6 +148,15 @@ function App() {
   const [lastPrompt, setLastPrompt] = useState('');
   const [lastInterpretation, setLastInterpretation] = useState('');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
+  // When true, prevent backend socket from overwriting visual state
+  // This ensures manual slider controls stay where the user sets them
+  const [manualControlMode, setManualControlMode] = useState(true);
+  const manualControlModeRef = useRef(true);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    manualControlModeRef.current = manualControlMode;
+  }, [manualControlMode]);
 
   const {
     visualState,
@@ -185,12 +194,19 @@ function App() {
     });
 
     newSocket.on('state:current', (data: any) => {
-      if (data.visual) setVisualState(data.visual);
+      // Only accept initial state if NOT in manual control mode
+      // This ensures user's manual settings take priority
+      if (!manualControlModeRef.current && data.visual) setVisualState(data.visual);
       if (data.audio) setAudioState(data.audio);
     });
 
     newSocket.on('state:update', (state: any) => {
-      setVisualState(state);
+      // IMPORTANT: Only accept backend state updates if NOT in manual control mode
+      // This prevents backend audio-reactive updates from overwriting slider positions
+      // Manual control mode = sliders stay where user sets them
+      if (!manualControlModeRef.current) {
+        setVisualState(state);
+      }
     });
 
     newSocket.on('audio:update', (state: any) => {
