@@ -1167,6 +1167,19 @@ export default function DisplayWindow() {
         }
       }
 
+      // CRITICAL DEBUG: Draw frame counter LAST (on top of everything)
+      // This will show if draw loop is running
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset any transforms
+      ctx.fillStyle = '#ff0000';
+      ctx.fillRect(0, 0, 300, 80);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px Arial';
+      ctx.fillText(`FRAME: ${Math.floor(timeRef.current)}`, 10, 30);
+      ctx.fillText(`Eclipse: ${(eclipsePhase).toFixed(2)}`, 10, 55);
+      ctx.fillText(`Palette: ${state?.colorPalette || 'none'}`, 10, 75);
+      ctx.restore();
+
       } catch (error) {
         console.error('Display draw error (continuing):', error);
         // Draw error on canvas so we can see it

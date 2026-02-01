@@ -8,8 +8,13 @@ import './index.css';
 const urlParams = new URLSearchParams(window.location.search);
 const isDisplayMode = urlParams.get('display') === 'true';
 
+// Temporarily disable StrictMode for DisplayWindow to debug rendering issue
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    {isDisplayMode ? <DisplayWindow /> : <App />}
-  </React.StrictMode>,
+  isDisplayMode ? (
+    <DisplayWindow />
+  ) : (
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  ),
 );
