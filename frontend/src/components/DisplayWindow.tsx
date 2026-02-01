@@ -103,6 +103,9 @@ function getInitialVibes(): VibeLayers {
 }
 
 export default function DisplayWindow() {
+  // CRITICAL DEBUG: Log when component mounts
+  console.log('[DisplayWindow] Component rendering!');
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const timeRef = useRef(0);
@@ -251,11 +254,27 @@ export default function DisplayWindow() {
     window.addEventListener('resize', resize);
 
     const draw = () => {
+      // CRITICAL DEBUG: Log every frame to confirm draw is running
+      console.log('[DRAW] Frame start - canvas:', canvas.width, 'x', canvas.height);
+
       try {
         const state = stateRef.current || defaultVisualState;
         const audio = audioStateRef.current;
         const width = window.innerWidth;
         const height = window.innerHeight;
+
+        // CRITICAL DEBUG: Draw bright red background FIRST to confirm canvas works
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(0, 0, width, height);
+
+        // Draw big white text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 48px Arial';
+        ctx.fillText('DISPLAY WORKING', 50, 100);
+        ctx.font = '24px Arial';
+        ctx.fillText(`Width: ${width}, Height: ${height}`, 50, 150);
+        ctx.fillText(`State: ${state?.geometryMode || 'NO STATE'}`, 50, 180);
+        ctx.fillText(`LocalStorage: ${localStorage.getItem('darthander_state') ? 'HAS DATA' : 'EMPTY'}`, 50, 210);
 
         // DEBUG: Log draw info periodically
         if (Math.random() < 0.01) {
